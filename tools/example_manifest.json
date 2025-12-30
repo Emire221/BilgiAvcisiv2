@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2025-11-28T23:48:00.000Z",
+  "files": [
+    {
+      "path": "3_Sinif/3_Sinif_v1.tar.bz2",
+      "type": "tar.bz2",
+      "version": "v1",
+      "hash": "abc123def456",
+      "addedAt": "2025-11-28T10:00:00.000Z"
+    },
+    {
+      "path": "3_Sinif/derslistesi.json",
+      "type": "json",
+      "version": "v1",
+      "hash": "def456ghi789",
+      "addedAt": "2025-11-28T10:00:00.000Z"
+    },
+    {
+      "path": "3_Sinif/konulistesi.json",
+      "type": "json",
+      "version": "v1",
+      "hash": "ghi789jkl012",
+      "addedAt": "2025-11-28T10:00:00.000Z"
+    },
+    {
+      "path": "3_Sinif/konuvideo.json",
+      "type": "json",
+      "version": "v1",
+      "hash": "jkl012mno345",
+      "addedAt": "2025-11-28T10:00:00.000Z"
+    }
+  ]
+}

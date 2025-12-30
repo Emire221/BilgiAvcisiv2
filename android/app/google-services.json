@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "60290155232",
+    "project_id": "bilgici-e2bf3",
+    "storage_bucket": "bilgici-e2bf3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60290155232:android:f12ed8c3f25335763e0685",
+        "android_client_info": {
+          "package_name": "com.example.bilgici"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJmR_N3nLUzPX3EQu3Yw8QiwZBIWYMF-M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60290155232:android:8794d9789acb58b03e0685",
+        "android_client_info": {
+          "package_name": "com.semse.bilgici"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJmR_N3nLUzPX3EQu3Yw8QiwZBIWYMF-M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

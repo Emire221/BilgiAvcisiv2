@@ -1,0 +1,15 @@
+# Tools klasörü için analiz ayarları
+# Bu dosyalar yardımcı araçlar olduğu için lint kuralları daha gevşek
+
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    # print kullanımına izin ver (CLI araçları için gerekli)
+    avoid_print: false
+    
+    # Dangling doc comments'a izin ver
+    dangling_library_doc_comments: false
+    
+    # Kütüphane için import kontrollerini gevşet
+    depend_on_referenced_packages: false

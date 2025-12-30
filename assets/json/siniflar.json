@@ -1,0 +1,28 @@
+{
+    "siniflar": [
+        {
+            "id": "3_Sinif",
+            "name": "3. Sınıf"
+        },
+        {
+            "id": "4_Sinif",
+            "name": "4. Sınıf"
+        },
+        {
+            "id": "5_Sinif",
+            "name": "5. Sınıf"
+        },
+        {
+            "id": "6_Sinif",
+            "name": "6. Sınıf"
+        },
+        {
+            "id": "7_Sinif",
+            "name": "7. Sınıf"
+        },
+        {
+            "id": "8_Sinif",
+            "name": "8. Sınıf"
+        }
+    ]
+}

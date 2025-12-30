@@ -1,0 +1,1252 @@
+[
+  {
+    "dayOfYear": 1,
+    "title": "Yılın İlk Günü",
+    "fact": "Dünya, Güneş etrafındaki turunu tam 365 gün 6 saatte tamamlar. Bu 6 saatlik farklar birikerek 4 yılda bir 'Artık Yıl'ı (29 Şubat) oluşturur."
+  },
+  {
+    "dayOfYear": 2,
+    "title": "Beynimizin Gücü",
+    "fact": "İnsan beyni, dünyadaki tüm telefonların toplamından daha fazla elektrik sinyali üretir. Uyanıkken bir ampulü yakacak kadar enerji harcar!"
+  },
+  {
+    "dayOfYear": 3,
+    "title": "Işık Hızı",
+    "fact": "Işık o kadar hızlıdır ki (300.000 km/s), parmağını şıklatana kadar Dünya'nın etrafını 7 kez dolaşabilir."
+  },
+  {
+    "dayOfYear": 4,
+    "title": "Dinozor Suyu",
+    "fact": "Dünyadaki su miktarı hiç değişmez. Şu an içtiğin suyun bir kısmı, milyonlarca yıl önce bir dinozorun içtiği su olabilir!"
+  },
+  {
+    "dayOfYear": 5,
+    "title": "Kalp Atışı",
+    "fact": "Kalbin bir gün içinde yaklaşık 100.000 kez atar. Kendi yumruğun büyüklüğündedir ama vücudundaki kanı kilometrelerce uzağa pompalar."
+  },
+  {
+    "dayOfYear": 6,
+    "title": "İki Kıtalı Ülke",
+    "fact": "Türkiye, toprakları hem Avrupa hem de Asya kıtasında bulunan nadir ülkelerdendir. İstanbul Boğazı bu iki kıtayı birbirine bağlar."
+  },
+  {
+    "dayOfYear": 7,
+    "title": "Atatürk ve Kitaplar",
+    "fact": "Mustafa Kemal Atatürk tam bir kitap kurduydu. Hayatı boyunca savaş cephelerinde bile okumayı bırakmamış, yaklaşık 4.000 kitap okumuştur."
+  },
+  {
+    "dayOfYear": 8,
+    "title": "Ağaçların Nefesi",
+    "fact": "Ağaçlar bizim tam tersimize işler; kirli havayı (karbondioksit) alıp bize temiz hava (oksijen) verirler. Bir ağaç 4 kişilik ailenin oksijenini sağlar."
+  },
+  {
+    "dayOfYear": 9,
+    "title": "Doğanın Matematiği",
+    "fact": "Ayçiçeğinin tohumlarına veya bir salyangoza baktığında Fibonacci dizisini (1, 1, 2, 3, 5...) görebilirsin. Doğa matematikle konuşur!"
+  },
+  {
+    "dayOfYear": 10,
+    "title": "Gök Gürültüsü",
+    "fact": "Şimşek çaktığını görürüz ama sesini sonra duyarız. Çünkü ışık sesten çok daha hızlıdır. Aradaki saniyeyi sayarak fırtınanın ne kadar uzakta olduğunu bulabilirsin."
+  },
+  {
+    "dayOfYear": 11,
+    "title": "Kar Taneleri",
+    "fact": "Milyarlarca kar tanesi yağsa da hiçbiri birbirinin aynısı değildir. Her biri gökyüzünden inen eşsiz bir sanat eseridir."
+  },
+  {
+    "dayOfYear": 12,
+    "title": "Zürafanın Dili",
+    "fact": "Bir zürafanın dili yaklaşık 50 cm uzunluğundadır ve mavidir! O kadar uzundur ki kulaklarını bile kendi diliyle temizleyebilir."
+  },
+  {
+    "dayOfYear": 13,
+    "title": "Tarihin Başlangıcı",
+    "fact": "Şanlıurfa'daki Göbeklitepe, Mısır Piramitlerinden bile 7.000 yıl daha eskidir. İnsanlık tarihinin bilinen en eski tapınağıdır."
+  },
+  {
+    "dayOfYear": 14,
+    "title": "Üç Kalpli Ahtapot",
+    "fact": "Ahtapotların tam 3 tane kalbi vardır! Ayrıca kanları kırmızı değil, mavidir."
+  },
+  {
+    "dayOfYear": 15,
+    "title": "Telefonun İcadı",
+    "fact": "Graham Bell telefonu icat ettiğinde ilk sözleri 'Bay Watson, buraya gelin, sizi görmek istiyorum' olmuştur."
+  },
+  {
+    "dayOfYear": 16,
+    "title": "Dünyanın Akciğeri",
+    "fact": "Amazon Yağmur Ormanları, dünyadaki oksijenin %20'sini tek başına üretir. Dünyanın nefes almasını sağlayan dev bir ormandır."
+  },
+  {
+    "dayOfYear": 17,
+    "title": "Dev Gezegen Jüpiter",
+    "fact": "Jüpiter o kadar büyüktür ki, içine tam 1.300 tane Dünya sığabilir. Güneş sisteminin en büyük gezegenidir."
+  },
+  {
+    "dayOfYear": 18,
+    "title": "Bukalemun Gözleri",
+    "fact": "Bukalemunlar bir gözüyle öne bakarken diğer gözüyle arkayı görebilirler. Gözleri birbirinden bağımsız hareket eder."
+  },
+  {
+    "dayOfYear": 19,
+    "title": "İstiklal Marşı",
+    "fact": "Mehmet Akif Ersoy, İstiklal Marşı'nı yazdıktan sonra verilen para ödülünü kabul etmemiş, kahraman ordumuza hediye etmiştir."
+  },
+  {
+    "dayOfYear": 20,
+    "title": "DNA Uzunluğu",
+    "fact": "Vücudundaki tüm DNA ipliklerini uca ekleseydin, Güneş'e gidip tam 600 kez geri dönebilirdin!"
+  },
+  {
+    "dayOfYear": 21,
+    "title": "Süper Karıncalar",
+    "fact": "Karıncalar kendi ağırlıklarının 50 katını kaldırabilirler. Bu, bir insanın dişleriyle bir kamyonu kaldırması gibidir!"
+  },
+  {
+    "dayOfYear": 22,
+    "title": "Van Gölü'nün Sırrı",
+    "fact": "Van Gölü'nün suyu sodalıdır. Bu yüzden içinde sadece 'İnci Kefali' adı verilen ve dünyada başka yerde olmayan bir balık yaşar."
+  },
+  {
+    "dayOfYear": 23,
+    "title": "Uzayan Eyfel Kulesi",
+    "fact": "Demir sıcakta genleştiği için Eyfel Kulesi yaz aylarında yaklaşık 15 cm uzar!"
+  },
+  {
+    "dayOfYear": 24,
+    "title": "Bozulmayan Yiyecek",
+    "fact": "Bal, dünyada asla bozulmayan tek yiyecektir. Mısır mezarlarında bulunan 3000 yıllık bal hala yenebilir durumdaydı."
+  },
+  {
+    "dayOfYear": 25,
+    "title": "Uyumayan Beyin",
+    "fact": "Yunuslar uyurken beyinlerinin sadece yarısını kapatırlar. Diğer yarısı uyanık kalır ki nefes almayı unutmasınlar."
+  },
+  {
+    "dayOfYear": 26,
+    "title": "İlk Bilgisayarcı",
+    "fact": "Tarihteki ilk bilgisayar programcısı bir kadındır: Ada Lovelace. 1800'lü yıllarda yaşamış ve bugünkü kodlamanın temelini atmıştır."
+  },
+  {
+    "dayOfYear": 27,
+    "title": "Venüs'ün Tuhaflığı",
+    "fact": "Venüs gezegeni kendi etrafında o kadar yavaş döner ki, Venüs'te 1 gün, Dünya'daki 1 yıldan daha uzundur!"
+  },
+  {
+    "dayOfYear": 28,
+    "title": "Geri Gidemeyenler",
+    "fact": "Kangurular büyük ayakları ve kuyruk yapıları nedeniyle geri geri yürüyemezler. Hep ileri gitmek zorundalar!"
+  },
+  {
+    "dayOfYear": 29,
+    "title": "Mimar Sinan",
+    "fact": "Büyük usta Mimar Sinan, 'Ustalık Eserim' dediği muhteşem Selimiye Camii'ni yaptığında tam 80 yaşındaydı."
+  },
+  {
+    "dayOfYear": 30,
+    "title": "Bulutların Ağırlığı",
+    "fact": "Pamuk gibi hafif görünen beyaz bir bulut kümesi aslında yaklaşık 100 fil ağırlığındadır (500 ton)!"
+  },
+  {
+    "dayOfYear": 31,
+    "title": "Ayakla Tat Almak",
+    "fact": "Kelebekler tat alma duyularını ayaklarıyla kullanırlar. Bir çiçeğin üzerine konduklarında ayaklarıyla tadına bakarlar."
+  },
+  {
+    "dayOfYear": 32,
+    "title": "Dünya'nın İçi",
+    "fact": "Dünya'nın çekirdeği (merkezi) o kadar sıcaktır ki, Güneş'in yüzeyi ile neredeyse aynı sıcaklıktadır (yaklaşık 6.000 derece)."
+  },
+  {
+    "dayOfYear": 33,
+    "title": "Kutup Farkı",
+    "fact": "Penguenler sadece Güney Yarım Küre'de, Kutup Ayıları ise sadece Kuzey Yarım Küre'de yaşar. Asla karşılaşmazlar!"
+  },
+  {
+    "dayOfYear": 34,
+    "title": "İlk Uçan Türk",
+    "fact": "Hezarfen Ahmed Çelebi, 17. yüzyılda kendi yaptığı kanatlarla Galata Kulesi'nden Üsküdar'a kadar uçmayı başarmıştır."
+  },
+  {
+    "dayOfYear": 35,
+    "title": "Fedakar Babalar",
+    "fact": "Denizatı, dünyada erkeklerin hamile kaldığı tek canlı türüdür. Yavruları erkek denizatı kesesinde taşır."
+  },
+  {
+    "dayOfYear": 36,
+    "title": "Gülümse!",
+    "fact": "Gülümsemek için 17 kasımızı, kaş çatmak için ise 43 kasımızı kullanırız. Yani gülümsemek fiziksel olarak daha kolaydır!"
+  },
+  {
+    "dayOfYear": 37,
+    "title": "Satürn'ün Halkaları",
+    "fact": "Satürn'ün halkaları uzaktan bir yol gibi görünse de aslında milyonlarca buz ve kaya parçasından oluşur."
+  },
+  {
+    "dayOfYear": 38,
+    "title": "Uzun Duvar",
+    "fact": "Çin Seddi o kadar uzundur ki (21.000 km), bu duvarla Türkiye'nin çevresini yaklaşık 8 kez sarabilirdiniz."
+  },
+  {
+    "dayOfYear": 39,
+    "title": "Radyasyonlu Meyve",
+    "fact": "Muzlar potasyum içerdiği için doğal olarak çok az miktarda radyasyon yayar. Ama zarar vermesi için milyonlarca yemen gerekir!"
+  },
+  {
+    "dayOfYear": 40,
+    "title": "Peri Bacaları",
+    "fact": "Kapadokya'daki Peri Bacaları, yanardağlardan püsküren lavların rüzgar ve yağmurla binlerce yılda aşınmasıyla oluşmuştur."
+  },
+  {
+    "dayOfYear": 41,
+    "title": "Sıcak Su Donar mı?",
+    "fact": "İlginç bir fizik kuralı (Mpemba Etkisi): Belirli koşullarda sıcak su, soğuk sudan daha hızlı donarak buza dönüşür."
+  },
+  {
+    "dayOfYear": 42,
+    "title": "Neden Pembe?",
+    "fact": "Flamingolar aslında gri doğarlar. Yedikleri karides ve yosunlardaki pigmentler yüzünden zamanla pembeleşirler."
+  },
+  {
+    "dayOfYear": 43,
+    "title": "Sessiz Uzay",
+    "fact": "Uzayda hava olmadığı için ses dalgaları yayılamaz. Bu yüzden uzayda ne kadar bağırırsan bağır kimse seni duyamaz."
+  },
+  {
+    "dayOfYear": 44,
+    "title": "Troya Atı",
+    "fact": "Efsaneye göre Çanakkale'deki savaşta askerler, dev bir tahta atın içine saklanarak kaleye gizlice girmişlerdir."
+  },
+  {
+    "dayOfYear": 45,
+    "title": "Zeytin Ağacı",
+    "fact": "Zeytin ağaçları çok dayanıklıdır ve 2.000 yıla kadar yaşayabilirler. Bu yüzden onlara 'Ölmez Ağaç' denir."
+  },
+  {
+    "dayOfYear": 46,
+    "title": "Kaşsız Tablo",
+    "fact": "Dünyanın en ünlü tablosu Mona Lisa'nın kaşları yoktur. O dönemde kaşları tıraş etmek modaydı!"
+  },
+  {
+    "dayOfYear": 47,
+    "title": "Koala İzi",
+    "fact": "Koalaların parmak izleri insanlarınkine o kadar benzer ki, mikroskop altında bile ayırt etmek çok zordur."
+  },
+  {
+    "dayOfYear": 48,
+    "title": "Beyaz Cennet",
+    "fact": "Denizli'deki Pamukkale, sıcak suların içindeki kirecin donmasıyla oluşmuş, dünyada eşi benzeri olmayan beyaz bir dağdır."
+  },
+  {
+    "dayOfYear": 49,
+    "title": "Google İsmi",
+    "fact": "Google ismi, matematikte 1 ve yanına 100 tane sıfırın gelmesiyle oluşan devasa 'Googol' sayısından gelmektedir."
+  },
+  {
+    "dayOfYear": 50,
+    "title": "Diş Rekortmeni",
+    "fact": "Köpekbalıkları hayatları boyunca 30.000'den fazla diş çıkarabilirler. Düşen dişin yerine hemen arkadan yenisi gelir!"
+  },
+  {
+    "dayOfYear": 51,
+    "title": "En Hızlı Kuş",
+    "fact": "Gökdoğan kuşu dalışa geçtiğinde saatte 389 km hıza ulaşabilir. Bu bir Formula 1 arabasından bile daha hızlıdır!"
+  },
+  {
+    "dayOfYear": 52,
+    "title": "Dans Eden Arılar",
+    "fact": "Bal arıları, güzel bir çiçek bulduklarında kovana dönüp 'dans ederek' diğer arılara çiçeğin yönünü ve uzaklığını anlatırlar."
+  },
+  {
+    "dayOfYear": 53,
+    "title": "Türk Kahvesi",
+    "fact": "Türk kahvesi, dünyada telvesiyle (tortusuyla) birlikte ikram edilen tek kahve türüdür. UNESCO kültür mirası listesindedir."
+  },
+  {
+    "dayOfYear": 54,
+    "title": "Uzayda Uzamak",
+    "fact": "Uzayda yerçekimi omurgamıza baskı yapmadığı için astronotlar uzay görevindeyken yaklaşık 5 cm uzarlar!"
+  },
+  {
+    "dayOfYear": 55,
+    "title": "Timsah Dili",
+    "fact": "Timsahlar dillerini dışarı çıkaramazlar çünkü dilleri ağız tabanına yapışıktır. Yani bir timsah size dil uzatamaz."
+  },
+  {
+    "dayOfYear": 56,
+    "title": "Nasreddin Hoca",
+    "fact": "Mizah ustamız Nasreddin Hoca, fıkralarıyla sadece güldürmez; aynı zamanda düşündürür. Eşeğe ters binmesi, geçmişe değil geleceğe bakmayı simgeler."
+  },
+  {
+    "dayOfYear": 57,
+    "title": "Güneş Postası",
+    "fact": "Güneş'ten çıkan bir ışık huzmesi Dünya'ya yaklaşık 8 dakikada ulaşır. Güneş şu an sönse, bunu ancak 8 dakika sonra fark ederiz!"
+  },
+  {
+    "dayOfYear": 58,
+    "title": "Deniz Altı İnterneti",
+    "fact": "Kullandığımız internetin büyük kısmı uydulardan değil, okyanusların dibine döşenen saç teli kalınlığındaki fiber optik kablolardan gelir."
+  },
+  {
+    "dayOfYear": 59,
+    "title": "Çiftçi Dostu Böcek",
+    "fact": "Bir uğur böceği hayatı boyunca yaklaşık 5.000 tane zararlı bitki bitini yiyerek bitkileri korur. Gerçek bir kahramandır!"
+  },
+  {
+    "dayOfYear": 60,
+    "title": "Kardeş Taşlar",
+    "fact": "Çok değerli elmas ile kömür aslında aynı maddeden (karbon) yapılmıştır. Elmas, kömürün çok yüksek basınç altında sıkışmış halidir."
+  },
+  {
+    "dayOfYear": 61,
+    "title": "Dev Kalp",
+    "fact": "Mavi balinalar dünyanın en büyük hayvanlarıdır. Kalpleri o kadar büyüktür ki, bir insan atardamarlarının içinde yüzebilir!"
+  },
+  {
+    "dayOfYear": 62,
+    "title": "Piri Reis Haritası",
+    "fact": "Piri Reis, 500 yıl önce çizdiği dünya haritasında Amerika kıtasını ve Antarktika dağlarını şaşırtıcı bir doğrulukla göstermiştir."
+  },
+  {
+    "dayOfYear": 63,
+    "title": "Acısız Beyin",
+    "fact": "Beynimiz vücudumuzdaki tüm acıyı hissetmemizi sağlar ama kendisinin acı reseptörleri yoktur. Yani beyin acı hissetmez."
+  },
+  {
+    "dayOfYear": 64,
+    "title": "Keloğlan",
+    "fact": "Masal kahramanımız Keloğlan, fiziksel gücüyle değil; zekası, kurnazlığı ve hazırcevaplığıyla devleri ve kötüleri yener."
+  },
+  {
+    "dayOfYear": 65,
+    "title": "Büyük Gözlü Kuş",
+    "fact": "Devekuşunun gözü beyninden daha büyüktür. Ayrıca dünyada en hızlı koşan kuş türüdür."
+  },
+  {
+    "dayOfYear": 66,
+    "title": "Tuz Gölü",
+    "fact": "Türkiye'nin tuz ihtiyacının büyük kısmı Tuz Gölü'nden karşılanır. Yazın su buharlaşınca gölün yüzeyinde 30 cm kalınlığında tuz tabakası oluşur."
+  },
+  {
+    "dayOfYear": 67,
+    "title": "Sonsuz Lego",
+    "fact": "Sadece altı tane 2x4'lük LEGO parçasıyla tam 915 milyon farklı kombinasyon yapabilirsiniz. İhtimal neredeyse sınırsızdır!"
+  },
+  {
+    "dayOfYear": 68,
+    "title": "Vücut Misafirleri",
+    "fact": "Vücudumuzdaki bakteri sayısı, vücudumuzdaki hücre sayısından fazladır. Ama korkma, bunların çoğu sağlığımız için yararlıdır."
+  },
+  {
+    "dayOfYear": 69,
+    "title": "Kaçan Ay",
+    "fact": "Ay, her yıl Dünya'dan yaklaşık 3.8 cm uzaklaşmaktadır. Milyonlarca yıl sonra Ay gökyüzünde çok daha küçük görünecek."
+  },
+  {
+    "dayOfYear": 70,
+    "title": "Olimpiyat Ödülü",
+    "fact": "Eski çağlarda Olimpiyat şampiyonlarına madalya değil, zeytin dalından yapılmış bir taç verilirdi."
+  },
+  {
+    "dayOfYear": 71,
+    "title": "Beyinsiz Denizyıldızı",
+    "fact": "Denizyıldızlarının beyni yoktur. Kollarıyla çevrelerini hissederler ve bir kollarını kaybederlerse yenisini çıkarabilirler."
+  },
+  {
+    "dayOfYear": 72,
+    "title": "Aslanlı Yol",
+    "fact": "Anıtkabir'deki Aslanlı Yol'da taşların arası bilerek boşluklu bırakılmıştır. Bu, ziyaretçilerin yere bakarak yürümesini ve Ata'nın huzuruna saygıyla eğilerek çıkmasını sağlar."
+  },
+  {
+    "dayOfYear": 73,
+    "title": "En Hızlı Kas",
+    "fact": "Vücudumuzdaki en hızlı kas göz kapağı kasımızdır. 'Göz açıp kapayıncaya kadar' sözü buradan gelir, saniyenin yüzde biri süresinde çalışır."
+  },
+  {
+    "dayOfYear": 74,
+    "title": "Kanka İnekler",
+    "fact": "İneklerin de 'en iyi arkadaşları' vardır. Sürülerinde sevdikleri arkadaşlarından ayrıldıklarında stres yaşarlar."
+  },
+  {
+    "dayOfYear": 75,
+    "title": "En Yüksek Dağ",
+    "fact": "Everest en yüksek dağdır ama tabanından zirvesine ölçülürse Hawaii'deki Mauna Kea dağı daha uzundur (büyük kısmı okyanus altındadır)."
+  },
+  {
+    "dayOfYear": 76,
+    "title": "Meyve mi Sebze mi?",
+    "fact": "Bilimsel olarak domates, salatalık ve biber aslında birer meyvedir. Çünkü çekirdekleri vardır ve çiçekten ürerler."
+  },
+  {
+    "dayOfYear": 77,
+    "title": "Yerebatan Sarnıcı",
+    "fact": "İstanbul'daki Yerebatan Sarnıcı'nın içinde, suyu izleyenleri taşa çevirdiğine inanılan ters durmuş iki Medusa başı heykeli bulunur."
+  },
+  {
+    "dayOfYear": 78,
+    "title": "Kutup Ayısı Rengi",
+    "fact": "Kutup ayılarının derisi aslında siyahtır! Tüyleri ise beyaz değil şeffaftır, ışığı yansıttığı için beyaz görünürler."
+  },
+  {
+    "dayOfYear": 79,
+    "title": "Karagöz ve Hacivat",
+    "fact": "Geleneksel gölge oyunumuzun kahramanları Karagöz halkı temsil eder ve dobradır; Hacivat ise eğitimli kesimi temsil eder ve süslü konuşur."
+  },
+  {
+    "dayOfYear": 80,
+    "title": "Kaybolan Kemikler",
+    "fact": "Bebekken yaklaşık 300 kemiğimiz varken, büyüdükçe bazıları birleşir ve yetişkin olduğumuzda 206 kemiğimiz kalır."
+  },
+  {
+    "dayOfYear": 81,
+    "title": "Sıcak Şimşek",
+    "fact": "Bir şimşek çaktığında havayı Güneş'in yüzeyinden 5 kat daha fazla ısıtır. Bu ani ısınma gök gürültüsünü oluşturur."
+  },
+  {
+    "dayOfYear": 82,
+    "title": "Kedi Dili",
+    "fact": "Yetişkin kediler birbirlerine neredeyse hiç miyavlamazlar. Miyavlamayı sadece insanlarla iletişim kurmak için kullanırlar."
+  },
+  {
+    "dayOfYear": 83,
+    "title": "Çay Severler",
+    "fact": "Dünyada kişi başına en çok çay tüketen ülke Türkiye'dir. Çay, Türk kültüründe dostluğun ve misafirperverliğin sembolüdür."
+  },
+  {
+    "dayOfYear": 84,
+    "title": "Altın Madalya",
+    "fact": "Olimpiyatlarda verilen altın madalyalar aslında saf altın değildir. Çoğunluğu gümüştür, sadece üzeri altınla kaplanır."
+  },
+  {
+    "dayOfYear": 85,
+    "title": "Ahtapot Mürekkebi",
+    "fact": "Ahtapotlar tehlike anında suya koyu renkli bir mürekkep sıkarak suyu bulandırır ve düşmanlarını şaşırtıp kaçarlar."
+  },
+  {
+    "dayOfYear": 86,
+    "title": "Tat Alma Ömrü",
+    "fact": "Dilimizdeki tat tomurcukları yaklaşık 10 günde bir yenilenir. Bu yüzden yediğimiz şeylerin tadını hep taze alırız."
+  },
+  {
+    "dayOfYear": 87,
+    "title": "Kağıt Para",
+    "fact": "Kağıt paralar aslında kağıttan değil, pamuk ve keten karışımından yapılır. Bu yüzden çamaşır makinesinde yıkansa bile kolayca dağılmaz."
+  },
+  {
+    "dayOfYear": 88,
+    "title": "Tembel Hayvan",
+    "fact": "Tembel hayvanlar o kadar yavaş hareket ederler ki, kürklerinin üzerinde yosunlar büyür. Bu yosunlar onları ormanda kamufle eder."
+  },
+  {
+    "dayOfYear": 89,
+    "title": "Gül Bahçesi",
+    "fact": "Dünya gül yağı üretiminin büyük bir kısmı Türkiye'de, Isparta şehrinde yapılır. Kozmetik sanayinin kalbi burada atar."
+  },
+  {
+    "dayOfYear": 90,
+    "title": "Süper Kamera Göz",
+    "fact": "Eğer insan gözü bir dijital kamera olsaydı, tam 576 megapiksel çözünürlüğünde olurdu. En iyi telefon kamerasından bile kat kat iyidir!"
+  },
+  {
+    "dayOfYear": 91,
+    "title": "Nemrut Dağı",
+    "fact": "Adıyaman'daki Nemrut Dağı'nın zirvesinde devasa heykeller vardır. Burası, dünyada güneşin doğuşunun ve batışının en güzel izlendiği yerlerden biridir."
+  },
+  {
+    "dayOfYear": 92,
+    "title": "Dağda Yemek",
+    "fact": "Yüksek dağlarda hava basıncı azaldığı için su 100 dereceden daha düşük sıcaklıkta kaynar. Bu yüzden dağcılar yemeklerini daha uzun sürede pişirir."
+  },
+  {
+    "dayOfYear": 93,
+    "title": "Yunus İsimleri",
+    "fact": "Yunusların birbirlerine seslenmek için kullandıkları özel ıslık sesleri vardır. Yani her yunusun kendine ait bir 'ismi' vardır."
+  },
+  {
+    "dayOfYear": 94,
+    "title": "Eksik Harf",
+    "fact": "Periyodik tabloda (elementler tablosu) 'J' harfi hiç bulunmaz. İngiliz alfabesindeki diğer tüm harfler element isimlerinde geçer."
+  },
+  {
+    "dayOfYear": 95,
+    "title": "Fındık Diyarı",
+    "fact": "Dünyadaki fındıkların yaklaşık %70'ini Türkiye üretir. Yediğin çikolatalı fındık kremalarının çoğu Karadeniz fındığından yapılır."
+  },
+  {
+    "dayOfYear": 96,
+    "title": "Sivas Kangalı",
+    "fact": "Sivas Kangal köpekleri, kurtlarla dövüşebilecek kadar güçlü ama bebekleri koruyacak kadar da merhametli ve sadık köpeklerdir."
+  },
+  {
+    "dayOfYear": 97,
+    "title": "Göz Açık Hapşırmak",
+    "fact": "Hapşırırken gözlerini açık tutman imkansızdır. Vücudun, gözlerini basınçtan ve mikroplardan korumak için otomatik olarak kapatır."
+  },
+  {
+    "dayOfYear": 98,
+    "title": "Batmayan Deniz",
+    "fact": "Ölü Deniz o kadar tuzludur ki, içine girdiğinde yüzme bilmesen bile batmazsın, suyun üzerinde mantar gibi kalırsın."
+  },
+  {
+    "dayOfYear": 99,
+    "title": "Kırkayak",
+    "fact": "Kırkayakların aslında tam 40 ayağı yoktur. Türe göre değişir ama ayak sayıları her zaman tek sayıdadır (örneğin 39 çift gibi)."
+  },
+  {
+    "dayOfYear": 100,
+    "title": "Işık Kirliliği",
+    "fact": "Şehir ışıkları yüzünden artık gökyüzündeki yıldızların çoğunu göremiyoruz. Elektriğin olmadığı köylerde Samanyolu'nu çıplak gözle görebilirsin."
+  },
+  {
+    "dayOfYear": 101,
+    "title": "Bambu Hızı",
+    "fact": "Bambular o kadar hızlı büyür ki, bazı türleri günde 90 santimetre uzayabilir. Yanında beklersen büyüdüğünü gözünle görebilirsin!"
+  },
+  {
+    "dayOfYear": 102,
+    "title": "Baykuş Boynu",
+    "fact": "Baykuşlar gözlerini yuvalarında hareket ettiremezler, bu yüzden etrafı görmek için kafalarını neredeyse tam tur (270 derece) çevirebilirler."
+  },
+  {
+    "dayOfYear": 103,
+    "title": "Kaşıkçı Elması",
+    "fact": "Topkapı Sarayı'ndaki ünlü Kaşıkçı Elması, 86 karattır ve çevresinde 49 tane çift sıra pırlanta vardır. Dünyanın en değerli hazinelerindendir."
+  },
+  {
+    "dayOfYear": 104,
+    "title": "Uzayın Kokusu",
+    "fact": "Astronotlara göre uzay yürüyüşünden sonra kıyafetleri 'yanık et', 'sıcak metal' veya 'kaynak dumanı' gibi kokmaktadır."
+  },
+  {
+    "dayOfYear": 105,
+    "title": "Kırmızı Ter",
+    "fact": "Su aygırları (hipopotamlar) güneşten korunmak ve mikropları öldürmek için kırmızı renkte, yağlı bir sıvı salgılarlar. Bu onların doğal güneş kremidir."
+  },
+  {
+    "dayOfYear": 106,
+    "title": "Zeugma Mozaiği",
+    "fact": "Gaziantep'teki Zeugma Müzesi'ndeki ünlü 'Çingene Kızı' mozaiği, odanın neresine giderseniz gidin gözleriyle sizi takip ediyormuş gibi görünür."
+  },
+  {
+    "dayOfYear": 107,
+    "title": "Dört Ayak Üstüne",
+    "fact": "Kedilerin köprücük kemikleri yoktur ve omurgaları çok esnektir. Bu sayede havada dönüp neredeyse her zaman dört ayak üstüne düşerler."
+  },
+  {
+    "dayOfYear": 108,
+    "title": "Aspendos Tiyatrosu",
+    "fact": "Antalya'daki antik Aspendos tiyatrosunun akustiği o kadar iyidir ki, sahnedeki bir fısıltı en üst basamaktaki seyirci tarafından bile duyulabilir."
+  },
+  {
+    "dayOfYear": 109,
+    "title": "Kemiksiz Balık",
+    "fact": "Köpekbalıklarının vücudunda hiç kemik yoktur. İskeletleri, kulaklarımızdaki gibi esnek kıkırdaktan oluşur."
+  },
+  {
+    "dayOfYear": 110,
+    "title": "Yıldırım ve Cam",
+    "fact": "Yıldırım kumsala düştüğünde, oluşan aşırı sıcaklık kum tanelerini eriterek doğal cam borularına dönüştürebilir."
+  },
+  {
+    "dayOfYear": 111,
+    "title": "Tersten Okunuş",
+    "fact": "Tersten okunduğunda da aynı olan kelime veya cümlelere 'Palindrom' denir. Örneğin: 'Ey Edip Adana'da pide ye' cümlesi tersten de aynıdır!"
+  },
+  {
+    "dayOfYear": 112,
+    "title": "Ay ve Yıldız",
+    "fact": "Bayrağımızdaki hilal ve yıldız sembolünün, I. Kosova Savaşı'ndan sonra yerdeki kan birikintisine yansıyan Ay ve Jüpiter yıldızından geldiği söylenir."
+  },
+  {
+    "dayOfYear": 113,
+    "title": "Geri Uçan Kuş",
+    "fact": "Sinek kuşları (kolibri), dünyada geriye doğru uçabilen tek kuş türüdür. Kanatlarını saniyede 80 kez çırpabilirler."
+  },
+  {
+    "dayOfYear": 114,
+    "title": "Etobur Bitki",
+    "fact": "Venüs sinek kapanı bitkisi, yapraklarının arasına konan böcekleri saniyenin onda biri hızında kapanarak yakalar ve sindirir."
+  },
+  {
+    "dayOfYear": 115,
+    "title": "Piramit İşçileri",
+    "fact": "Mısır Piramitlerini köleler değil, maaş alan, et yiyen ve iyi bakılan uzman işçiler inşa etmiştir. Hatta grev yapma hakları bile vardı."
+  },
+  {
+    "dayOfYear": 116,
+    "title": "İçimizdeki Altın",
+    "fact": "İnsan vücudunda çok az miktarda (yaklaşık 0.2 miligram) altın bulunur. Bu altının çoğu kanımızda dolaşır."
+  },
+  {
+    "dayOfYear": 117,
+    "title": "Yağmur Kokusu",
+    "fact": "Yağmur yağdıktan sonra toprakta oluşan o güzel kokunun bilimsel bir adı vardır: 'Petrikor'. Bu koku bakteriler ve bitki yağlarından gelir."
+  },
+  {
+    "dayOfYear": 118,
+    "title": "Üç İmparatorluk",
+    "fact": "İstanbul tarihi boyunca Roma, Bizans ve Osmanlı olmak üzere üç büyük imparatorluğa başkentlik yapmış dünyadaki tek şehirdir."
+  },
+  {
+    "dayOfYear": 119,
+    "title": "Tersi Çilek",
+    "fact": "Çilek, çekirdekleri meyvenin içinde değil, dışında olan tek meyvedir. Bir çileğin üzerinde ortalama 200 tane çekirdek vardır."
+  },
+  {
+    "dayOfYear": 120,
+    "title": "Bulut Hızı",
+    "fact": "Gökyüzünde yavaşça süzülüyormuş gibi görünen yüksek bulutlar aslında saatte 160 km hızla (bir arabadan hızlı) hareket edebilirler."
+  },
+  {
+    "dayOfYear": 121,
+    "title": "Satranç",
+    "fact": "Bir satranç oyunundaki olası hamle sayısı, evrendeki atom sayısından daha fazladır. İhtimal neredeyse sonsuzdur!"
+  },
+  {
+    "dayOfYear": 122,
+    "title": "Lale Devri",
+    "fact": "Laleler Hollanda ile özdeşleşse de aslında Hollanda'ya Osmanlı zamanında Türkiye'den götürülmüştür. Ana vatanı Orta Asya ve Türkiye'dir."
+  },
+  {
+    "dayOfYear": 123,
+    "title": "Dev Dil",
+    "fact": "Bir mavi balinanın dili o kadar ağırdır ki, tek başına bir filin ağırlığına eşittir (yaklaşık 2.7 ton)."
+  },
+  {
+    "dayOfYear": 124,
+    "title": "Çikolata Para",
+    "fact": "Eski Aztek ve Maya uygarlıklarında kakao çekirdekleri o kadar değerliydi ki para birimi olarak kullanılırdı."
+  },
+  {
+    "dayOfYear": 125,
+    "title": "Zebra Rengi",
+    "fact": "Zebralar beyaz üzerine siyah çizgili değil, aslında siyah deri üzerine beyaz çizgili hayvanlardır. Anne karnında önce siyah oluşurlar."
+  },
+  {
+    "dayOfYear": 126,
+    "title": "Uzayda Ağlamak",
+    "fact": "Uzayda yerçekimi olmadığı için ağlarsanız gözyaşlarınız yüzünüzden aşağı akmaz. Gözünüzün etrafında bir su topu olarak birikir."
+  },
+  {
+    "dayOfYear": 127,
+    "title": "Arının Sonu",
+    "fact": "Bal arıları insanları soktuklarında iğneleri deriye takılı kalır. İğneyi çıkarmaya çalışırken iç organları zarar görür ve maalesef ölürler."
+  },
+  {
+    "dayOfYear": 128,
+    "title": "Van Kedisi",
+    "fact": "Van kedileri suyu seven ve yüzebilen nadir kedi türlerindendir. Genellikle bir gözleri mavi, diğer gözleri kehribar rengidir."
+  },
+  {
+    "dayOfYear": 129,
+    "title": "Uzay Patatesi",
+    "fact": "Patates, 1995 yılında uzay mekiğinde yetiştirilen ilk sebze olmuştur. Yani uzayda tarım patatesle başlamıştır."
+  },
+  {
+    "dayOfYear": 130,
+    "title": "En Eski Sakız",
+    "fact": "Arkeologlar Finlandiya'da 9.000 yıllık bir sakız buldular. O zamanlar insanlar sakızı ağaç reçinesinden yapıyorlardı."
+  },
+  {
+    "dayOfYear": 131,
+    "title": "Akciğersiz Hayvan",
+    "fact": "Karıncaların akciğerleri yoktur. Oksijen, vücutlarındaki minik deliklerden içeri girer ve tüm vücuda yayılır."
+  },
+  {
+    "dayOfYear": 132,
+    "title": "Sualtında Ses",
+    "fact": "Ses, suyun altında havadan 4 kat daha hızlı hareket eder. Bu yüzden balinalar okyanusun diğer ucundan birbirlerini duyabilirler."
+  },
+  {
+    "dayOfYear": 133,
+    "title": "Hızlı Tırnaklar",
+    "fact": "Baskın kullandığın elinin (sağlaksa sağ, solaksa sol) tırnakları diğer eline göre daha hızlı uzar. Ayrıca yazın tırnaklar kıştan hızlı uzar."
+  },
+  {
+    "dayOfYear": 134,
+    "title": "Derinkuyu",
+    "fact": "Kapadokya'daki Derinkuyu Yeraltı Şehri, yerin 85 metre altına kadar iner. Binlerce insan savaş zamanında burada saklanarak yaşardı."
+  },
+  {
+    "dayOfYear": 135,
+    "title": "Mide Çıkarmak",
+    "fact": "Denizyıldızları yemek yerken midelerini ağızlarından dışarı çıkarırlar, yemeği dışarıda sindirip mideyi tekrar içeri çekerler."
+  },
+  {
+    "dayOfYear": 136,
+    "title": "Rekor Hıçkırık",
+    "fact": "Charles Osborne adlı bir adamın hıçkırığı tam 68 yıl boyunca hiç durmamıştır. Hıçkırığı başladığında 1. Dünya Savaşı yeni bitmişti!"
+  },
+  {
+    "dayOfYear": 137,
+    "title": "Ağrı Dağı",
+    "fact": "Türkiye'nin en yüksek noktası olan Ağrı Dağı (5.137 metre), efsaneye göre Nuh'un Gemisi'nin karaya oturduğu yerdir."
+  },
+  {
+    "dayOfYear": 138,
+    "title": "Kağıt Geri Dönüşümü",
+    "fact": "Bir ton kağıdı geri dönüştürmek, 17 tane yetişkin ağacın kesilmesini önler. Eski defterlerini geri dönüşüm kutusuna atmayı unutma!"
+  },
+  {
+    "dayOfYear": 139,
+    "title": "Sivrisinek Dişi",
+    "fact": "O minicik sivrisineklerin ağzında tam 47 tane diş olduğunu biliyor muydun? Sadece mikroskopla görülebilirler."
+  },
+  {
+    "dayOfYear": 140,
+    "title": "Büyük Kırmızı Leke",
+    "fact": "Jüpiter'in üzerindeki 'Büyük Kırmızı Leke' aslında 300 yıldır devam eden devasa bir fırtınadır. Bu fırtına Dünya'dan bile büyüktür."
+  },
+  {
+    "dayOfYear": 141,
+    "title": "İnci Taneleri",
+    "fact": "İstiridyeler, içlerine kaçan kum tanesinden rahatsız olurlar. Kendilerini korumak için kumu sedefle kaplarlar ve böylece inci oluşur."
+  },
+  {
+    "dayOfYear": 142,
+    "title": "Baklava",
+    "fact": "İyi bir Gaziantep baklavası en az 40 kat yufkadan yapılır. Yufkalar o kadar incedir ki arkasından bakınca diğer taraf görünür."
+  },
+  {
+    "dayOfYear": 143,
+    "title": "Paslı Gezegen",
+    "fact": "Mars'ın kızıl görünmesinin sebebi yüzeyinin paslanmış demir tozuyla kaplı olmasıdır. Yani Mars aslında paslanmış bir gezegendir."
+  },
+  {
+    "dayOfYear": 144,
+    "title": "Evdeki Tozlar",
+    "fact": "Evdeki tozların büyük bir kısmı dışarıdan gelen kir değil, aslında insanların dökülen ölü deri hücreleridir."
+  },
+  {
+    "dayOfYear": 145,
+    "title": "Postacı Kuşlar",
+    "fact": "Güvercinler dünyanın manyetik alanını hissedebilirler. Bu sayede yüzlerce kilometre uzağa bırakılsalar bile evlerinin yolunu bulabilirler."
+  },
+  {
+    "dayOfYear": 146,
+    "title": "Uzay Tutması",
+    "fact": "Tıpkı araba tutması gibi astronotlar da uzaya ilk gittiklerinde yerçekimsiz ortam yüzünden mide bulantısı yaşarlar."
+  },
+  {
+    "dayOfYear": 147,
+    "title": "Canlı Pil",
+    "fact": "Elektrikli yılan balıkları, avlanmak veya korunmak için 600 voltluk elektrik üretebilirler. Bu bir atı bile devirebilir!"
+  },
+  {
+    "dayOfYear": 148,
+    "title": "Güneş Bir Yıldızdır",
+    "fact": "Güneş özel bir cisim değil, aslında orta büyüklükte bir yıldızdır. Bize çok yakın olduğu için diğer yıldızlardan büyük ve parlak görünür."
+  },
+  {
+    "dayOfYear": 149,
+    "title": "Boğaz Akıntısı",
+    "fact": "İstanbul Boğazı'nda su yüzeyde Karadeniz'den Marmara'ya akarken, dipte ise tam tersine Marmara'dan Karadeniz'e doğru akar."
+  },
+  {
+    "dayOfYear": 150,
+    "title": "Zürafa Uykusu",
+    "fact": "Zürafaların çok az uykuya ihtiyacı vardır. Günde toplamda sadece 30 dakika, o da 5'er dakikalık şekerlemeler halinde uyurlar."
+  },
+  {
+    "dayOfYear": 151,
+    "title": "Gezegen Halkaları",
+    "fact": "Sadece Satürn'ün değil; Jüpiter, Uranüs ve Neptün'ün de halkaları vardır. Ancak onlarınki daha sönük olduğu için zor görünür."
+  },
+  {
+    "dayOfYear": 152,
+    "title": "Damlataş Mağarası",
+    "fact": "Alanya'daki Damlataş Mağarası'nın havası astım hastalarına iyi gelir. Mağaranın iç sıcaklığı yaz-kış hep 22 derecedir."
+  },
+  {
+    "dayOfYear": 153,
+    "title": "Kanguru Yavrusu",
+    "fact": "Dev gibi bir kangurunun yavrusu doğduğunda sadece bir kuru fasulye tanesi büyüklüğündedir! Hemen annesinin kesesine tırmanır."
+  },
+  {
+    "dayOfYear": 154,
+    "title": "Altın Oran",
+    "fact": "Doğada, sanatta ve mimaride göze en hoş gelen matematiksel orana 'Altın Oran' denir. Mimar Sinan eserlerinde bunu sıkça kullanmıştır."
+  },
+  {
+    "dayOfYear": 155,
+    "title": "Plüton",
+    "fact": "Plüton eskiden gezegen sayılırdı, ancak 2006'da 'Cüce Gezegen' sınıfına alındı. İsmini yeraltı dünyasının tanrısından alır."
+  },
+  {
+    "dayOfYear": 156,
+    "title": "El Ele Uyuyanlar",
+    "fact": "Su samurları akıntıda sürüklenip birbirlerini kaybetmemek için uyurken el ele tutuşurlar. Çok tatlı değil mi?"
+  },
+  {
+    "dayOfYear": 157,
+    "title": "En Büyük Çöl",
+    "fact": "Dünyanın en büyük çölü sıcak kumsallar değil, buzla kaplı Antarktika'dır. Çünkü çöl demek, çok az yağış alan yer demektir."
+  },
+  {
+    "dayOfYear": 158,
+    "title": "Tsunami Hızı",
+    "fact": "Okyanusta oluşan dev dalgalar (tsunami), bir jet uçağı kadar hızlı (saatte 800 km) ilerleyebilir."
+  },
+  {
+    "dayOfYear": 159,
+    "title": "Sıfırın Mucidi",
+    "fact": "Matematikteki '0' (sıfır) rakamını ünlü İslam alimi Harezmi sistemleştirmiştir. O olmasaydı bugünkü bilgisayarlar çalışamazdı."
+  },
+  {
+    "dayOfYear": 160,
+    "title": "Köpek Burnu",
+    "fact": "Her köpeğin burun izi, tıpkı insanların parmak izi gibi eşsizdir. Dünyada birbirinin aynısı olan iki köpek burnu yoktur."
+  },
+  {
+    "dayOfYear": 161,
+    "title": "İskender Döner",
+    "fact": "Meşhur İskender Kebabı, 1800'lü yıllarda Bursa'da İskender Efendi tarafından, kuzu etini dikey çubuğa takarak icat edilmiştir."
+  },
+  {
+    "dayOfYear": 162,
+    "title": "Sulu Beyin",
+    "fact": "İnsan beyninin yaklaşık %75'i sudan oluşur. Bu yüzden susuz kaldığında başın ağrır ve dikkatin dağılır. Su içmeyi unutma!"
+  },
+  {
+    "dayOfYear": 163,
+    "title": "Kaplumbağa Evi",
+    "fact": "Çizgi filmlerin aksine kaplumbağalar kabuklarından çıkamazlar. Kabukları, omurgalarının ve göğüs kafeslerinin bir parçasıdır."
+  },
+  {
+    "dayOfYear": 164,
+    "title": "Paranın İcadı",
+    "fact": "Tarihte parayı ilk kullanan uygarlık, Anadolu'da (Manisa civarında) yaşamış olan Lidyalılar'dır."
+  },
+  {
+    "dayOfYear": 165,
+    "title": "Bulutsuz Yağmur",
+    "fact": "Bazen gökyüzünde hiç bulut yokken yağmur yağabilir. Rüzgar, yağmur damlalarını çok uzaklardaki bulutlardan taşıyabilir."
+  },
+  {
+    "dayOfYear": 166,
+    "title": "Göz Kırpma",
+    "fact": "Bilimsel araştırmalara göre kadınlar, erkeklerden iki kat daha fazla göz kırparlar."
+  },
+  {
+    "dayOfYear": 167,
+    "title": "Temizlikçi Çiçek",
+    "fact": "Ayçiçekleri topraktaki zehirli maddeleri ve radyasyonu emerek temizleyebilir. Doğanın elektrik süpürgesi gibidirler."
+  },
+  {
+    "dayOfYear": 168,
+    "title": "Sümela Manastırı",
+    "fact": "Trabzon'daki Sümela Manastırı, sarp bir kayalığın yamacına, yerden 300 metre yükseğe inşa edilmiştir. Bulutların içinde gibidir."
+  },
+  {
+    "dayOfYear": 169,
+    "title": "Işık Yılı",
+    "fact": "'Işık yılı' bir zaman ölçüsü değil, mesafe ölçüsüdür. Işığın bir yılda gittiği yolun uzunluğunu (yaklaşık 9.5 trilyon km) anlatır."
+  },
+  {
+    "dayOfYear": 170,
+    "title": "Süper Burun",
+    "fact": "Kutup ayıları, buzun bir metre altındaki fok balığının kokusunu bile alabilirler. Koku alma duyuları çok gelişmiştir."
+  },
+  {
+    "dayOfYear": 171,
+    "title": "Zehirli Domates?",
+    "fact": "Avrupalılar domatesle ilk tanıştıklarında rengi kırmızı olduğu için onu zehirli sanmışlar ve uzun süre sadece süs bitkisi olarak yetiştirmişlerdir."
+  },
+  {
+    "dayOfYear": 172,
+    "title": "Kule Boyası",
+    "fact": "Eyfel Kulesi paslanmasın diye her 7 yılda bir boyanır. Kullanılan boyanın ağırlığı 10 filin ağırlığına eşittir!"
+  },
+  {
+    "dayOfYear": 173,
+    "title": "Nem Nedir?",
+    "fact": "Yazın 'hava çok nemli' deriz. Nem, havanın içinde asılı duran görünmez su buharıdır."
+  },
+  {
+    "dayOfYear": 174,
+    "title": "Safranbolu Evleri",
+    "fact": "Karabük'teki tarihi Safranbolu evleri, birbirinin manzarasını ve güneşini kapatmayacak şekilde, komşuya saygı düşünülerek inşa edilmiştir."
+  },
+  {
+    "dayOfYear": 175,
+    "title": "Aynadaki Kim?",
+    "fact": "Yunuslar aynaya baktıklarında gördükleri yansımanın kendileri olduğunu anlayabilirler. Bunu yapabilen çok az hayvan vardır."
+  },
+  {
+    "dayOfYear": 176,
+    "title": "En Kısa Savaş",
+    "fact": "Tarihin en kısa savaşı İngiltere ile Zanzibar arasında yaşanmıştır. Savaş sadece 38 dakika sürmüştür!"
+  },
+  {
+    "dayOfYear": 177,
+    "title": "İlk Kalorifer",
+    "fact": "Ağrı'daki İshak Paşa Sarayı, dünyada ilk kez merkezi ısıtma (kalorifer) sisteminin kullanıldığı saraydır. Duvarların içinden sıcak su boruları geçer."
+  },
+  {
+    "dayOfYear": 178,
+    "title": "Hız Canavarı",
+    "fact": "Bir çita 0'dan 100 kilometre hıza sadece 3 saniyede çıkabilir. Bu, en pahalı spor arabalardan bile daha iyi bir performanstır."
+  },
+  {
+    "dayOfYear": 179,
+    "title": "Hapşırma Hızı",
+    "fact": "Hapşırdığımızda ağzımızdan çıkan hava saatte 160 km hıza ulaşabilir. Bu yüzden hapşırırken ağzımızı kapatmak çok önemlidir."
+  },
+  {
+    "dayOfYear": 180,
+    "title": "En Zehirli Hayvan",
+    "fact": "Güney Amerika'daki 'Zehirli Ok Kurbağası' o kadar zehirlidir ki, derisine dokunmak bile tehlikelidir. Parlak renkleri 'bana yaklaşma' uyarısıdır."
+  },
+  {
+    "dayOfYear": 181,
+    "title": "Her Yerde Mısır",
+    "fact": "Mısır bitkisi, Antarktika kıtası hariç dünyanın her yerinde yetişebilir."
+  },
+  {
+    "dayOfYear": 182,
+    "title": "Kedi Bıyıkları",
+    "fact": "Kedilerin bıyıkları süs değildir. Bir delikten geçip geçemeyeceklerini bıyıklarıyla ölçerler, bıyıkları sığıyorsa vücutları da sığar."
+  },
+  {
+    "dayOfYear": 183,
+    "title": "Türk Lokumu",
+    "fact": "Dünyada 'Turkish Delight' olarak bilinen lokum, eskiden boğazı rahatlatmak için ilaç niyetine de kullanılırdı."
+  },
+  {
+    "dayOfYear": 184,
+    "title": "Mavi Kanlılar",
+    "fact": "Yengeçlerin, ahtapotların ve karideslerin kanı mavidir. Çünkü kanlarında demir yerine bakır bulunur."
+  },
+  {
+    "dayOfYear": 185,
+    "title": "Yüzen Gezegen",
+    "fact": "Satürn devasa bir gezegen olsa da yoğunluğu sudan düşüktür. Yeterince büyük bir okyanus bulabilseydik, Satürn suda batmaz, yüzerdi!"
+  },
+  {
+    "dayOfYear": 186,
+    "title": "Çin Seddi Efsanesi",
+    "fact": "Çin Seddi'nin Ay'dan çıplak gözle görülebildiği bilgisi yanlıştır. Astronotlar, çok ince olduğu için uzaydan görünmediğini söylemiştir."
+  },
+  {
+    "dayOfYear": 187,
+    "title": "Ters Dönemeyenler",
+    "fact": "Uçaklar yerde (pistte) kendi motor güçleriyle geri geri gidemezler. O yüzden onları 'Push-Back' denilen küçük araçlar iter."
+  },
+  {
+    "dayOfYear": 188,
+    "title": "Ağacın Yaşı",
+    "fact": "Bir ağacın gövdesini kestiğinizde içindeki halkaları sayarak kaç yaşında olduğunu bulabilirsiniz. Her halka bir yılı temsil eder."
+  },
+  {
+    "dayOfYear": 189,
+    "title": "Tavşan ve Havuç",
+    "fact": "Çizgi filmlerin aksine tavşanlar havucu ana yemek olarak yememelidir. Havuçta çok şeker vardır, onlar için yeşillik ve saman daha sağlıklıdır."
+  },
+  {
+    "dayOfYear": 190,
+    "title": "Özel Bayrak Direği",
+    "fact": "Anıtkabir'deki 33 metrelik dev bayrak direği, tek parça çeliktir ve Avrupa'daki bir fabrikada sadece Anıtkabir için özel üretilmiştir."
+  },
+  {
+    "dayOfYear": 191,
+    "title": "Hızlı Tırnaklar",
+    "fact": "El tırnaklarımız, ayak tırnaklarımızdan yaklaşık 4 kat daha hızlı uzar. Bu yüzden ellerimizi daha sık kesmemiz gerekir."
+  },
+  {
+    "dayOfYear": 192,
+    "title": "Aydede'nin Yüzü",
+    "fact": "Ay'a baktığımızda gördüğümüz lekeler aslında meteorların çarpmasıyla oluşan dev kraterler ve donmuş lav düzlükleridir."
+  },
+  {
+    "dayOfYear": 193,
+    "title": "Dinozor Akrabası",
+    "fact": "Bugün yaşayan hayvanlar arasında T-Rex dinozorunun en yakın akrabası tavuklardır! Evet, o dev dinozor zamanla kuşa dönüşmüştür."
+  },
+  {
+    "dayOfYear": 194,
+    "title": "Yuvarlak Gökkuşağı",
+    "fact": "Yerden bakınca gökkuşağını yarım daire görürüz. Ama uçaktan bakarsan gökkuşağının aslında tam bir daire olduğunu görebilirsin!"
+  },
+  {
+    "dayOfYear": 195,
+    "title": "Galata Kulesi",
+    "fact": "İstanbul'un simgesi Galata Kulesi, 1348 yılında Cenevizliler tarafından limanı gözetlemek ve yangınları haber vermek için yapılmıştır."
+  },
+  {
+    "dayOfYear": 196,
+    "title": "Buz Neden Yüzer?",
+    "fact": "Maddeler donunca küçülür ama su donunca genişler! Bu sayede buz sudan hafif olur ve batmaz. Balıklar bu sayede buzun altında yaşayabilir."
+  },
+  {
+    "dayOfYear": 197,
+    "title": "Düşmeyen Asansör",
+    "fact": "Elisha Otis, asansör halatı kopsa bile kabini tutan bir fren sistemi icat etti. Bu sayede insanlar gökdelenlere güvenle çıkabildi."
+  },
+  {
+    "dayOfYear": 198,
+    "title": "Baykuş Meclisi",
+    "fact": "Bir grup baykuş bir araya geldiğinde bu gruba 'Parlamento' adı verilir. Çünkü baykuşlar bilgeliğin simgesidir."
+  },
+  {
+    "dayOfYear": 199,
+    "title": "Çay Diyarı",
+    "fact": "Türkiye'de çay denince akla Rize gelir. Rize'nin nemli ve yağışlı havası, dünyanın en kaliteli çaylarının yetişmesini sağlar."
+  },
+  {
+    "dayOfYear": 200,
+    "title": "Çelikten Sağlam",
+    "fact": "İnsan uyluk kemiği o kadar sağlamdır ki, aynı ağırlıktaki betondan veya çelikten daha fazla basınca dayanabilir."
+  },
+  {
+    "dayOfYear": 201,
+    "title": "Örümcek Ağı",
+    "fact": "Örümcek ağı aynı kalınlıktaki çelik bir telden 5 kat daha sağlamdır. Eğer kurşun kalem kalınlığında bir ağ olsaydı, uçan bir uçağı bile durdurabilirdi!"
+  },
+  {
+    "dayOfYear": 202,
+    "title": "Salda Gölü",
+    "fact": "Burdur'daki Salda Gölü, beyaz kumsalları ve turkuaz suyuyla 'Türkiye'nin Maldivleri' olarak bilinir. Yapısı Mars gezegeninin yüzeyine çok benzer."
+  },
+  {
+    "dayOfYear": 203,
+    "title": "Dokuz Beyinli",
+    "fact": "Ahtapotların sadece 3 kalbi değil, aynı zamanda 9 beyni vardır! Her bir kolunda birer mini beyin ve kafasında bir ana beyin bulunur."
+  },
+  {
+    "dayOfYear": 204,
+    "title": "Elmas Yağmuru",
+    "fact": "Jüpiter ve Satürn gezegenlerinde atmosfer basıncı o kadar yüksektir ki, bilim insanları gökyüzünden yağmur yerine elmas yağdığını düşünüyor."
+  },
+  {
+    "dayOfYear": 205,
+    "title": "Deri Değişimi",
+    "fact": "Yılanlar gibi insanlar da deri değiştirir. Her saat yaklaşık 600.000 deri hücremiz dökülür ve yenilenir. Bir yılda yaklaşık 4 kilo deri dökeriz."
+  },
+  {
+    "dayOfYear": 206,
+    "title": "Yeşil Heykel",
+    "fact": "Özgürlük Anıtı aslında bakır rengindeydi (kahverengi). Ancak bakır zamanla havayla temas edip paslandığı için bugünkü yeşil rengini aldı."
+  },
+  {
+    "dayOfYear": 207,
+    "title": "Dağcı Arılar",
+    "fact": "Bal arıları, dünyanın en yüksek dağı Everest'in zirvesinden (8.848 metre) bile daha yükseğe uçabilirler."
+  },
+  {
+    "dayOfYear": 208,
+    "title": "Efes Antik Kenti",
+    "fact": "İzmir'deki Efes Antik Kenti'nde, geceleri sokakları aydınlatan meşaleler vardı. Tarihte sokak aydınlatması yapılan ilk şehirlerden biridir."
+  },
+  {
+    "dayOfYear": 209,
+    "title": "Sindirimi Zor",
+    "fact": "Tembel hayvanların (Sloth) sindirim sistemi o kadar yavaştır ki, bir yemeği tamamen sindirmeleri bir ay sürebilir."
+  },
+  {
+    "dayOfYear": 210,
+    "title": "Rüzgarlı Gezegen",
+    "fact": "Neptün gezegeninde rüzgarlar ses hızından bile hızlı eser. Saatte 2.000 kilometreye ulaşan bu fırtınalar, Güneş sisteminin en güçlü rüzgarlarıdır."
+  },
+  {
+    "dayOfYear": 211,
+    "title": "Kan Damarsız Yer",
+    "fact": "Vücudumuzda kan damarı olmayan tek yer gözümüzün 'kornea' tabakasıdır. Oksijeni kandan değil, doğrudan havadan alır."
+  },
+  {
+    "dayOfYear": 212,
+    "title": "Ankara Keçisi",
+    "fact": "Dünyaca ünlü 'Tiftik' yünü (Mohair), sadece Ankara keçisinden elde edilir. Bu keçi türü dünyaya Türkiye'den yayılmıştır."
+  },
+  {
+    "dayOfYear": 213,
+    "title": "Kısa Ömürlü mü?",
+    "fact": "Kelebeklerin ömrünün 1 gün olduğu bilgisi yanlıştır. Türüne göre 1 hafta ile 1 yıl arasında yaşayabilirler."
+  },
+  {
+    "dayOfYear": 214,
+    "title": "Yağmurun Hızı",
+    "fact": "Yağmur damlaları yere düşerken saatte yaklaşık 30 kilometre hızla hareket eder. Bu, bisikletle hızlı gitmeye benzer."
+  },
+  {
+    "dayOfYear": 215,
+    "title": "Altıncı His",
+    "fact": "Köpekbalıkları, kumun altına saklanmış bir balığın kalp atışlarının yarattığı elektriği bile hissedebilirler. Bu onların süper gücüdür."
+  },
+  {
+    "dayOfYear": 216,
+    "title": "Yüzen Elmalar",
+    "fact": "Elmaların %25'i havadan oluşur. Bu yüzden onları suya attığında batmazlar, suyun yüzeyinde kalırlar."
+  },
+  {
+    "dayOfYear": 217,
+    "title": "Atatürk ve Geometri",
+    "fact": "Bugün matematik dersinde kullandığımız 'üçgen, açı, dikdörtgen' gibi Türkçe terimleri bizzat Atatürk, yazdığı Geometri kitabıyla türetmiştir."
+  },
+  {
+    "dayOfYear": 218,
+    "title": "Zürafa Kalbi",
+    "fact": "Zürafanın beynine kan gönderebilmesi için çok güçlü bir pompaya ihtiyacı vardır. Kalbi yaklaşık 11 kilogramdır, yani bir araba lastiği kadar ağırdır!"
+  },
+  {
+    "dayOfYear": 219,
+    "title": "Rubik Küpü",
+    "fact": "Rubik küpünün mucidi Erno Rubik, küpü ilk tasarladığında çözmesi tam bir ay sürmüştür. Şimdi ise rekor 3 saniyenin altında!"
+  },
+  {
+    "dayOfYear": 220,
+    "title": "Tuzlu Su Donmaz",
+    "fact": "Deniz suyu 0 derecede donmaz. İçindeki tuz donmayı zorlaştırır, bu yüzden denizlerin donması için havanın -2 dereceye kadar soğuması gerekir."
+  },
+  {
+    "dayOfYear": 221,
+    "title": "Cankurtaran Yunuslar",
+    "fact": "Yunuslar köpekbalığı saldırısına uğrayan insanları korumak için etraflarında çember oluştururlar. Denizlerin koruyucu melekleridir."
+  },
+  {
+    "dayOfYear": 222,
+    "title": "Devekuşu Tekmesi",
+    "fact": "Bir devekuşunun tekmesi bir aslanı bile devirebilecek kadar güçlüdür. Bacakları onların en büyük silahıdır."
+  },
+  {
+    "dayOfYear": 223,
+    "title": "Uyuyan Karıncalar",
+    "fact": "Karıncalar hiç uyumaz sanılır ama aslında gün içinde yüzlerce kez 1 dakikalık 'mikro uykular' yaparlar."
+  },
+  {
+    "dayOfYear": 224,
+    "title": "Kapalıçarşı",
+    "fact": "İstanbul'daki Kapalıçarşı, 4.000 dükkanı ve 60 sokağıyla dünyanın en eski ve en büyük alışveriş merkezlerinden biridir."
+  },
+  {
+    "dayOfYear": 225,
+    "title": "Uzay Çöpü",
+    "fact": "Dünya'nın yörüngesinde, eski uydulardan ve roketlerden kalan milyonlarca parça 'uzay çöpü' başıboş bir şekilde dönmektedir."
+  },
+  {
+    "dayOfYear": 226,
+    "title": "Sıçrama Şampiyonu",
+    "fact": "Pireler kendi boylarının 200 katı yükseğe zıplayabilirler. Bu, bir insanın Eyfel Kulesi'nin üzerinden atlaması gibidir!"
+  },
+  {
+    "dayOfYear": 227,
+    "title": "Sivrisinek Tercihi",
+    "fact": "Sivrisinekler bazı insanları daha çok ısırır. Özellikle ter kokusuna ve koyu renkli kıyafet giyenlere daha çok gelirler."
+  },
+  {
+    "dayOfYear": 228,
+    "title": "Kutup Yüzücüsü",
+    "fact": "Kutup ayıları o kadar iyi yüzerler ki, karadan 100 kilometre uzakta bile denizin ortasında görülebilirler."
+  },
+  {
+    "dayOfYear": 229,
+    "title": "Kayısı Diyarı",
+    "fact": "Dünyadaki kuru kayısının %70'inden fazlası Malatya'da üretilir. Malatya kayısısı dünyada eşi benzeri olmayan bir lezzettir."
+  },
+  {
+    "dayOfYear": 230,
+    "title": "En Küçük Kemik",
+    "fact": "Vücudumuzdaki en küçük kemik kulağımızın içinde bulunan 'üzengi' kemiğidir. Boyutu bir pirinç tanesinden bile küçüktür."
+  },
+  {
+    "dayOfYear": 231,
+    "title": "Balina Sesi",
+    "fact": "Mavi balinalar bir jet uçağından daha yüksek ses çıkarabilirler. Sesleri suyun altında 800 kilometre öteden duyulabilir."
+  },
+  {
+    "dayOfYear": 232,
+    "title": "Ay'daki Ayak İzi",
+    "fact": "Ay'da rüzgar veya yağmur olmadığı için, astronotların 1969'da bastığı ayak izleri hala bozulmadan durmaktadır."
+  },
+  {
+    "dayOfYear": 233,
+    "title": "Parlayan Gözler",
+    "fact": "Karanlıkta kedilerin gözleri parlar çünkü gözlerinin arkasında ışığı yansıtan ayna gibi bir tabaka vardır. Bu, gece daha iyi görmelerini sağlar."
+  },
+  {
+    "dayOfYear": 234,
+    "title": "En Derin Çukur",
+    "fact": "Dünyanın en derin yeri olan Mariana Çukuru o kadar derindir ki (11 km), Everest Dağı'nı içine koysanız zirvesi suyun altında kalırdı."
+  },
+  {
+    "dayOfYear": 235,
+    "title": "Monopoly Parası",
+    "fact": "Her yıl Monopoly oyunları için basılan yapay paraların miktarı, dünyada basılan gerçek dolar miktarından daha fazladır."
+  },
+  {
+    "dayOfYear": 236,
+    "title": "Kalp Motoru",
+    "fact": "Sinek kuşunun kalbi dakikada 1.200 kez atar. O kadar hızlıdır ki, insan kulağı kalp atışını vızıltı gibi duyar."
+  },
+  {
+    "dayOfYear": 237,
+    "title": "Manavgat Şelalesi",
+    "fact": "Antalya'daki Manavgat Şelalesi çok yüksekten dökülmez ama suyu o kadar güçlü ve boldur ki sesi kilometrelerce öteden duyulur."
+  },
+  {
+    "dayOfYear": 238,
+    "title": "Yağlı Beyin",
+    "fact": "İnsan beyni vücudun en yağlı organıdır. Yaklaşık %60'ı yağdan oluşur. Bu yüzden sağlıklı yağlar (ceviz, balık) yemek zekayı geliştirir."
+  },
+  {
+    "dayOfYear": 239,
+    "title": "Denizyıldızı Gözü",
+    "fact": "Denizyıldızlarının her bir kolunun ucunda minik bir göz beneği vardır. Çok net göremezler ama aydınlığı ve karanlığı ayırt ederler."
+  },
+  {
+    "dayOfYear": 240,
+    "title": "Yıldız Tozu",
+    "fact": "Vücudumuzdaki karbon, kalsiyum ve demir gibi elementler milyarlarca yıl önce patlayan yıldızların içinde oluşmuştur. Yani hepimiz yıldız tozuyuz!"
+  },
+  {
+    "dayOfYear": 241,
+    "title": "Yarasa Radarı",
+    "fact": "Yarasalar karanlıkta gözleriyle değil, çıkardıkları seslerin yankısını dinleyerek (sonar sistemiyle) yollarını bulurlar."
+  },
+  {
+    "dayOfYear": 242,
+    "title": "Türkçe'nin Gücü",
+    "fact": "Türkçe sondan eklemeli bir dildir. Bu sayede 'Çekoslovakyalılaştıramadıklarımızdanmışsınızcasına' gibi tek kelimelik dev cümleler kurabiliriz."
+  },
+  {
+    "dayOfYear": 243,
+    "title": "Yan Yatan Gezegen",
+    "fact": "Uranüs gezegeni diğer gezegenlerin aksine yan yatmış bir varil gibi yuvarlanarak Güneş'in etrafında döner."
+  },
+  {
+    "dayOfYear": 244,
+    "title": "Dört Mideli İnek",
+    "fact": "İneklerin midesi dört bölümden oluşur. Bu sayede otları tekrar tekrar çiğneyip sindirebilirler. Buna 'geviş getirmek' denir."
+  },
+  {
+    "dayOfYear": 245,
+    "title": "Camın Ömrü",
+    "fact": "Doğaya atılan bir cam şişenin yok olması 4.000 yıl sürer. Bu yüzden camları mutlaka geri dönüşüm kutusuna atmalıyız."
+  },
+  {
+    "dayOfYear": 246,
+    "title": "Balon Diyarı",
+    "fact": "Kapadokya, dünyada her sabah yüzlerce sıcak hava balonunun aynı anda havalandığı en ünlü yerdir. Gökyüzü rengarenk olur."
+  },
+  {
+    "dayOfYear": 247,
+    "title": "Çalışkan Arı",
+    "fact": "Yarım kilo bal üretmek için arıların toplamda 2 milyon çiçeği ziyaret etmesi ve dünyanın çevresini 2 kez dönecek kadar yol yapması gerekir."
+  },
+  {
+    "dayOfYear": 248,
+    "title": "Dil İzi",
+    "fact": "Sadece parmak izimiz değil, dil izimiz de eşsizdir. Dünyada kimsenin dil izi bir başkasınınkiyle aynı değildir."
+  },
+  {
+    "dayOfYear": 249,
+    "title": "Zeki Kargalar",
+    "fact": "Kargalar çok zekidir; alet kullanabilir, insan yüzlerini hatırlayabilir ve hatta ceviz kırmak için arabaların tekerleğini kullanabilirler."
+  },
+  {
+    "dayOfYear": 250,
+    "title": "Güneş Sistemi Dağı",
+    "fact": "Güneş sistemindeki en yüksek dağ Mars'taki 'Olimpos Dağı'dır. Everest'ten tam 3 kat daha yüksektir!"
+  }
+]

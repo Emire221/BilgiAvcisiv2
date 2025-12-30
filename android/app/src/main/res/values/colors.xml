@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Parlak lacivert arka plan rengi -->
+    <color name="splash_background">#1a1a2e</color>
+    <!-- Launcher icon arka plan rengi -->
+    <color name="ic_launcher_background">#1a1a2e</color>
+</resources>
