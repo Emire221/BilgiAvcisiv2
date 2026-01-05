@@ -12,7 +12,8 @@ import '../../providers/repository_providers.dart';
 
 /// Macera Haritası Dersleri - Veritabanından okunan dersler
 class LessonsTab extends ConsumerStatefulWidget {
-  const LessonsTab({super.key});
+  final bool isActive;
+  const LessonsTab({super.key, this.isActive = false});
 
   @override
   ConsumerState<LessonsTab> createState() => _LessonsTabState();
@@ -33,12 +34,14 @@ class _LessonsTabState extends ConsumerState<LessonsTab>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Her tab değişiminde progress bar animasyonunu tetikle
-    setState(() {
-      _progressBarRebuildKey++;
-    });
+  void didUpdateWidget(LessonsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      // Tab aktif hale geldiğinde progress bar'ı yeniden oluştur
+      setState(() {
+        _progressBarRebuildKey++;
+      });
+    }
   }
 
   Future<void> _loadLessons() async {

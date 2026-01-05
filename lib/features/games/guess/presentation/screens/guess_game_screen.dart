@@ -258,127 +258,130 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
       );
     }
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // Animasyonlu arka plan
-          _buildAnimatedBackground(state),
+    return PopScope(
+      canPop: true, // Oyun sırasında geri tuşu aktif
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            // Animasyonlu arka plan
+            _buildAnimatedBackground(state),
 
-          // Floating partiküller
-          ..._buildFloatingParticles(),
+            // Floating partiküller
+            ..._buildFloatingParticles(),
 
-          // Wave efekti
-          _buildWaveEffect(),
+            // Wave efekti
+            _buildWaveEffect(),
 
-          // Ana içerik
-          SafeArea(
-            child: Column(
-              children: [
-                // Üst bar
-                _buildTopBar(state)
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideY(begin: -0.3, end: 0),
+            // Ana içerik
+            SafeArea(
+              child: Column(
+                children: [
+                  // Üst bar
+                  _buildTopBar(state)
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: -0.3, end: 0),
 
-                // İçerik
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          // Soru alanı
-                          _buildQuestionCard(state)
-                              .animate()
-                              .fadeIn(delay: 100.ms, duration: 500.ms)
-                              .scale(begin: const Offset(0.9, 0.9)),
-
-                          const SizedBox(height: 24),
-
-                          // Orta alan: Maskot + Termometre
-                          _buildMiddleSection(
-                            state,
-                          ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
-
-                          const SizedBox(height: 24),
-
-                          // Input alanı
-                          if (!state.isCorrect)
-                            _buildInputSection(state)
+                  // İçerik
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            // Soru alanı
+                            _buildQuestionCard(state)
                                 .animate()
-                                .fadeIn(delay: 300.ms, duration: 500.ms)
-                                .slideY(begin: 0.2, end: 0),
+                                .fadeIn(delay: 100.ms, duration: 500.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
 
-                          // Doğru cevap bilgisi
-                          if (state.isCorrect)
-                            _buildCorrectAnswerSection(state)
-                                .animate()
-                                .fadeIn(duration: 500.ms)
-                                .scale(begin: const Offset(0.8, 0.8)),
-                        ],
+                            const SizedBox(height: 24),
+
+                            // Orta alan: Maskot + Termometre
+                            _buildMiddleSection(
+                              state,
+                            ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+
+                            const SizedBox(height: 24),
+
+                            // Input alanı
+                            if (!state.isCorrect)
+                              _buildInputSection(state)
+                                  .animate()
+                                  .fadeIn(delay: 300.ms, duration: 500.ms)
+                                  .slideY(begin: 0.2, end: 0),
+
+                            // Doğru cevap bilgisi
+                            if (state.isCorrect)
+                              _buildCorrectAnswerSection(state)
+                                  .animate()
+                                  .fadeIn(duration: 500.ms)
+                                  .scale(begin: const Offset(0.8, 0.8)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          // Konfeti
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-              colors: const [
-                _primaryOrange,
-                _accentCyan,
-                Colors.pink,
-                Colors.amber,
-                Colors.purple,
-                Colors.green,
-              ],
-              numberOfParticles: 30,
-              gravity: 0.3,
+            // Konfeti
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  _primaryOrange,
+                  _accentCyan,
+                  Colors.pink,
+                  Colors.amber,
+                  Colors.purple,
+                  Colors.green,
+                ],
+                numberOfParticles: 30,
+                gravity: 0.3,
+              ),
             ),
-          ),
 
-          // Intro overlay
-          if (_showIntro)
-            AnimatedOpacity(
-              opacity: _showIntro ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: Container(
-                color: _darkBg,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                            FontAwesomeIcons.mobileScreenButton,
+            // Intro overlay
+            if (_showIntro)
+              AnimatedOpacity(
+                opacity: _showIntro ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Container(
+                  color: _darkBg,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                              FontAwesomeIcons.mobileScreenButton,
+                              color: _primaryOrange,
+                              size: 64,
+                            )
+                            .animate(onPlay: (c) => c.repeat())
+                            .shake(duration: 500.ms, hz: 4),
+                        const SizedBox(height: 16),
+                        Text(
+                          'SALLA!',
+                          style: GoogleFonts.poppins(
                             color: _primaryOrange,
-                            size: 64,
-                          )
-                          .animate(onPlay: (c) => c.repeat())
-                          .shake(duration: 500.ms, hz: 4),
-                      const SizedBox(height: 16),
-                      Text(
-                        'SALLA!',
-                        style: GoogleFonts.poppins(
-                          color: _primaryOrange,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4,
-                        ),
-                      ).animate().fadeIn().then().shimmer(color: _accentCyan),
-                    ],
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 4,
+                          ),
+                        ).animate().fadeIn().then().shimmer(color: _accentCyan),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -492,10 +495,23 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
           ),
           child: Row(
             children: [
-              // Geri butonu
-              _buildGlassIconButton(
-                icon: FontAwesomeIcons.xmark,
-                onPressed: () => _showExitDialog(),
+              // Çıkış butonu
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  ),
+                  child: const Icon(
+                    FontAwesomeIcons.arrowLeft,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
               ),
 
               const Spacer(),
@@ -577,26 +593,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
     );
   }
 
-  Widget _buildGlassIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onPressed();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-        ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
-    );
-  }
+
 
   Widget _buildQuestionCard(GuessState state) {
     final question = state.currentQuestion;
@@ -1393,58 +1390,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
     }
   }
 
-  void _showExitDialog() {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: AlertDialog(
-          backgroundColor: _deepPurple,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: _primaryOrange.withValues(alpha: 0.3)),
-          ),
-          title: Text(
-            'Oyundan Çık',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            'Oyundan çıkmak istediğine emin misin?',
-            style: GoogleFonts.nunito(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'İptal',
-                style: GoogleFonts.nunito(
-                  color: _accentCyan,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Çık',
-                style: GoogleFonts.nunito(
-                  color: _primaryOrange,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   void _navigateToResult(GuessState state) {
     Navigator.pushReplacement(

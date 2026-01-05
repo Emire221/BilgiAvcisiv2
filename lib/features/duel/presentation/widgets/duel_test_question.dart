@@ -12,8 +12,6 @@ class DuelTestQuestion extends StatelessWidget {
 
   // Tema renkleri
   static const Color _neonCyan = Color(0xFF00F5FF);
-  static const Color _neonGreen = Color(0xFF39FF14);
-  static const Color _neonRed = Color(0xFFFF3131);
 
   const DuelTestQuestion({
     super.key,

@@ -432,57 +432,60 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
   // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1a0033), // Deep Violet
-              Color(0xFF0d1b2a), // Night Blue
-              Color(0xFF1b263b), // Dark Navy
-            ],
-            stops: [0.0, 0.5, 1.0],
+    return PopScope(
+      canPop: false, // Test/oyun sırasında geri tuşu devre dışı
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1a0033), // Deep Violet
+                Color(0xFF0d1b2a), // Night Blue
+                Color(0xFF1b263b), // Dark Navy
+              ],
+              stops: [0.0, 0.5, 1.0],
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            // Dojo particles
-            ..._buildParticles(),
+          child: Stack(
+            children: [
+              // Dojo particles
+              ..._buildParticles(),
 
-            // Grid pattern overlay
-            _buildGridPattern(),
+              // Grid pattern overlay
+              _buildGridPattern(),
 
-            // Main content
-            SafeArea(
-              child: _isLoading
-                  ? _buildLoadingState()
-                  : _errorMessage != null
-                  ? _buildErrorState()
-                  : _buildMainContent(),
-            ),
-
-            // Confetti
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: const [
-                  Color(0xFF00f5d4),
-                  Color(0xFF9b5de5),
-                  Color(0xFFf15bb5),
-                  Color(0xFFfee440),
-                  Color(0xFF00bbf9),
-                ],
-                emissionFrequency: 0.05,
-                numberOfParticles: 30,
-                gravity: 0.1,
+              // Main content
+              SafeArea(
+                child: _isLoading
+                    ? _buildLoadingState()
+                    : _errorMessage != null
+                    ? _buildErrorState()
+                    : _buildMainContent(),
               ),
-            ),
-          ],
+
+              // Confetti
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  colors: const [
+                    Color(0xFF00f5d4),
+                    Color(0xFF9b5de5),
+                    Color(0xFFf15bb5),
+                    Color(0xFFfee440),
+                    Color(0xFF00bbf9),
+                  ],
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 30,
+                  gravity: 0.1,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -660,29 +663,8 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          // Back button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop();
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFF00f5d4).withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
+          // Boş alan (simetri için)
+          const SizedBox(width: 44),
 
           const SizedBox(width: 16),
 

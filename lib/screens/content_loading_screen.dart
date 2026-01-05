@@ -355,21 +355,25 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
     final syncState = ref.watch(syncControllerProvider);
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Mesh gradient arka plan
-          _buildMeshGradientBackground(),
+    // Senkronizasyon sırasında geri tuşunu devre dışı bırak
+    return PopScope(
+      canPop: false, // Geri tuşu çalışmaz
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Mesh gradient arka plan
+            _buildMeshGradientBackground(),
 
-          // Ana içerik
-          SafeArea(
-            child: Center(
-              child: _hasError
-                  ? _buildErrorState()
-                  : _buildLoadingState(syncState, screenWidth),
+            // Ana içerik
+            SafeArea(
+              child: Center(
+                child: _hasError
+                    ? _buildErrorState()
+                    : _buildLoadingState(syncState, screenWidth),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

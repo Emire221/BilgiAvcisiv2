@@ -245,8 +245,11 @@ class _TestScreenState extends ConsumerState<TestScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              // Çıkış Butonu
-              _buildExitButton(),
+              // Soru Sayacı (sol tarafta)
+              _buildQuestionCounter(
+                testState.currentQuestionIndex + 1,
+                testState.questions.length,
+              ),
 
               const Spacer(),
 
@@ -255,11 +258,8 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
               const Spacer(),
 
-              // Soru Sayacı
-              _buildQuestionCounter(
-                testState.currentQuestionIndex + 1,
-                testState.questions.length,
-              ),
+              // Boş alan (simetri için)
+              const SizedBox(width: 60),
             ],
           ),
         ),
@@ -267,27 +267,9 @@ class _TestScreenState extends ConsumerState<TestScreen>
     ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.3, end: 0);
   }
 
-  /// Çıkış butonu
-  Widget _buildExitButton() {
-    return GestureDetector(
-      onTap: _showExitDialog,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.red.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
-        ),
-        child: const Center(
-          child: FaIcon(FontAwesomeIcons.xmark, color: Colors.red, size: 18),
-        ),
-      ),
-    );
-  }
+
+
+
 
   /// Timer widget'ı
   Widget _buildTimer(int timeLeft) {
@@ -473,92 +455,9 @@ class _TestScreenState extends ConsumerState<TestScreen>
     }
   }
 
-  /// Çıkış dialogu
-  void _showExitDialog() {
-    HapticFeedback.mediumImpact();
 
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1a1a2e),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.red.withValues(alpha: 0.5), width: 2),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const FaIcon(
-                FontAwesomeIcons.triangleExclamation,
-                color: Colors.red,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Testten Çık',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Testi yarıda bırakmak istediğine emin misin?\n\nİlerlemeniz kaydedilmeyecek.',
-          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'Devam Et',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Colors.red, Color(0xFFFF4444)],
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'Çık',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
+
 
   /// Loading ekranı
   Widget _buildLoadingScreen() {
@@ -688,6 +587,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
           wrongCount: state.wrongCount,
           topicId: widget.topicId ?? '',
           topicName: widget.topicName ?? '',
+          testId: widget.testId ?? widget.testData?['testID'] as String?,
           answeredQuestions: answeredQuestions,
         ),
       ),

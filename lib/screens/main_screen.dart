@@ -34,8 +34,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   late AnimationController _glowController;
   late AnimationController _bounceController;
 
-  // Tab'ları geç başlat (callback ile)
-  late final List<Widget> _tabs;
+
 
   // Navigation items
   final List<_NavItem> _navItems = [
@@ -83,24 +82,21 @@ class _MainScreenState extends ConsumerState<MainScreen>
       duration: const Duration(milliseconds: 300),
     );
 
-    // Tab'ları callback ile oluştur
-    _tabs = [
-      HomeTab(onNavigateToTab: _navigateToTab),
-      const LessonsTab(),
-      const GamesTab(),
-      const ProfileTab(),
-    ];
+
 
     // Shake servisi başlatma (build sonrası)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _shakeService = ShakeService(context);
       _shakeService?.start();
+      
+      // Bildirim servisini başlat (izin kontrolü + zamanlanmış bildirimler)
+      NotificationService().ensureInitialized();
     });
   }
 
   /// Belirtilen tab'a geçiş yapar
   void _navigateToTab(int index) {
-    if (index >= 0 && index < _tabs.length) {
+    if (index >= 0 && index < 4) { // _tabs.length yerine sabit 4
       HapticFeedback.lightImpact();
       _bounceController.forward(from: 0);
       setState(() {
@@ -142,7 +138,15 @@ class _MainScreenState extends ConsumerState<MainScreen>
             appBar: _currentIndex == 0
                 ? _buildAppBar(context, isDarkMode)
                 : null,
-            body: IndexedStack(index: _currentIndex, children: _tabs),
+            body: IndexedStack(
+              index: _currentIndex,
+              children: [
+                HomeTab(onNavigateToTab: _navigateToTab),
+                LessonsTab(isActive: _currentIndex == 1),
+                const GamesTab(),
+                ProfileTab(isActive: _currentIndex == 3),
+              ],
+            ),
             bottomNavigationBar: _buildFloatingGlassDock(isDarkMode),
           ),
         );
@@ -654,7 +658,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
             // İkon container
             AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutBack,
+                  curve: Curves.easeOutCubic,
                   width: isSelected ? activeSize : inactiveSize,
                   height: isSelected ? activeSize : inactiveSize,
                   transform: Matrix4.identity()

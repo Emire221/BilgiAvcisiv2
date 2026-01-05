@@ -13,11 +13,14 @@ import '../../features/mascot/presentation/providers/mascot_provider.dart';
 import '../../features/mascot/domain/entities/mascot.dart';
 import '../../core/gamification/mascot_logic.dart';
 import '../../services/database_helper.dart';
+import '../../services/time_tracking_service.dart';
 import '../login_screen.dart';
+import '../time_analytics_screen.dart';
 
 /// 🏆 Kahraman Profili - RPG Style Profile Tab
 class ProfileTab extends ConsumerStatefulWidget {
-  const ProfileTab({super.key});
+  final bool isActive;
+  const ProfileTab({super.key, this.isActive = false});
 
   @override
   ConsumerState<ProfileTab> createState() => _ProfileTabState();
@@ -26,8 +29,33 @@ class ProfileTab extends ConsumerStatefulWidget {
 class _ProfileTabState extends ConsumerState<ProfileTab>
     with TickerProviderStateMixin {
   Map<String, dynamic>? _userData;
+  // ... existing variables ...
+
+  @override
+  void didUpdateWidget(ProfileTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Eğer tab aktif duruma geldiyse (başka tabdan buraya geçildiyse)
+    if (widget.isActive && !oldWidget.isActive) {
+      debugPrint('ProfileTab: Tab became active -> Resetting animation');
+      _hasAnimatedXp = false;
+      // Mevcut datayı kullanarak animasyonu tekrar tetikle
+      if (_userData != null) {
+          // Force re-build or re-trigger logic will happen in build
+          setState(() {}); 
+      }
+    }
+  }
+
   bool _isLoading = true;
   late AnimationController _floatController;
+  
+  // XP Bar Animasyonları
+  late AnimationController _fillController;
+  late AnimationController _returnController;
+  late Animation<double> _fillAnimation;
+  late Animation<double> _returnAnimation;
+  double _targetXpProgress = 0.0;
+  bool _hasAnimatedXp = false;
 
   // Gerçek kullanıcı istatistikleri
   int _totalCorrect = 0;
@@ -43,13 +71,91 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
+
+    // XP Bar Animasyonlarını Hazırla
+    _initXpAnimations();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Her tab geçişinde animasyonu sıfırla
+    _hasAnimatedXp = false;
   }
 
   @override
   void dispose() {
     _floatController.dispose();
+    _fillController.dispose();
+    _returnController.dispose();
     super.dispose();
   }
+    
+  void _initXpAnimations() {
+    // Fill animasyonu (0 -> 100%) - Yavaşlatıldı
+    _fillController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000), 
+    );
+    
+    // Return animasyonu (100% -> gerçek değer) - Yavaşlatıldı
+    _returnController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fillAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fillController, curve: Curves.easeOutCubic),
+    );
+    
+    _returnAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _returnController, curve: Curves.easeInOutCubic),
+    );
+
+    // Fill bittikten sonra return başlasın
+    _fillController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        _returnController.forward(from: 0.0);
+      }
+    });
+
+    // Her sayfa açıldığında animasyonun çalışması için
+    // didChangeDependencies içinde logic ekleyeceğiz
+  }
+
+  void _startXpAnimation(double progress) {
+    // Eğer animasyon zaten yapıldıysa ve hedef değişmediyse işlem yapma.
+    // Ancak _hasAnimatedXp false ise (örn: tab değişimi sonrası) animasyonu tekrar başlat.
+    if (_hasAnimatedXp && _targetXpProgress == progress) return;
+    
+    _targetXpProgress = progress;
+    
+    // Eğer zaten animasyon oynuyorsa, sadece hedefi güncellemiş olduk.
+    // Animasyon (return kısmı) yeni hedefe göre devam edecek.
+    // Eğer animasyon oynamıyorsa (veya bitmişse), baştan başlat.
+    if (!_fillController.isAnimating && !_returnController.isAnimating) {
+      _fillController.reset();
+      _returnController.reset();
+      _fillController.forward(from: 0.0);
+    }
+    _hasAnimatedXp = true;
+  }
+
+  double _getCurrentXpProgress() {
+    if (_fillController.isAnimating) {
+      // Fill aşaması: 0 -> 100%
+      return _fillAnimation.value;
+    } else if (_returnController.isAnimating) {
+      // Return aşaması: 100% -> gerçek değer
+      final returnValue = _returnAnimation.value;
+      return _targetXpProgress + (1.0 - _targetXpProgress) * returnValue;
+    } else if (_hasAnimatedXp) {
+      return _targetXpProgress;
+    }
+    // Safety net: Eğer animasyon başlamadıysa bile 0 yerine hedeflenen değeri göster.
+    return _targetXpProgress;
+  }
+
 
   Future<void> _loadUserData() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -799,10 +905,24 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
           mascotAsync.when(
             data: (mascot) {
               if (mascot == null) return const SizedBox.shrink();
+              // Level bilgisini XP'den hesapla (veri tutarlılığı için)
+              final calculatedLevel = MascotLogic.calculateLevel(mascot.currentXp);
+              
               final progress = MascotLogic.getLevelProgress(
                 mascot.currentXp,
-                mascot.level,
+                calculatedLevel,
               );
+              
+              
+              // Animasyonu başlat
+
+              // Animasyonu başlat
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && !_fillController.isAnimating && !_returnController.isAnimating) {
+                  _startXpAnimation(progress);
+                }
+              });
+
               final xpToNext = MascotLogic.xpToNextLevel(
                 mascot.currentXp,
                 mascot.level,
@@ -848,26 +968,23 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                         ),
                         child: Stack(
                           children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 500),
-                              width: constraints.maxWidth * progress,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    mascot.petType.color,
-                                    mascot.petType.color.withValues(alpha: 0.7),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: mascot.petType.color.withValues(
-                                      alpha: 0.5,
+                            AnimatedBuilder(
+                              animation: Listenable.merge([_fillController, _returnController]),
+                              builder: (context, child) {
+                                final animatedProgress = _getCurrentXpProgress();
+                                return Container(
+                                  width: (constraints.maxWidth * animatedProgress).clamp(0.0, constraints.maxWidth),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        mascot.petType.color,
+                                        mascot.petType.color.withValues(alpha: 0.7),
+                                      ],
                                     ),
-                                    blurRadius: 8,
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -888,7 +1005,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
   /// Stats Grid - Bento Box Style
   Widget _buildStatsGrid(bool isDarkMode, AsyncValue<Mascot?> mascotAsync) {
     final mascot = mascotAsync.asData?.value;
-    final grade = _userData?['grade'] ?? _userData?['classLevel'] ?? '3. Sınıf';
 
     final stats = [
       _StatItem(
@@ -912,10 +1028,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
         color: const Color(0xFFFFD700),
         delay: 200,
       ),
+      // Bugün kartı - özel işaretli
       _StatItem(
-        icon: FontAwesomeIcons.bookOpen,
-        label: 'Sınıf',
-        value: _formatGrade(grade),
+        icon: FontAwesomeIcons.clock,
+        label: 'Bugün',
+        value: '__LIVE_TIME__', // Özel işaret - StreamBuilder ile değiştirilecek
         color: const Color(0xFF6C5CE7),
         delay: 300,
       ),
@@ -939,6 +1056,48 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       itemCount: stats.length,
       itemBuilder: (context, index) {
         final stat = stats[index];
+        
+        // Bugün kartı için özel StreamBuilder kullan
+        if (stat.value == '__LIVE_TIME__') {
+          return StreamBuilder<int>(
+            stream: TimeTrackingService().timeStream,
+            initialData: TimeTrackingService().todaySeconds,
+            builder: (context, snapshot) {
+              final seconds = snapshot.data ?? 0;
+              final liveValue = TimeTrackingService.formatDurationLong(seconds);
+              final liveStat = _StatItem(
+                icon: stat.icon,
+                label: stat.label,
+                value: liveValue,
+                color: stat.color,
+                delay: stat.delay,
+              );
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TimeAnalyticsScreen()),
+                  );
+                },
+                child: _buildStatCard(liveStat, isDarkMode)
+                    .animate()
+                    .fadeIn(
+                      duration: 500.ms,
+                      delay: Duration(milliseconds: stat.delay),
+                    )
+                    .scale(
+                      begin: const Offset(0.8, 0.8),
+                      end: const Offset(1, 1),
+                      duration: 500.ms,
+                      delay: Duration(milliseconds: stat.delay),
+                      curve: Curves.easeOutBack,
+                    ),
+              );
+            },
+          );
+        }
+        
         return _buildStatCard(stat, isDarkMode)
             .animate()
             .fadeIn(
@@ -1006,6 +1165,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
   /// Menu Options
   Widget _buildMenuOptions(bool isDarkMode) {
     final menuItems = [
+      _MenuItem(
+        icon: FontAwesomeIcons.chartLine,
+        label: 'Eğitimin için ayırdığın süre',
+        color: const Color(0xFF11998E),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TimeAnalyticsScreen()),
+          );
+        },
+      ),
       _MenuItem(
         icon: FontAwesomeIcons.fileContract,
         label: 'Kullanıcı Sözleşmesi',

@@ -13,9 +13,11 @@ import 'screens/profile_setup_screen.dart';
 import 'util/app_colors.dart';
 import 'core/navigator_key.dart';
 import 'services/notification_service.dart';
+import 'services/time_tracking_service.dart';
 
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'services/local_preferences_service.dart';
+import 'services/scheduled_notification_helper.dart';
 
 // Basit bir tema yöneticisi
 class ThemeManager extends ValueNotifier<ThemeMode> {
@@ -47,6 +49,12 @@ void main() async {
 
   // Bildirim servisini başlat
   await NotificationService().initialize();
+  
+  // Android Alarm Manager'i başlat (zamanlanmış bildirimler için)
+  await ScheduledNotificationHelper.initialize();
+  
+  // Süre takibi servisini başlat
+  await TimeTrackingService().start();
   
   // Tema tercihini yükle (Varsayılan: Dark Mode)
   final isDarkMode = await LocalPreferencesService().isDarkMode();

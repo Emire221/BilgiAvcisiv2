@@ -28,6 +28,7 @@ class ResultScreen extends ConsumerStatefulWidget {
   final int wrongCount;
   final String topicId;
   final String topicName;
+  final String? testId; // Yeni eklenen alan
   final List<Map<String, dynamic>> answeredQuestions;
   final bool isFlashcard;
 
@@ -38,6 +39,7 @@ class ResultScreen extends ConsumerStatefulWidget {
     this.wrongCount = 0,
     this.topicId = '',
     this.topicName = '',
+    this.testId, // Constructor'a eklendi
     this.answeredQuestions = const [],
     this.isFlashcard = false,
   });
@@ -147,6 +149,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
         correctCount: widget.correctCount,
         wrongCount: widget.wrongCount,
         totalQuestions: widget.correctCount + widget.wrongCount,
+        key: widget.isFlashcard ? widget.topicId : widget.testId,
       );
       debugPrint(
         'Sonuç kaydedildi: ${widget.isFlashcard ? "flashcard" : "test"} - Skor: ${widget.score}',

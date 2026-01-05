@@ -43,6 +43,11 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
   // Renk paleti - Sky Journey
   static const Color _skyTop = Color(0xFF4FACFE);
   static const Color _skyBottom = Color(0xFF00F2FE);
+
+  // Dark Mode Colors
+  static const Color _darkSkyTop = Color(0xFF0F2027);
+  static const Color _darkSkyBottom = Color(0xFF2C5364);
+
   static const Color _activeOrange = Color(0xFFFF9966);
   static const Color _activeRed = Color(0xFFFF5E62);
   static const Color _completedGreen = Color(0xFF56AB2F);
@@ -242,17 +247,20 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final safePadding = MediaQuery.of(context).padding;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Stack(
         children: [
           // 1. Gökyüzü Gradient Arka Plan
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [_skyTop, _skyBottom],
+                colors: isDark 
+                    ? [_darkSkyTop, _darkSkyBottom] 
+                    : [_skyTop, _skyBottom],
               ),
             ),
           ),
@@ -276,6 +284,8 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
   }
 
   Widget _buildMainContent(Size screenSize, EdgeInsets safePadding) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoading) {
       return Center(
         child:
@@ -411,6 +421,7 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
                       verticalSpacing: _verticalSpacing,
                       screenWidth: screenSize.width,
                       getPosition: _getLevelPosition,
+                      isDark: isDark,
                     ),
                   ),
                 ),
@@ -429,6 +440,7 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
   }
 
   Widget _buildHeader(double topPadding) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
           padding: EdgeInsets.only(
             top: topPadding + 12,
@@ -440,7 +452,9 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [_skyTop, _skyTop.withValues(alpha: 0)],
+              colors: isDark
+                  ? [_darkSkyTop, _darkSkyTop.withValues(alpha: 0)]
+                  : [_skyTop, _skyTop.withValues(alpha: 0)],
             ),
           ),
           child: Row(
@@ -591,11 +605,12 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
   }
 
   Widget _buildCloud(double size, double opacity) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return IgnorePointer(
       child: Icon(
         Icons.cloud,
         size: size,
-        color: Colors.white.withValues(alpha: opacity),
+        color: Colors.white.withValues(alpha: isDark ? opacity * 0.5 : opacity),
       ),
     );
   }
@@ -806,10 +821,13 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
   }
 
   Widget _buildLevelLabel() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: widget.isLocked ? 0.5 : 0.9),
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.6)
+            : Colors.white.withValues(alpha: widget.isLocked ? 0.5 : 0.9),
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -826,7 +844,9 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
         style: GoogleFonts.nunito(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: widget.isLocked ? Colors.grey : Colors.black87,
+          color: isDark
+              ? Colors.white70
+              : (widget.isLocked ? Colors.grey : Colors.black87),
         ),
       ),
     );
@@ -834,11 +854,12 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
 
   /// Kilitli seviye düğümü
   Widget _buildLockedNode() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: widget.nodeSize,
       height: widget.nodeSize,
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: isDark ? Colors.grey[800] : Colors.grey[300],
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
@@ -848,7 +869,11 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
           ),
         ],
       ),
-      child: Icon(Icons.lock, color: Colors.grey[600], size: 30),
+      child: Icon(
+        Icons.lock,
+        color: isDark ? Colors.grey[400] : Colors.grey[600],
+        size: 30,
+      ),
     );
   }
 
@@ -1042,6 +1067,7 @@ class _PathPainter extends CustomPainter {
   final double verticalSpacing;
   final double screenWidth;
   final double Function(int) getPosition;
+  final bool isDark;
 
   _PathPainter({
     required this.levelCount,
@@ -1049,12 +1075,15 @@ class _PathPainter extends CustomPainter {
     required this.verticalSpacing,
     required this.screenWidth,
     required this.getPosition,
+    required this.isDark,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = _LevelSelectionScreenState._pathColor.withValues(alpha: 0.5)
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.15)
+          : _LevelSelectionScreenState._pathColor.withValues(alpha: 0.5)
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

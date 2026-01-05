@@ -37,7 +37,7 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 11,
+      version: 13,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -180,7 +180,8 @@ class DatabaseHelper implements IDatabaseHelper {
         wrongCount INTEGER,
         totalQuestions INTEGER,
         completedAt TEXT,
-        details TEXT
+        details TEXT,
+        key TEXT
       )
     ''');
 
@@ -248,6 +249,14 @@ class DatabaseHelper implements IDatabaseHelper {
         contentId TEXT NOT NULL,
         seenAt TEXT NOT NULL,
         UNIQUE(contentType, contentId)
+      )
+    ''');
+
+    // Günlük Uygulama Kullanım Süresi Tablosu
+    await db.execute('''
+      CREATE TABLE DailyTimeTracking(
+        date TEXT PRIMARY KEY,
+        durationSeconds INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -430,6 +439,28 @@ class DatabaseHelper implements IDatabaseHelper {
           contentId TEXT NOT NULL,
           seenAt TEXT NOT NULL,
           UNIQUE(contentType, contentId)
+        )
+      ''');
+    }
+
+    if (oldVersion < 12) {
+      // GameResults tablosuna key sütunu ekle (TestID veya KonuID için)
+      try {
+        await db.execute('ALTER TABLE GameResults ADD COLUMN key TEXT');
+      } catch (e) {
+        // Sütun zaten varsa hata verebilir, yut
+        if (e.toString().contains('duplicate column name')) {
+          // ignore
+        }
+      }
+    }
+
+    if (oldVersion < 13) {
+      // Günlük Uygulama Kullanım Süresi Tablosu
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS DailyTimeTracking(
+          date TEXT PRIMARY KEY,
+          durationSeconds INTEGER NOT NULL DEFAULT 0
         )
       ''');
     }
@@ -663,6 +694,7 @@ class DatabaseHelper implements IDatabaseHelper {
     required int wrongCount,
     required int totalQuestions,
     String? details,
+    String? key, // TestID veya KonuID
   }) async {
     Database db = await database;
 
@@ -675,6 +707,7 @@ class DatabaseHelper implements IDatabaseHelper {
       'totalQuestions': totalQuestions,
       'completedAt': DateTime.now().toIso8601String(),
       'details': details,
+      'key': key,
     });
 
     // Sonra eski kayıtları temizle (son 50'yi koru)
@@ -759,12 +792,85 @@ class DatabaseHelper implements IDatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getGameResults(String gameType) async {
     Database db = await database;
-    return await db.query(
-      'GameResults',
-      where: 'gameType = ?',
-      whereArgs: [gameType],
-      orderBy: 'completedAt DESC',
-    );
+    
+    if (gameType == 'test') {
+      // Test için detaylı sorgu (Ders ve Konu adlarını da getir)
+      // GameResults tablosunda 'testId' sütunu var mı? Hayır, 'key' sütunu var.
+      // GameResults tablosu: id, gameType, score, correct, wrong, completedAt, key (testId olabilir)
+      
+      // Önce tüm sonuçları al
+      final results = await db.query(
+        'GameResults',
+        where: 'gameType = ?',
+        whereArgs: [gameType],
+        orderBy: 'completedAt DESC',
+      );
+      
+      List<Map<String, dynamic>> enrichedResults = [];
+      
+      for (final result in results) {
+        final resultMap = Map<String, dynamic>.from(result);
+        final testId = result['key'] as String?;
+        
+        if (testId != null && testId.isNotEmpty) {
+          // Bu testin konusunu ve dersini bul
+          final testData = await db.rawQuery('''
+            SELECT T.testAdi, K.konuAdi, D.dersAdi 
+            FROM Testler T
+            JOIN Konular K ON T.konuID = K.konuID
+            JOIN Dersler D ON K.dersID = D.dersID
+            WHERE T.testID = ?
+          ''', [testId]);
+          
+          if (testData.isNotEmpty) {
+            resultMap['testAdi'] = testData.first['testAdi'];
+            resultMap['konuAdi'] = testData.first['konuAdi'];
+            resultMap['dersAdi'] = testData.first['dersAdi'];
+          }
+        }
+        enrichedResults.add(resultMap);
+      }
+      return enrichedResults;
+    } else if (gameType == 'flashcard') {
+      // Flashcard için detaylı sorgu (Ders ve Konu adlarını da getir)
+      final results = await db.query(
+        'GameResults',
+        where: 'gameType = ?',
+        whereArgs: [gameType],
+        orderBy: 'completedAt DESC',
+      );
+      
+      List<Map<String, dynamic>> enrichedResults = [];
+      
+      for (final result in results) {
+        final resultMap = Map<String, dynamic>.from(result);
+        final topicId = result['key'] as String?;
+        
+        if (topicId != null && topicId.isNotEmpty) {
+          // Bu konuyu ve dersini bul
+          final topicData = await db.rawQuery('''
+            SELECT K.konuAdi, D.dersAdi 
+            FROM Konular K
+            JOIN Dersler D ON K.dersID = D.dersID
+            WHERE K.konuID = ?
+          ''', [topicId]);
+          
+          if (topicData.isNotEmpty) {
+            resultMap['konuAdi'] = topicData.first['konuAdi'];
+            resultMap['dersAdi'] = topicData.first['dersAdi'];
+          }
+        }
+        enrichedResults.add(resultMap);
+      }
+      return enrichedResults;
+    } else {
+      return await db.query(
+        'GameResults',
+        where: 'gameType = ?',
+        whereArgs: [gameType],
+        orderBy: 'completedAt DESC',
+      );
+    }
   }
 
   Future<List<Map<String, dynamic>>> getAllGameResults() async {
@@ -772,9 +878,185 @@ class DatabaseHelper implements IDatabaseHelper {
     return await db.query('GameResults', orderBy: 'completedAt DESC');
   }
 
+  /// Haftalık sınav sonuçlarını getir
+  Future<List<Map<String, dynamic>>> getWeeklyExamResults() async {
+    Database db = await database;
+    return await db.query(
+      'WeeklyExamResults',
+      orderBy: 'completedAt DESC',
+    );
+  }
+
   // ============================================================
-  // Performans Optimizasyonu - SQL RANDOM() Metodları
+  // Başarı Analitik Metodları
   // ============================================================
+
+  /// Ders bazlı başarı oranlarını hesapla
+  /// Her ders için çözülen testlerdeki doğru/toplam oranını döner
+  Future<List<Map<String, dynamic>>> getLessonSuccessRates() async {
+    Database db = await database;
+    
+    // Dersleri al
+    final dersler = await db.query('Dersler');
+    
+    List<Map<String, dynamic>> result = [];
+    
+    for (final ders in dersler) {
+      final dersId = ders['dersID'] as String;
+      final dersAdi = ders['dersAdi'] as String? ?? '';
+      
+      // Bu derse ait konuları al
+      final konular = await db.query(
+        'Konular',
+        where: 'dersID = ?',
+        whereArgs: [dersId],
+      );
+      
+      if (konular.isEmpty) continue;
+      
+      final konuIds = konular.map((k) => k['konuID'] as String).toList();
+      
+      // Bu konulara ait testleri al
+      final placeholders = List.filled(konuIds.length, '?').join(',');
+      final testler = await db.rawQuery(
+        'SELECT testID FROM Testler WHERE konuID IN ($placeholders)',
+        konuIds,
+      );
+      
+      if (testler.isEmpty) {
+        result.add({
+          'dersID': dersId,
+          'dersAdi': dersAdi,
+          'basariOrani': 0.0,
+          'toplamTest': 0,
+          'cozulenTest': 0,
+        });
+        continue;
+      }
+      
+      final testIds = testler.map((t) => t['testID'] as String).toList();
+      final testPlaceholders = List.filled(testIds.length, '?').join(',');
+      
+      // Bu testlerden çözülenlerin sonuçlarını al
+      final sonuclar = await db.rawQuery(
+        'SELECT correct, wrong FROM TestResults WHERE testId IN ($testPlaceholders)',
+        testIds,
+      );
+      
+      if (sonuclar.isEmpty) {
+        result.add({
+          'dersID': dersId,
+          'dersAdi': dersAdi,
+          'basariOrani': 0.0,
+          'toplamTest': testIds.length,
+          'cozulenTest': 0,
+        });
+        continue;
+      }
+      
+      // Toplam doğru ve yanlış hesapla
+      int toplamDogru = 0;
+      int toplamSoru = 0;
+      
+      for (final sonuc in sonuclar) {
+        final dogru = sonuc['correct'] as int? ?? 0;
+        final yanlis = sonuc['wrong'] as int? ?? 0;
+        toplamDogru += dogru;
+        toplamSoru += dogru + yanlis;
+      }
+      
+      final basariOrani = toplamSoru > 0 ? (toplamDogru / toplamSoru) * 100 : 0.0;
+      
+      result.add({
+        'dersID': dersId,
+        'dersAdi': dersAdi,
+        'basariOrani': basariOrani,
+        'toplamTest': testIds.length,
+        'cozulenTest': sonuclar.length,
+      });
+    }
+    
+    return result;
+  }
+
+  /// Seçilen derse ait konu başarı oranlarını hesapla
+  Future<List<Map<String, dynamic>>> getTopicSuccessRates(String dersId) async {
+    Database db = await database;
+    
+    // Derse ait konuları al
+    final konular = await db.query(
+      'Konular',
+      where: 'dersID = ?',
+      whereArgs: [dersId],
+      orderBy: 'sira ASC',
+    );
+    
+    List<Map<String, dynamic>> result = [];
+    
+    for (final konu in konular) {
+      final konuId = konu['konuID'] as String;
+      final konuAdi = konu['konuAdi'] as String? ?? '';
+      
+      // Bu konuya ait testleri al
+      final testler = await db.query(
+        'Testler',
+        columns: ['testID'],
+        where: 'konuID = ?',
+        whereArgs: [konuId],
+      );
+      
+      if (testler.isEmpty) {
+        result.add({
+          'konuID': konuId,
+          'konuAdi': konuAdi,
+          'basariOrani': 0.0,
+          'cozulenTest': 0,
+        });
+        continue;
+      }
+      
+      final testIds = testler.map((t) => t['testID'] as String).toList();
+      final placeholders = List.filled(testIds.length, '?').join(',');
+      
+      // Bu testlerin sonuçlarını al
+      final sonuclar = await db.rawQuery(
+        'SELECT correct, wrong FROM TestResults WHERE testId IN ($placeholders)',
+        testIds,
+      );
+      
+      if (sonuclar.isEmpty) {
+        result.add({
+          'konuID': konuId,
+          'konuAdi': konuAdi,
+          'basariOrani': 0.0,
+          'cozulenTest': 0,
+        });
+        continue;
+      }
+      
+      // Başarı oranını hesapla
+      int toplamDogru = 0;
+      int toplamSoru = 0;
+      
+      for (final sonuc in sonuclar) {
+        final dogru = sonuc['correct'] as int? ?? 0;
+        final yanlis = sonuc['wrong'] as int? ?? 0;
+        toplamDogru += dogru;
+        toplamSoru += dogru + yanlis;
+      }
+      
+      final basariOrani = toplamSoru > 0 ? (toplamDogru / toplamSoru) * 100 : 0.0;
+      
+      result.add({
+        'konuID': konuId,
+        'konuAdi': konuAdi,
+        'basariOrani': basariOrani,
+        'cozulenTest': sonuclar.length,
+      });
+    }
+    
+    return result;
+  }
 
   /// Rastgele Fill Blanks level çeker
   /// Tüm veriyi belleğe almak yerine SQL RANDOM() kullanır
@@ -1106,5 +1388,64 @@ class DatabaseHelper implements IDatabaseHelper {
     );
     final seenCount = Sqflite.firstIntValue(result) ?? 0;
     return seenCount >= totalCount;
+  }
+
+  // ==================== SÜRE TAKİBİ METOTLARI ====================
+
+  /// Bugünün süresini kaydet veya güncelle (saniye cinsinden)
+  Future<void> saveDailyTime(String date, int durationSeconds) async {
+    Database db = await database;
+    await db.insert(
+      'DailyTimeTracking',
+      {'date': date, 'durationSeconds': durationSeconds},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Belirli bir günün süresini getir (saniye cinsinden)
+  Future<int> getDailyTime(String date) async {
+    Database db = await database;
+    final result = await db.query(
+      'DailyTimeTracking',
+      where: 'date = ?',
+      whereArgs: [date],
+    );
+    if (result.isEmpty) return 0;
+    return (result.first['durationSeconds'] as int?) ?? 0;
+  }
+
+  /// Bu haftanın verilerini getir (Pazartesi-Pazar)
+  Future<List<Map<String, dynamic>>> getWeeklyTimeData() async {
+    final now = DateTime.now();
+    // Haftanın Pazartesi gününü bul (weekday: 1 = Pazartesi)
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final List<Map<String, dynamic>> weekData = [];
+
+    for (int i = 0; i < 7; i++) {
+      final date = monday.add(Duration(days: i));
+      final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final seconds = await getDailyTime(dateStr);
+      
+      weekData.add({
+        'date': dateStr,
+        'dayName': _getDayName(date.weekday),
+        'durationSeconds': seconds,
+        'durationMinutes': (seconds / 60).round(),
+      });
+    }
+    return weekData;
+  }
+
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1: return 'Pzt';
+      case 2: return 'Sal';
+      case 3: return 'Çar';
+      case 4: return 'Per';
+      case 5: return 'Cum';
+      case 6: return 'Cmt';
+      case 7: return 'Paz';
+      default: return '';
+    }
   }
 }

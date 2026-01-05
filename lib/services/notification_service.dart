@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +11,7 @@ import '../screens/main_screen.dart';
 import '../features/duel/presentation/screens/duel_game_selection_screen.dart';
 import '../features/games/memory/presentation/screens/memory_game_screen.dart';
 import '../screens/lesson_selection_screen.dart';
+import 'scheduled_notification_helper.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -45,8 +46,9 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // Timezone verisini yükle
+    // Timezone verisini yükle ve Türkiye saatini ayarla
     tz.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Europe/Istanbul'));
 
     // Android için bildirim izni iste
     await _requestPermissions();
@@ -66,25 +68,43 @@ class NotificationService {
         >();
 
     if (androidPlugin != null) {
-      // Maskot kanalı
       await androidPlugin.createNotificationChannel(
         const AndroidNotificationChannel(
           NotificationData.mascotChannelId,
           NotificationData.mascotChannelName,
           description: NotificationData.mascotChannelDesc,
           importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
         ),
       );
 
-      // Oyun kanalı
       await androidPlugin.createNotificationChannel(
         const AndroidNotificationChannel(
           NotificationData.gameChannelId,
           NotificationData.gameChannelName,
           description: NotificationData.gameChannelDesc,
           importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
         ),
       );
+    }
+  }
+
+  /// MainScreen açılışında çağrılır - zamanlanmış bildirim kurulumu
+  /// İzinler LoginScreen'de zaten istenmiş olmalı
+  Future<void> ensureInitialized() async {
+    try {
+      debugPrint('🔔 Bildirim servisi başlatılıyor...');
+      
+      // Zamanlanmış bildirimleri kur
+      await initializeScheduledNotifications();
+      
+      debugPrint('✅ Bildirim servisi başarıyla başlatıldı');
+    } catch (e, stack) {
+      debugPrint('❌ Bildirim servisi başlatma hatası: $e');
+      debugPrint('📍 Stack: $stack');
     }
   }
 
@@ -219,168 +239,29 @@ class NotificationService {
 
   // ========== HAFTALIK BİLDİRİMLER ==========
 
-  /// Haftalık bildirimleri planlar
-  /// Bu metod login veya uygulama açılışında bir kez çağrılmalıdır
+  /// Haftalık bildirimleri planlar (MainScreen açılışında)
   Future<void> initializeScheduledNotifications() async {
     try {
-      // Mevcut haftalık bildirimleri iptal et (güncelleme için)
-      await _cancelWeeklyNotifications();
-
-      // Kullanıcının bildirimleri aktif mi kontrol et
+      // Önce mevcutları iptal et (temiz başlangıç)
+      await ScheduledNotificationHelper.cancelAllAlarms();
+      
+      // Bildirim ayarını kontrol et
       final prefs = await SharedPreferences.getInstance();
-      final notificationsEnabled =
-          prefs.getBool('notifications_enabled') ?? true;
+      final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
 
       if (!notificationsEnabled) {
         debugPrint('Bildirimler devre dışı, haftalık bildirimler kurulmadı');
         return;
       }
 
-      // Maskot ismini al
-      final mascotName = await _getMascotName();
-
-      // Tüm haftalık bildirimleri planla
-      await scheduleWeeklyNotifications(mascotName: mascotName);
-
-      debugPrint(
-        '✅ ${NotificationData.weeklyNotifications.length} haftalık bildirim kuruldu',
-      );
+      // Haftalık bildirimleri ScheduledNotificationHelper ile kur
+      // (Platform kontrolü helper içinde yapılıyor)
+      await ScheduledNotificationHelper.scheduleWeeklyNotifications();
+      
+      debugPrint('✅ Haftalık bildirimler başarıyla kuruldu');
     } catch (e) {
       debugPrint('Haftalık bildirim kurulum hatası: $e');
     }
-  }
-
-  /// Haftalık bildirimleri iptal eder
-  Future<void> _cancelWeeklyNotifications() async {
-    // ID aralıkları: 100-106 ve 200-206
-    for (int id = 100; id <= 106; id++) {
-      await _notificationsPlugin.cancel(id);
-    }
-    for (int id = 200; id <= 206; id++) {
-      await _notificationsPlugin.cancel(id);
-    }
-  }
-
-  /// Maskot ismini SharedPreferences veya veritabanından alır
-  Future<String> _getMascotName() async {
-    try {
-      // Önce DatabaseHelper'dan dene
-      final mascot = await DatabaseHelper().getActiveMascot();
-      if (mascot != null && mascot['petName'] != null) {
-        return mascot['petName'] as String;
-      }
-    } catch (e) {
-      debugPrint('Maskot ismi alınamadı: $e');
-    }
-    // Varsayılan isim
-    return 'Minik Dostun';
-  }
-
-  /// 14 haftalık bildirimi planlar
-  Future<void> scheduleWeeklyNotifications({
-    String mascotName = 'Minik Dostun',
-  }) async {
-    for (final notification in NotificationData.weeklyNotifications) {
-      await _scheduleWeeklyNotification(notification, mascotName);
-    }
-  }
-
-  /// Tek bir haftalık bildirimi planlar
-  Future<void> _scheduleWeeklyNotification(
-    NotificationData data,
-    String mascotName,
-  ) async {
-    // Kanal ayarlarını belirle
-    final isMascotChannel = data.channelId == NotificationData.mascotChannelId;
-
-    final AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          data.channelId,
-          isMascotChannel
-              ? NotificationData.mascotChannelName
-              : NotificationData.gameChannelName,
-          channelDescription: isMascotChannel
-              ? NotificationData.mascotChannelDesc
-              : NotificationData.gameChannelDesc,
-          importance: isMascotChannel ? Importance.high : Importance.max,
-          priority: Priority.high,
-          showWhen: true,
-          styleInformation: BigTextStyleInformation(
-            data.useMascotName ? data.getBody(mascotName) : data.body,
-          ),
-        );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    final NotificationDetails notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    // Bir sonraki hedef zamanı hesapla
-    final scheduledDate = _nextInstanceOfWeekdayTime(
-      data.dayOfWeek,
-      data.hour,
-      data.minute,
-    );
-
-    try {
-      await _notificationsPlugin.zonedSchedule(
-        data.id,
-        data.useMascotName ? data.getTitle(mascotName) : data.title,
-        data.useMascotName ? data.getBody(mascotName) : data.body,
-        scheduledDate,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-        payload: data.payload,
-      );
-
-      if (kDebugMode) {
-        debugPrint(
-          '📅 Bildirim planlandı: ID=${data.id}, '
-          'Gün=${data.dayOfWeek}, Saat=${data.hour}:${data.minute}, '
-          'Başlık="${data.title}"',
-        );
-      }
-    } catch (e) {
-      debugPrint('Bildirim planlama hatası (ID: ${data.id}): $e');
-    }
-  }
-
-  /// Belirtilen haftanın günü ve saati için bir sonraki zamanı hesaplar
-  tz.TZDateTime _nextInstanceOfWeekdayTime(
-    int dayOfWeek,
-    int hour,
-    int minute,
-  ) {
-    final now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      hour,
-      minute,
-    );
-
-    // Hedef güne ilerle
-    while (scheduledDate.weekday != dayOfWeek) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-
-    // Eğer bu gün ama saat geçtiyse, bir sonraki haftaya al
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 7));
-    }
-
-    return scheduledDate;
   }
 
   // Okunmamış bildirim sayısı için notifier
@@ -426,7 +307,6 @@ class NotificationService {
       // 3A. Uygulama AÇIKSA: In-App Notification (Overlay) göster
       _showInAppNotification(title, body, payload);
     } else {
-      // 3B. Uygulama KAPALIYSA veya arka plandaysa: Sistem bildirimi göster
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
             'bilgi_avcisi_channel',
@@ -435,6 +315,9 @@ class NotificationService {
             importance: Importance.max,
             priority: Priority.high,
             showWhen: true,
+            playSound: true,
+            enableVibration: true,
+            visibility: NotificationVisibility.public,
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -497,7 +380,7 @@ class NotificationService {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: const Color(0xFF00CEC9).withOpacity(0.3),
+            color: const Color(0xFF00CEC9).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -656,30 +539,6 @@ class NotificationService {
     required String userName,
     int delaySeconds = 10,
   }) async {
-    final scheduledTime = DateTime.now().add(Duration(seconds: delaySeconds));
-
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'welcome_channel',
-          'Hoşgeldin Bildirimleri',
-          channelDescription: 'Yeni kullanıcılar için karşılama bildirimleri',
-          importance: Importance.max,
-          priority: Priority.high,
-          showWhen: true,
-          styleInformation: BigTextStyleInformation(''),
-        );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    const NotificationDetails notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
     final notificationId = 'welcome_$userName'.hashCode;
     final title = '🎉 Hoş Geldin $userName!';
     final body =
@@ -688,25 +547,62 @@ class NotificationService {
         '🎮 Tüm ekranları kontrol etmeyi unutma!\n\n'
         '⭐ Şimdi başla ve bilgi avcısı ol!';
 
-    // Zamanlanmış bildirim
-    await _notificationsPlugin.zonedSchedule(
-      notificationId,
-      title,
-      body,
-      _convertToTZDateTime(scheduledTime),
-      notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      payload: 'welcome_notification',
-    );
-
     // Veritabanına kaydet
     await DatabaseHelper().insertNotification({
       'title': title,
       'body': body,
-      'date': scheduledTime.toIso8601String(),
+      'date': DateTime.now().toIso8601String(),
       'isRead': 0,
+    });
+    
+    // Sayacı güncelle
+    await updateUnreadCount();
+
+    // Belirtilen süre sonra bildirim gönder (zonedSchedule yerine Future.delayed + show)
+    Future.delayed(Duration(seconds: delaySeconds), () async {
+      try {
+        const AndroidNotificationDetails androidDetails =
+            AndroidNotificationDetails(
+              'welcome_channel',
+              'Hoşgeldin Bildirimleri',
+              channelDescription: 'Yeni kullanıcılar için karşılama bildirimleri',
+              importance: Importance.max,
+              priority: Priority.high,
+              playSound: true,
+              enableVibration: true,
+              visibility: NotificationVisibility.public,
+              icon: '@mipmap/ic_launcher',
+              styleInformation: BigTextStyleInformation(
+                '🚀 Öğrenme macerana hoş geldin!\n\n'
+                '📚 Testler, bilgi kartları ve mini oyunlarla öğrenmeyi keşfet.\n'
+                '🎮 Tüm ekranları kontrol etmeyi unutma!\n\n'
+                '⭐ Şimdi başla ve bilgi avcısı ol!',
+              ),
+            );
+
+        const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
+
+        const NotificationDetails notificationDetails = NotificationDetails(
+          android: androidDetails,
+          iOS: iosDetails,
+        );
+
+        await _notificationsPlugin.show(
+          notificationId,
+          title,
+          body,
+          notificationDetails,
+          payload: 'welcome_notification',
+        );
+        
+        debugPrint('✅ Hoşgeldin bildirimi gönderildi: $userName');
+      } catch (e) {
+        debugPrint('❌ Hoşgeldin bildirimi gönderilemedi: $e');
+      }
     });
   }
 }

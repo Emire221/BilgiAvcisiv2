@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 // Maskot türleri
 enum PetType {
+  astronaut,
+  monkey,
+  tiger,
   cat,
   dog,
-  rabbit,
-  astronaut,
-  tiger,
-  monkey;
+  rabbit;
 
   String get displayName {
     switch (this) {

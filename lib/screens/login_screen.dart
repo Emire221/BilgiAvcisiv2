@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'register_screen.dart';
 import 'main_screen.dart';
 import 'profile_setup_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// 🎮 Oyunlaştırılmış Login Ekranı
 /// Glassmorphism + Living UI + Haptic Feedback
@@ -57,6 +59,28 @@ class _LoginScreenState extends State<LoginScreen>
     _initAnimations();
     _setupFocusListeners();
     _checkAuthState();
+    _requestAllPermissions(); // Tüm izinleri baştan iste
+  }
+  
+  /// Tüm izinleri arka arkaya iste (bildirim, mikrofon, exact alarm)
+  Future<void> _requestAllPermissions() async {
+    // 1. Bildirim izni (Android 13+ ve iOS)
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+    
+    // 2. Mikrofon izni (Android ve iOS)
+    if (await Permission.microphone.isDenied) {
+      await Permission.microphone.request();
+    }
+    
+    // 3. Exact alarm izni (SADECE Android 12+ için)
+    // iOS'ta bu izin gerekli değil - yerel bildirimler sistem tarafından yönetiliyor
+    if (Platform.isAndroid) {
+      if (await Permission.scheduleExactAlarm.isDenied) {
+        await Permission.scheduleExactAlarm.request();
+      }
+    }
   }
 
   void _initAnimations() {

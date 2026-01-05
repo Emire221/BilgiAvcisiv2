@@ -1,14 +1,24 @@
+import 'dart:async';
 import 'dart:math' as math;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/mascot.dart';
 import '../providers/mascot_provider.dart';
-import '../../../../screens/content_loading_screen.dart';
+import '../../../../core/navigator_key.dart';
+import '../../../../core/providers/sync_provider.dart';
+import '../../../../services/notification_service.dart';
+import '../../../../services/local_preferences_service.dart';
+import '../../../../services/database_helper.dart';
 import '../../../../widgets/glass_container.dart';
+import '../../../../widgets/in_app_notification.dart';
+import '../../../../screens/main_screen.dart';
 
 /// 🎮 3D Sahne Stili Maskot Seçim Ekranı
 /// Carousel yapısı ile modern, animasyonlu tasarım
@@ -25,6 +35,11 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
   PetType? _selectedPetType;
   bool _isHatching = false;
   bool _showCelebration = false;
+
+  // Sync durumları
+  bool _isSyncing = false;
+  bool _syncError = false;
+  String _errorMessage = '';
 
   // Carousel kontrolü
   late PageController _pageController;
@@ -46,6 +61,22 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
 
   // Maskot listesi
   final List<PetType> _petTypes = PetType.values;
+
+  // 🎮 Eğlenceli motivasyon mesajları
+  final List<Map<String, dynamic>> _funMessages = [
+    {'emoji': '🚀', 'text': 'Uzay gemisi kalkışa hazırlanıyor!'},
+    {'emoji': '🧙‍♂️', 'text': 'Büyücü derslerini sihirliyor...'},
+    {'emoji': '🦸', 'text': 'Süper güçler yükleniyor!'},
+    {'emoji': '🎢', 'text': 'Bilgi lunapark treni hareket ediyor!'},
+    {'emoji': '🏰', 'text': 'Bilgi kalesi inşa ediliyor...'},
+    {'emoji': '🌈', 'text': 'Gökkuşağı renkleri karıştırılıyor...'},
+    {'emoji': '⚡', 'text': 'Beyin şimşekleri çakıyor!'},
+    {'emoji': '🎮', 'text': 'Level yükleniyor...'},
+    {'emoji': '🦄', 'text': 'Tek boynuzlu at seni bekliyor!'},
+    {'emoji': '🌟', 'text': 'Yıldızlar senin için parlıyor!'},
+  ];
+  int _currentMessageIndex = 0;
+  Timer? _messageTimer;
 
   @override
   void initState() {
@@ -110,6 +141,7 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
     _blobController.dispose();
     _selectionController.dispose();
     _celebrationController.dispose();
+    _messageTimer?.cancel();
     super.dispose();
   }
 
@@ -287,21 +319,167 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
 
       if (!mounted) return;
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const ContentLoadingScreen()),
-        (route) => false,
-      );
+      // Sync başlat - aynı ekranda kalıp progress göster
+      await _startContentSync();
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _showCelebration = false;
         _isHatching = false;
+        _syncError = true;
+        _errorMessage = e.toString();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e'), backgroundColor: _energeticCoral),
-      );
     }
+  }
+
+  /// İçerik senkronizasyonu başlat
+  Future<void> _startContentSync() async {
+    setState(() {
+      _isSyncing = true;
+      _syncError = false;
+    });
+
+    // Mesaj timer'ını başlat
+    _messageTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _currentMessageIndex = (_currentMessageIndex + 1) % _funMessages.length;
+      });
+    });
+
+    final prefsService = LocalPreferencesService();
+
+    // Önceki sync yarım kalmışsa temizle
+    final wasComplete = await prefsService.isContentSyncCompleted();
+    if (!wasComplete) {
+      await DatabaseHelper().clearAllData();
+    }
+
+    await prefsService.setContentSyncCompleted(false);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Kullanıcı oturumu bulunamadı');
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) throw Exception('Kullanıcı profili bulunamadı');
+
+      final userData = userDoc.data();
+      final selectedClass = userData?['classLevel'] as String?;
+      final userName = userData?['name'] as String? ?? 'Öğrenci';
+
+      if (selectedClass == null) throw Exception('Sınıf bilgisi bulunamadı');
+
+      // Hoşgeldin bildirimi planla
+      await _scheduleWelcomeNotificationIfFirstTime(userName);
+
+      // Sınıf adını güvenli formata çevir
+      final safeClassName = selectedClass
+          .replaceAll('.', '')
+          .replaceAll(' ', '_')
+          .replaceAll('ı', 'i')
+          .replaceAll('İ', 'I');
+
+      // Sync başlat
+      await ref.read(syncControllerProvider.notifier).syncContent(safeClassName);
+
+      final syncState = ref.read(syncControllerProvider);
+      if (syncState.error != null) throw Exception(syncState.error);
+
+      await prefsService.setContentSyncCompleted(true);
+
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        _navigateToMain();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _syncError = true;
+          _errorMessage = e.toString();
+          _isSyncing = false;
+        });
+      }
+    }
+  }
+
+  /// Hoşgeldin bildirimi gönder
+  Future<void> _scheduleWelcomeNotificationIfFirstTime(String userName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasReceivedWelcome = prefs.getBool('has_received_welcome_notification') ?? false;
+
+      if (!hasReceivedWelcome) {
+        await NotificationService().scheduleWelcomeNotification(
+          userName: userName,
+          delaySeconds: 10,
+        );
+        await prefs.setBool('has_received_welcome_notification', true);
+      }
+    } catch (e) {
+      debugPrint('Hoşgeldin bildirimi hatası: $e');
+    }
+  }
+
+  /// In-app hoşgeldin bildirimi göster
+  void _showInAppWelcomeNotification() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasShownInAppWelcome = prefs.getBool('has_shown_inapp_welcome') ?? false;
+
+      if (!hasShownInAppWelcome) {
+        final user = FirebaseAuth.instance.currentUser;
+        final userName = user?.displayName ?? 'Şampiyon';
+
+        Future.delayed(const Duration(seconds: 12), () {
+          if (!mounted) return;
+          final navContext = navigatorKey.currentContext;
+          if (navContext != null) {
+            // ignore: use_build_context_synchronously
+            showWelcomeNotification(navContext, userName);
+          }
+        });
+
+        await prefs.setBool('has_shown_inapp_welcome', true);
+      }
+    } catch (e) {
+      debugPrint('In-app bildirim hatası: $e');
+    }
+  }
+
+  /// Ana ekrana git
+  void _navigateToMain() {
+    _messageTimer?.cancel();
+    _showInAppWelcomeNotification();
+    NotificationService().initializeScheduledNotifications();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const MainScreen(),
+        transitionDuration: const Duration(milliseconds: 800),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          );
+          final scaleUp = Tween<double>(begin: 0.95, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          );
+          return FadeTransition(
+            opacity: fadeIn,
+            child: ScaleTransition(scale: scaleUp, child: child),
+          );
+        },
+      ),
+      (route) => false,
+    );
   }
 
   // ==================== UI BUILD METODLARI ====================
@@ -311,19 +489,23 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
     final size = MediaQuery.of(context).size;
     final isTablet = size.shortestSide >= 600;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Animasyonlu arka plan
-          _buildAnimatedBackground(),
+    // Senkronizasyon/kutlama sırasında geri tuşunu devre dışı bırak
+    return PopScope(
+      canPop: false, // Geri tuşu devre dışı - maskot seçimi ve sync sırasında
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Animasyonlu arka plan
+            _buildAnimatedBackground(),
 
-          // Ana içerik
-          SafeArea(
-            child: _showCelebration
-                ? _buildCelebrationOverlay(size)
-                : _buildMainContent(size, isTablet),
-          ),
-        ],
+            // Ana içerik
+            SafeArea(
+              child: _showCelebration
+                  ? _buildCelebrationOverlay(size)
+                  : _buildMainContent(size, isTablet),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -864,71 +1046,234 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
   }
 
   Widget _buildCelebrationOverlay(Size size) {
+    final syncState = ref.watch(syncControllerProvider);
+    
     return Stack(
       children: [
-        // Konfeti / Yıldız Lottie
-        Positioned.fill(
-          child: Lottie.asset(
-            'assets/animation/loading-kum.json', // Placeholder - konfeti yerine
-            fit: BoxFit.cover,
-            repeat: false,
+        // Animasyonlu arka plan
+        _buildAnimatedBackground(),
+
+        // Ana içerik
+        SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Maskot animasyonu
+                  AnimatedBuilder(
+                    animation: _jumpAnimation,
+                    builder: (context, _) {
+                      return Transform.translate(
+                        offset: Offset(0, _jumpAnimation.value),
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (_selectedPetType?.color ?? Colors.white)
+                                    .withValues(alpha: 0.6),
+                                blurRadius: 40,
+                                spreadRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Lottie.asset(
+                            _selectedPetType?.getLottiePath() ?? '',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Başlık
+                  Text(
+                        '🎉 Harika Seçim! 🎉',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .scale(curve: Curves.elasticOut),
+
+                  const SizedBox(height: 16),
+
+                  // Alt başlık veya progress
+                  if (_syncError)
+                    _buildSyncErrorWidget()
+                  else if (_isSyncing) ...[
+                    Text(
+                      'Maceran başlıyor...',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 18,
+                      ),
+                    ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+
+                    const SizedBox(height: 32),
+
+                    // Progress bar
+                    Container(
+                      width: double.infinity,
+                      constraints: const BoxConstraints(maxWidth: 280),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: syncState.progress > 0 ? syncState.progress : null,
+                          backgroundColor: Colors.white.withValues(alpha: 0.3),
+                          valueColor: const AlwaysStoppedAnimation<Color>(_softYellow),
+                          minHeight: 8,
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 500.ms),
+
+                    if (syncState.progress > 0) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '%${(syncState.progress * 100).toInt()}',
+                        style: GoogleFonts.poppins(
+                          color: _softYellow,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // Eğlenceli mesaj
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          key: ValueKey(_currentMessageIndex),
+                          children: [
+                            Text(
+                              _funMessages[_currentMessageIndex]['emoji'] as String,
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Text(
+                                _funMessages[_currentMessageIndex]['text'] as String,
+                                style: GoogleFonts.nunito(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 700.ms),
+                  ] else
+                    Text(
+                      'Maceran başlıyor...',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 18,
+                      ),
+                    ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+                ],
+              ),
+            ),
           ),
         ),
+      ],
+    );
+  }
 
-        // Ortada seçilen maskot
-        Center(
+  Widget _buildSyncErrorWidget() {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(20),
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          decoration: BoxDecoration(
+            color: _energeticCoral.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _energeticCoral.withValues(alpha: 0.5)),
+          ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedBuilder(
-                animation: _jumpAnimation,
-                builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(0, _jumpAnimation.value),
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: (_selectedPetType?.color ?? Colors.white)
-                                .withValues(alpha: 0.6),
-                            blurRadius: 40,
-                            spreadRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: Lottie.asset(
-                        _selectedPetType?.getLottiePath() ?? '',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
+              const Icon(Icons.error_outline_rounded, color: Colors.white, size: 40),
+              const SizedBox(height: 12),
               Text(
-                    '🎉 Harika Seçim! 🎉',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 400.ms)
-                  .scale(curve: Curves.elasticOut),
-              const SizedBox(height: 16),
-              Text(
-                'Maceran başlıyor...',
+                'Bir sorun oluştu 😔',
                 style: GoogleFonts.poppins(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.white,
                   fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage,
+                style: GoogleFonts.nunito(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _syncError = false;
+                  _errorMessage = '';
+                });
+                _startContentSync();
+              },
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Tekrar Dene'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _softYellow,
+                foregroundColor: Colors.black87,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: _navigateToMain,
+              child: Text(
+                'Atla',
+                style: GoogleFonts.poppins(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

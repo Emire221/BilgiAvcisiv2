@@ -43,10 +43,10 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
   static const Color _skyTop = Color(0xFF4FACFE);
   static const Color _skyBottom = Color(0xFF00F2FE);
   
-  // Night Mode (Dark) Renk Paleti
-  static const Color _nightTop = Color(0xFF0F2027);
-  static const Color _nightMid = Color(0xFF203A43);
-  static const Color _nightBottom = Color(0xFF2C5364);
+  // Night Mode (Dark) Renk Paleti - Bright Night
+  static const Color _nightTop = Color(0xFF2B32B2);
+  static const Color _nightMid = Color(0xFF1488CC);
+  static const Color _nightBottom = Color(0xFF00C6FF);
   
   static const Color _correctGreen = Color(0xFF56AB2F);
   static const Color _wrongRed = Color(0xFFFF5E62);
@@ -178,82 +178,85 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 1. Gökyüzü Gradient Arka Plan
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isDark 
-                    ? [_nightTop, _nightMid, _nightBottom] 
-                    : [_skyTop, _skyBottom],
+    return PopScope(
+      canPop: false, // Oyun sırasında geri tuşu devre dışı
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // 1. Gökyüzü Gradient Arka Plan
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isDark 
+                      ? [_nightTop, _nightMid, _nightBottom] 
+                      : [_skyTop, _skyBottom],
+                ),
               ),
             ),
-          ),
 
-          // 2. Akan Bulutlar
-          ..._buildFloatingClouds(screenSize),
+            // 2. Akan Bulutlar
+            ..._buildFloatingClouds(screenSize),
 
-          // 3. Ana Oyun İçeriği
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                _buildHeader(safePadding),
+            // 3. Ana Oyun İçeriği
+            SafeArea(
+              child: Column(
+                children: [
+                  // Header
+                  _buildHeader(safePadding),
 
-                // Progress Bar
-                _buildProgressBar(),
+                  // Progress Bar
+                  _buildProgressBar(),
 
-                // Oyun Alanı
-                Expanded(
-                  child: AnimatedBuilder(
-                    animation: _shakeAnimation,
-                    builder: (context, child) {
-                      final shakeOffset =
-                          sin(_shakeAnimation.value * 4 * pi) * 10;
-                      return Transform.translate(
-                        offset: Offset(
-                          _showFeedback && !_isCorrect ? shakeOffset : 0,
-                          0,
+                  // Oyun Alanı
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: _shakeAnimation,
+                      builder: (context, child) {
+                        final shakeOffset =
+                            sin(_shakeAnimation.value * 4 * pi) * 10;
+                        return Transform.translate(
+                          offset: Offset(
+                            _showFeedback && !_isCorrect ? shakeOffset : 0,
+                            0,
+                          ),
+                          child: child,
+                        );
+                      },
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            // Soru Kartı
+                            _buildQuestionCard(currentQuestion),
+
+                            const SizedBox(height: 20),
+
+                            // Bilgilendirme ipucu
+                            if (!_showFeedback) _buildInstructionHint(),
+
+                            const SizedBox(height: 16),
+
+                            // Seçenekler veya Feedback
+                            if (!_showFeedback)
+                              _buildOptions(currentQuestion)
+                            else
+                              _buildFeedback(),
+                          ],
                         ),
-                        child: child,
-                      );
-                    },
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          // Soru Kartı
-                          _buildQuestionCard(currentQuestion),
-
-                          const SizedBox(height: 20),
-
-                          // Bilgilendirme ipucu
-                          if (!_showFeedback) _buildInstructionHint(),
-
-                          const SizedBox(height: 16),
-
-                          // Seçenekler veya Feedback
-                          if (!_showFeedback)
-                            _buildOptions(currentQuestion)
-                          else
-                            _buildFeedback(),
-                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          // 4. Intro Overlay
-          if (_showIntro) _buildIntroOverlay(),
-        ],
+            // 4. Intro Overlay
+            if (_showIntro) _buildIntroOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -263,18 +266,8 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Geri butonu
-          GestureDetector(
-            onTap: () => _showExitDialog(),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.close, color: Colors.white, size: 22),
-            ),
-          ),
+          // Boş alan (simetri için)
+          const SizedBox(width: 44),
 
           const SizedBox(width: 12),
 
@@ -396,7 +389,7 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
     final afterBlank = parts.length > 1 ? parts[1] : '';
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final cardColor = isDark ? const Color(0xFF0F2027).withValues(alpha: 0.8) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
     final placeholderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
     final placeholderTextColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
@@ -886,91 +879,20 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
     );
   }
 
-  void _showExitDialog() {
-    HapticFeedback.selectionClick();
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _wrongRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.exit_to_app, color: _wrongRed),
-              ),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Text(
-                  'Çıkmak istiyor musun?',
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(dialogContext).size.height * 0.3,
-            ),
-            child: SingleChildScrollView(
-              child: Text(
-                'İlerleme kaydedilmeyecek.',
-                style: GoogleFonts.nunito(color: Colors.black54),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'Devam Et',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w700,
-                  color: _skyTop,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _wrongRed,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'Çık',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
+
+
 
   /// Bilgilendirici ipucu widget'ı
   Widget _buildInstructionHint() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF2D2D2D) : Colors.white.withValues(alpha: 0.95);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -997,7 +919,7 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
             style: GoogleFonts.nunito(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: textColor,
             ),
           ),
         ],

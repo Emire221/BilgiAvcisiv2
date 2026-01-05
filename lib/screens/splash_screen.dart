@@ -4,7 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/local_preferences_service.dart';
+import '../services/notification_service.dart';
+import '../features/mascot/presentation/screens/pet_selection_screen.dart';
 import 'content_loading_screen.dart';
 import 'login_screen.dart';
 import 'main_screen.dart';
@@ -67,15 +70,29 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (isContentSynced) {
         // ✅ İçerik başarıyla indirilmiş → MainScreen
+        // Hoşgeldin bildirimi kontrolü
+        await _scheduleWelcomeNotificationIfNeeded();
         _navigateToScreen(const MainScreen());
       } else {
-        // ❌ İçerik indirilmemiş veya yarım kalmış → ContentLoadingScreen
-        _navigateToScreen(const ContentLoadingScreen());
+        // ❌ İçerik indirilmemiş veya yarım kalmış
+        // Maskot seçilmiş mi kontrol et - eğer seçilmişse ContentLoadingScreen'e git
+        final userData = userDoc.data();
+        final hasMascot = userData != null && 
+            (userData.containsKey('petType') || userData.containsKey('mascot'));
+        
+        if (hasMascot) {
+          // Maskot var ama sync yarım kalmış → ContentLoadingScreen (sync devam edecek)
+          debugPrint('SplashScreen: Maskot var ama sync yarım kalmış - ContentLoadingScreen\'e yönlendiriliyor');
+          _navigateToScreen(const ContentLoadingScreen());
+        } else {
+          // Maskot yok → PetSelectionScreen
+          _navigateToScreen(const PetSelectionScreen());
+        }
       }
     } catch (e) {
-      // Hata durumunda güvenli tarafta kal - ContentLoadingScreen
+      // Hata durumunda güvenli tarafta kal - PetSelectionScreen
       debugPrint('Auth kontrol hatası: $e');
-      _navigateToScreen(const ContentLoadingScreen());
+      _navigateToScreen(const PetSelectionScreen());
     }
   }
 
@@ -90,6 +107,29 @@ class _SplashScreenState extends State<SplashScreen> {
         },
       ),
     );
+  }
+
+  /// İlk kurulumda hoşgeldin bildirimi gönder (sadece bir kez)
+  Future<void> _scheduleWelcomeNotificationIfNeeded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasReceivedWelcome =
+          prefs.getBool('has_received_welcome_notification') ?? false;
+
+      if (!hasReceivedWelcome) {
+        final user = FirebaseAuth.instance.currentUser;
+        final userName = user?.displayName ?? 'Şampiyon';
+        
+        await NotificationService().scheduleWelcomeNotification(
+          userName: userName,
+          delaySeconds: 5,
+        );
+        
+        await prefs.setBool('has_received_welcome_notification', true);
+      }
+    } catch (e) {
+      debugPrint('Hoşgeldin bildirimi hatası: $e');
+    }
   }
 
   @override

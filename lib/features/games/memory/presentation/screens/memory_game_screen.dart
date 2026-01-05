@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/memory_game_controller.dart';
 import '../../domain/entities/memory_game_state.dart';
@@ -155,53 +156,56 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
       }
     });
 
-    return Scaffold(
-      backgroundColor: _darkBg,
-      body: Stack(
-        children: [
-          // ═══════════════════════════════════════════════════════════════════
-          // ANIMATED BACKGROUND
-          // ═══════════════════════════════════════════════════════════════════
-          _buildAnimatedBackground(size),
+    return PopScope(
+      canPop: true, // Oyun sırasında geri tuşu aktif
+      child: Scaffold(
+        backgroundColor: _darkBg,
+        body: Stack(
+          children: [
+            // ═══════════════════════════════════════════════════════════════════
+            // ANIMATED BACKGROUND
+            // ═══════════════════════════════════════════════════════════════════
+            _buildAnimatedBackground(size),
 
-          // ═══════════════════════════════════════════════════════════════════
-          // FLOATING PARTICLES
-          // ═══════════════════════════════════════════════════════════════════
-          ..._buildFloatingParticles(size),
+            // ═══════════════════════════════════════════════════════════════════
+            // FLOATING PARTICLES
+            // ═══════════════════════════════════════════════════════════════════
+            ..._buildFloatingParticles(size),
 
-          // ═══════════════════════════════════════════════════════════════════
-          // MAIN CONTENT
-          // ═══════════════════════════════════════════════════════════════════
-          SafeArea(
-            child: Column(
-              children: [
-                // Üst bar
-                _buildTopBar(
-                  state,
-                ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.3),
+            // ═══════════════════════════════════════════════════════════════════
+            // MAIN CONTENT
+            // ═══════════════════════════════════════════════════════════════════
+            SafeArea(
+              child: Column(
+                children: [
+                  // Üst bar
+                  _buildTopBar(
+                    state,
+                  ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.3),
 
-                // Durum göstergesi
-                _buildStatusIndicator(
-                  state,
-                ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+                  // Durum göstergesi
+                  _buildStatusIndicator(
+                    state,
+                  ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
 
-                // Kart grid'i
-                Expanded(
-                  child: _buildCardGrid(state)
+                  // Kart grid'i
+                  Expanded(
+                    child: _buildCardGrid(state)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 200.ms)
+                        .scale(begin: const Offset(0.95, 0.95)),
+                  ),
+
+                  // Alt bilgi
+                  _buildBottomInfo(state)
                       .animate()
-                      .fadeIn(duration: 500.ms, delay: 200.ms)
-                      .scale(begin: const Offset(0.95, 0.95)),
-                ),
-
-                // Alt bilgi
-                _buildBottomInfo(state)
-                    .animate()
-                    .fadeIn(duration: 400.ms, delay: 300.ms)
-                    .slideY(begin: 0.3),
-              ],
+                      .fadeIn(duration: 400.ms, delay: 300.ms)
+                      .slideY(begin: 0.3),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -222,7 +226,7 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
               center: Alignment.topCenter,
               radius: 1.5,
               colors: [
-                _neonPurple.withValues(alpha: 0.15 * _glowAnimation.value),
+                _neonPurple.withOpacity(0.15 * _glowAnimation.value),
                 _darkBg2,
                 _darkBg,
               ],
@@ -253,10 +257,10 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
                   height: particleSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withValues(alpha: 0.5),
+                    color: color.withOpacity(0.5),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.3),
+                        color: color.withOpacity(0.3),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -280,8 +284,11 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Geri butonu
-          _buildIconButton(icon: Icons.close_rounded, onTap: _showExitDialog),
+          // Çıkış butonu
+          _buildIconButton(
+            icon: FontAwesomeIcons.arrowLeft,
+            onTap: () => Navigator.of(context).pop(),
+          ),
 
           const Spacer(),
 
@@ -622,157 +629,6 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
     );
   }
 
-  void _showExitDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _darkBg2.withValues(alpha: 0.95),
-                    _darkBg.withValues(alpha: 0.98),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: _neonPink.withValues(alpha: 0.5),
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Icon
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _neonPink.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _neonPink.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.exit_to_app_rounded,
-                      color: _neonPink,
-                      size: 32,
-                    ),
-                  ),
 
-                  const SizedBox(height: 20),
 
-                  // Title
-                  Text(
-                    'Oyundan Çık',
-                    style: GoogleFonts.nunito(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Content
-                  Text(
-                    'Oyundan çıkmak istediğine emin misin?\nİlerlemen kaydedilmeyecek.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.nunito(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Buttons
-                  Row(
-                    children: [
-                      // Cancel button
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.pop(context);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'İptal',
-                                style: GoogleFonts.nunito(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      // Exit button
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            HapticFeedback.heavyImpact();
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [_neonPink, _neonPurple],
-                              ),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _neonPink.withValues(alpha: 0.4),
-                                  blurRadius: 12,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Çık',
-                                style: GoogleFonts.nunito(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
