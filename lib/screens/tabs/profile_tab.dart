@@ -92,16 +92,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
   }
     
   void _initXpAnimations() {
-    // Fill animasyonu (0 -> 100%) - Yavaşlatıldı
+    // Fill animasyonu (0 -> 100%) - Hızlandırıldı
     _fillController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000), 
+      duration: const Duration(milliseconds: 1000), 
     );
     
-    // Return animasyonu (100% -> gerçek değer) - Yavaşlatıldı
+    // Return animasyonu (100% -> gerçek değer) - Hızlandırıldı
     _returnController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 750),
     );
 
     _fillAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -187,31 +187,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       final db = await dbHelper.database;
       final testResults = await db.query('TestResults');
 
-      // Oyun sonuçlarını al (flashcard ve diğer oyunlar dahil)
-      final gameResults = await dbHelper.getAllGameResults();
-
-      // Haftalık sınav sonuçlarını al
-      final weeklyResults = await db.query('WeeklyExamResults');
-
       int totalCorrect = 0;
       int totalWrong = 0;
 
-      // Test sonuçlarını hesapla
+      // Sadece test sonuçlarını hesapla (doğruluk oranı için)
       for (final result in testResults) {
         totalCorrect += (result['correct'] as int?) ?? 0;
         totalWrong += (result['wrong'] as int?) ?? 0;
-      }
-
-      // Oyun sonuçlarını hesapla (flashcard dahil)
-      for (final result in gameResults) {
-        totalCorrect += (result['correctCount'] as int?) ?? 0;
-        totalWrong += (result['wrongCount'] as int?) ?? 0;
-      }
-
-      // Haftalık sınav sonuçlarını hesapla
-      for (final result in weeklyResults) {
-        totalCorrect += (result['dogru'] as int?) ?? 0;
-        totalWrong += (result['yanlis'] as int?) ?? 0;
       }
 
       // Streak hesapla (basit: ardışık günler)

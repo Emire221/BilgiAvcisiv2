@@ -23,6 +23,7 @@ class MemoryResultScreen extends StatefulWidget {
   final int elapsedSeconds;
   final int score;
   final int starCount;
+  final String gameType; // 'number_sequence' veya 'shape_match'
 
   const MemoryResultScreen({
     super.key,
@@ -31,6 +32,7 @@ class MemoryResultScreen extends StatefulWidget {
     required this.elapsedSeconds,
     required this.score,
     required this.starCount,
+    this.gameType = 'number_sequence',
   });
 
   @override
@@ -115,10 +117,10 @@ class _MemoryResultScreenState extends State<MemoryResultScreen>
         wrongCount: widget.mistakes,
         totalQuestions: 10,
         details:
-            '{"moves": ${widget.moves}, "mistakes": ${widget.mistakes}, "seconds": ${widget.elapsedSeconds}}',
+            '{"moves": ${widget.moves}, "mistakes": ${widget.mistakes}, "seconds": ${widget.elapsedSeconds}, "gameType": "${widget.gameType}"}',
       );
     } catch (e) {
-      if (kDebugMode) debugPrint('Bul Bakalım sonucu kaydedilemedi: $e');
+      if (kDebugMode) debugPrint('Hafıza oyunu sonucu kaydedilemedi: $e');
     }
   }
 

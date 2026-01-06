@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
 import '../../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../../features/games/memory/presentation/screens/memory_game_screen.dart';
+import '../../features/games/memory/presentation/screens/shape_game_screen.dart';
 import '../../features/duel/presentation/screens/duel_game_selection_screen.dart';
 import '../../providers/repository_providers.dart';
 
@@ -47,16 +49,13 @@ class _GamesTabState extends ConsumerState<GamesTab>
       ),
       _GameData(
         id: 'memory',
-        title: 'Bul Bakalım',
+        title: 'Hafıza Oyunu',
         subtitle: 'Hafıza testi!',
-        description: '1\'den 10\'a kadar sırayla bul',
+        description: 'Sıralı bul veya şekil eşleştir',
         icon: FontAwesomeIcons.brain,
         gradientColors: [const Color(0xFF00E676), const Color(0xFF00C853)],
         glowColor: const Color(0xFF00E676),
-        onTap: (ctx) => Navigator.push(
-          ctx,
-          MaterialPageRoute(builder: (_) => const MemoryGameScreen()),
-        ).then((_) => _refreshGameProgress()),
+        onTap: (ctx) => _showMemoryGameModal(ctx),
       ),
       _GameData(
         id: 'fill_blanks',
@@ -101,6 +100,172 @@ class _GamesTabState extends ConsumerState<GamesTab>
       ref.invalidate(gameProgressProvider('guess'));
       setState(() {});
     }
+  }
+
+  /// Hafıza oyunu mod seçim modalı
+  // Neon tema renkleri (Bildirimler ile uyumlu)
+  static const Color _accentCyan = Color(0xFF00D9FF);
+  static const Color _deepPurple = Color(0xFF1A0A2E);
+  static const Color _darkBg = Color(0xFF0D0D1A);
+
+  void _showMemoryGameModal(BuildContext ctx) {
+    final screenHeight = MediaQuery.of(ctx).size.height;
+    final screenWidth = MediaQuery.of(ctx).size.width;
+    final isTablet = screenWidth > 600;
+    
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(
+        maxWidth: screenWidth,
+        minWidth: screenWidth,
+      ),
+      builder: (context) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final modalHeight = screenHeight * 0.45;
+            final isCompact = modalHeight < 300;
+            final horizontalPadding = screenWidth * 0.05;
+            
+            return Container(
+              width: isTablet ? 500 : double.infinity,
+              height: modalHeight,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_deepPurple, _darkBg],
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(
+                  top: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
+                  left: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
+                  right: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00E676).withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Column(
+                    children: [
+                      // Başlık container
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: isCompact ? 12 : 16,
+                          horizontal: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('🧠', style: TextStyle(fontSize: 26)),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'HAFIZA OYUNU',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: isCompact ? 20 : 24,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: isCompact ? 4 : 8),
+                            Text(
+                              'Bir oyun modu seç',
+                              style: GoogleFonts.poppins(
+                                fontSize: isCompact ? 13 : 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Oyun mod butonları
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                            vertical: isCompact ? 12 : 16,
+                          ),
+                          child: Column(
+                            children: [
+                              // Sıralı Bulma Modu
+                              Expanded(
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: _MemoryModeCard(
+                                    icon: FontAwesomeIcons.sortNumericUp,
+                                    title: 'Sıralı Bulma',
+                                    subtitle: '1\'den 10\'a kadar sırayla bul',
+                                    gradient: [const Color(0xFF667EEA), const Color(0xFF764BA2)],
+                                    isCompact: isCompact,
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Navigator.push(
+                                        ctx,
+                                        MaterialPageRoute(builder: (_) => const MemoryGameScreen()),
+                                      ).then((_) => _refreshGameProgress());
+                                    },
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: isCompact ? 10 : 14),
+                              
+                              // Şekil Eşleştirme Modu
+                              Expanded(
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: _MemoryModeCard(
+                                    icon: FontAwesomeIcons.shapes,
+                                    title: 'Şekil Eşleştir',
+                                    subtitle: 'Aynı şekilleri eşleştirerek bul',
+                                    gradient: [const Color(0xFFFF6B9D), const Color(0xFFC44FFF)],
+                                    isCompact: isCompact,
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Navigator.push(
+                                        ctx,
+                                        MaterialPageRoute(builder: (_) => const ShapeGameScreen()),
+                                      ).then((_) => _refreshGameProgress());
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isCompact ? 8 : 12),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -859,4 +1024,111 @@ class _NeonGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Hafıza oyunu mod seçim kartı
+class _MemoryModeCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+  final bool isCompact;
+
+  const _MemoryModeCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+    required this.onTap,
+    this.isCompact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradient,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.first.withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 16 : 20,
+            vertical: isCompact ? 8 : 12,
+          ),
+          child: Row(
+            children: [
+              // İkon
+              Container(
+                width: isCompact ? 44 : 56,
+                height: isCompact ? 44 : 56,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: FaIcon(
+                    icon,
+                    color: Colors.white,
+                    size: isCompact ? 20 : 26,
+                  ),
+                ),
+              ),
+              SizedBox(width: isCompact ? 12 : 16),
+              // Metin
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isCompact ? 15 : 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: isCompact ? 2 : 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: isCompact ? 12 : 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              // Ok ikonu
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white.withValues(alpha: 0.7),
+                size: isCompact ? 18 : 22,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

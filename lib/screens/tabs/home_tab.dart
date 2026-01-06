@@ -777,13 +777,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
         ),
       ),
       _ActionCard(
-        icon: FontAwesomeIcons.gamepad,
-        title: 'Oyun Odası',
-        subtitle: 'Eğlenerek öğren',
-        gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
-        onTap: () => widget.onNavigateToTab?.call(2),
-      ),
-      _ActionCard(
         icon: FontAwesomeIcons.medal,
         title: 'Başarılarım',
         subtitle: 'Rozetlerini gör',
@@ -792,6 +785,13 @@ class _HomeTabState extends ConsumerState<HomeTab>
           context,
           MaterialPageRoute(builder: (context) => const AchievementsScreen()),
         ),
+      ),
+      _ActionCard(
+        icon: FontAwesomeIcons.gamepad,
+        title: 'Oyun Odası',
+        subtitle: 'Eğlenerek öğren',
+        gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+        onTap: () => widget.onNavigateToTab?.call(2),
       ),
     ];
 

@@ -228,8 +228,8 @@ class ShakeService {
           break;
         case ContentType.bulbakalim:
           _showGameContent(
-            title: '🔢 Bul Bakalım',
-            description: '1\'den 10\'a kadar sırayla bul!',
+            title: '🧠 Hafıza Oyunu',
+            description: 'Sıralı bul veya şekil eşleştir!',
             icon: Icons.grid_view_rounded,
             color: Colors.indigo,
             onAction: () {
@@ -313,8 +313,8 @@ class ShakeService {
     final flashcards = await db.query('Flashcards', limit: 100);
     if (flashcards.isEmpty) {
       _showGameContent(
-        title: '🔢 Bul Bakalım',
-        description: '1\'den 10\'a kadar sırayla bul!',
+        title: '🧠 Hafıza Oyunu',
+        description: 'Sıralı bul veya şekil eşleştir!',
         icon: Icons.grid_view_rounded,
         color: Colors.indigo,
         onAction: () {

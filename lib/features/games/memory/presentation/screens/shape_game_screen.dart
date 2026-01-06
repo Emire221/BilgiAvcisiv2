@@ -6,29 +6,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../controllers/memory_game_controller.dart';
-import '../../domain/entities/memory_game_state.dart';
-import '../widgets/flip_card_widget.dart';
+import '../controllers/shape_game_controller.dart';
+import '../../domain/entities/shape_game_state.dart';
+import '../widgets/shape_flip_card_widget.dart';
 import 'memory_result_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// 🧠 NEON BRAIN MEMORY - Bul Bakalım Ana Oyun Ekranı
+/// 🎨 SHAPE MATCH - Şekil Eşleştirme Oyunu
 /// ═══════════════════════════════════════════════════════════════════════════
-/// Design: Cyberpunk Brain temalı hafıza oyunu deneyimi
-/// - Neon glow efektleri ve pulse animasyonları
-/// - Glassmorphism stat kartları
-/// - Animasyonlu mesaj göstergesi
-/// - Haptic feedback
+/// Design: Cyberpunk temalı şekil eşleştirme deneyimi
+/// - 5 farklı okul figürü (cetvel, kalem, kitap, hesap makinesi, palet)
+/// - Her şekilden 2 adet = 10 kart
+/// - Ardışık aynı şekilleri eşleştir
 /// ═══════════════════════════════════════════════════════════════════════════
 
-class MemoryGameScreen extends ConsumerStatefulWidget {
-  const MemoryGameScreen({super.key});
+class ShapeGameScreen extends ConsumerStatefulWidget {
+  const ShapeGameScreen({super.key});
 
   @override
-  ConsumerState<MemoryGameScreen> createState() => _MemoryGameScreenState();
+  ConsumerState<ShapeGameScreen> createState() => _ShapeGameScreenState();
 }
 
-class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
+class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
     with TickerProviderStateMixin {
   // ═══════════════════════════════════════════════════════════════════════════
   // THEME COLORS
@@ -46,7 +45,6 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
   int _elapsedSeconds = 0;
   late AnimationController _pulseController;
   late AnimationController _glowController;
-  late Animation<double> _pulseAnimation;
   late Animation<double> _glowAnimation;
 
   @override
@@ -58,10 +56,6 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
       vsync: this,
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
     _glowController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
@@ -72,7 +66,7 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(memoryGameProvider.notifier).startGame();
+      ref.read(shapeGameProvider.notifier).startGame();
       _startTimer();
     });
   }
@@ -103,16 +97,15 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(memoryGameProvider);
+    final state = ref.watch(shapeGameProvider);
     final size = MediaQuery.of(context).size;
 
     // Oyun bittiğinde sonuç ekranına git
-    ref.listen<MemoryGameState>(memoryGameProvider, (previous, next) {
+    ref.listen<ShapeGameState>(shapeGameProvider, (previous, next) {
       if (next.isCompleted && !(previous?.isCompleted ?? false)) {
         _timer?.cancel();
         HapticFeedback.heavyImpact();
 
-        // Navigator'u async gap öncesi yakala
         final navigator = Navigator.of(context);
         final resultScreen = MemoryResultScreen(
           moves: next.moves,
@@ -120,7 +113,7 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
           elapsedSeconds: next.elapsedSeconds,
           score: next.score,
           starCount: next.starCount,
-          gameType: 'number_sequence',
+          gameType: 'shape_match', // Şekil eşleştirme
         );
 
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -151,43 +144,38 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
         });
       }
 
-      // Yanlış cevapta haptic feedback
-      if (next.isChecking && !(previous?.isChecking ?? false)) {
+      // Doğru eşleşmede haptic feedback
+      if (next.matches > (previous?.matches ?? 0)) {
         HapticFeedback.mediumImpact();
       }
     });
 
     return PopScope(
-      canPop: true, // Oyun sırasında geri tuşu aktif
+      canPop: true,
       child: Scaffold(
         backgroundColor: _darkBg,
         body: Stack(
           children: [
-            // ═══════════════════════════════════════════════════════════════════
-            // ANIMATED BACKGROUND
-            // ═══════════════════════════════════════════════════════════════════
+            // Animated Background
             _buildAnimatedBackground(size),
-
-            // ═══════════════════════════════════════════════════════════════════
-            // FLOATING PARTICLES
-            // ═══════════════════════════════════════════════════════════════════
+            
+            // Floating Particles
             ..._buildFloatingParticles(size),
 
-            // ═══════════════════════════════════════════════════════════════════
-            // MAIN CONTENT
-            // ═══════════════════════════════════════════════════════════════════
+            // Main Content
             SafeArea(
               child: Column(
                 children: [
                   // Üst bar
-                  _buildTopBar(
-                    state,
-                  ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.3),
+                  _buildTopBar(state)
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: -0.3),
 
                   // Durum göstergesi
-                  _buildStatusIndicator(
-                    state,
-                  ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+                  _buildStatusIndicator(state)
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: 100.ms),
 
                   // Kart grid'i
                   Expanded(
@@ -211,10 +199,6 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // WIDGET BUILDERS
-  // ═══════════════════════════════════════════════════════════════════════════
-
   Widget _buildAnimatedBackground(Size size) {
     return AnimatedBuilder(
       animation: _glowAnimation,
@@ -227,7 +211,7 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
               center: Alignment.topCenter,
               radius: 1.5,
               colors: [
-                _neonPurple.withOpacity(0.15 * _glowAnimation.value),
+                _neonPink.withValues(alpha: 0.15 * _glowAnimation.value),
                 _darkBg2,
                 _darkBg,
               ],
@@ -252,35 +236,34 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
       return Positioned(
         left: startX,
         top: startY,
-        child:
-            Container(
-                  width: particleSize,
-                  height: particleSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withOpacity(0.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                )
-                .animate(onPlay: (c) => c.repeat())
-                .moveY(
-                  begin: 0,
-                  end: -80,
-                  duration: Duration(seconds: duration),
-                  curve: Curves.easeInOut,
-                )
-                .fadeOut(begin: 1, duration: Duration(seconds: duration)),
+        child: Container(
+          width: particleSize,
+          height: particleSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withValues(alpha: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 8,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+        )
+            .animate(onPlay: (c) => c.repeat())
+            .moveY(
+              begin: 0,
+              end: -80,
+              duration: Duration(seconds: duration),
+              curve: Curves.easeInOut,
+            )
+            .fadeOut(begin: 1, duration: Duration(seconds: duration)),
       );
     });
   }
 
-  Widget _buildTopBar(MemoryGameState state) {
+  Widget _buildTopBar(ShapeGameState state) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -300,10 +283,10 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
 
           // Yeniden başlat
           _buildIconButton(
-            icon: Icons.refresh_rounded,
+            icon: FontAwesomeIcons.arrowRotateRight,
             onTap: () {
               HapticFeedback.mediumImpact();
-              ref.read(memoryGameProvider.notifier).restartGame();
+              ref.read(shapeGameProvider.notifier).restartGame();
               _startTimer();
             },
           ),
@@ -312,50 +295,46 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildIconButton({required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            ),
+            child: Center(
+              child: FaIcon(icon, color: Colors.white, size: 18),
+            ),
+          ),
         ),
-        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
 
   Widget _buildTimerWidget() {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Container(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                _neonCyan.withValues(alpha: 0.2),
-                _neonPurple.withValues(alpha: 0.2),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: _neonCyan.withValues(alpha: 0.4 * _pulseAnimation.value),
-              width: 1.5,
-            ),
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _neonCyan.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
-                color: _neonCyan.withValues(alpha: 0.2 * _pulseAnimation.value),
-                blurRadius: 12,
-                spreadRadius: 2,
+                color: _neonCyan.withValues(alpha: 0.2),
+                blurRadius: 10,
+                spreadRadius: 1,
               ),
             ],
           ),
@@ -370,40 +349,39 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
                 ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  Widget _buildStatusIndicator(MemoryGameState state) {
+  Widget _buildStatusIndicator(ShapeGameState state) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildStatBox(
-            icon: Icons.filter_1_rounded,
-            label: 'Sıradaki',
-            value: state.nextExpectedNumber > 10
-                ? '✓'
-                : '${state.nextExpectedNumber}',
-            color: _neonGreen,
-          ),
-          _buildStatBox(
-            icon: Icons.touch_app_rounded,
+          _buildStatChip(
+            icon: FontAwesomeIcons.handPointer,
+            value: state.moves.toString(),
             label: 'Hamle',
-            value: '${state.moves}',
             color: _neonCyan,
           ),
-          _buildStatBox(
-            icon: Icons.close_rounded,
+          const SizedBox(width: 16),
+          _buildStatChip(
+            icon: FontAwesomeIcons.circleCheck,
+            value: '${state.matches}/5',
+            label: 'Eşleşme',
+            color: _neonGreen,
+          ),
+          const SizedBox(width: 16),
+          _buildStatChip(
+            icon: FontAwesomeIcons.circleXmark,
+            value: state.mistakes.toString(),
             label: 'Hata',
-            value: '${state.mistakes}',
             color: _neonRed,
           ),
         ],
@@ -411,93 +389,66 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
     );
   }
 
-  Widget _buildStatBox({
+  Widget _buildStatChip({
     required IconData icon,
-    required String label,
     required String value,
+    required String label,
     required Color color,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: AnimatedBuilder(
-          animation: _glowAnimation,
-          builder: (context, child) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color.withValues(alpha: 0.15),
-                    color.withValues(alpha: 0.05),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: color.withValues(
-                    alpha: 0.4 + (0.2 * _glowAnimation.value),
-                  ),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.15 * _glowAnimation.value),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
+        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FaIcon(icon, color: color, size: 14),
+              const SizedBox(width: 6),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icon, color: color, size: 22),
-                  const SizedBox(height: 6),
                   Text(
                     value,
                     style: GoogleFonts.orbitron(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 2),
                   Text(
                     label,
-                    style: GoogleFonts.nunito(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 10,
                     ),
                   ),
                 ],
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCardGrid(MemoryGameState state) {
+  Widget _buildCardGrid(ShapeGameState state) {
     if (state.cards.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              width: 50,
-              height: 50,
-              child: CircularProgressIndicator(
-                color: _neonCyan,
-                strokeWidth: 3,
-              ),
-            ),
+            const CircularProgressIndicator(color: _neonPink),
             const SizedBox(height: 16),
             Text(
               'Kartlar hazırlanıyor...',
-              style: GoogleFonts.nunito(
+              style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
@@ -522,35 +473,17 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
             ),
             itemCount: 10,
             itemBuilder: (context, index) {
-              // 4x3 grid için padding (10 kart var, 2 boşluk)
-              // İlk 4, sonra 4, sonra 2 (ortada)
-              int cardIndex;
-              if (index < 4) {
-                cardIndex = index;
-              } else if (index < 8) {
-                cardIndex = index;
-              } else {
-                // Son satırda 2 kart ortada
-                if (index == 8) {
-                  cardIndex = 8;
-                } else if (index == 9) {
-                  cardIndex = 9;
-                } else {
-                  return const SizedBox();
-                }
-              }
-
-              if (cardIndex >= state.cards.length) {
+              if (index >= state.cards.length) {
                 return const SizedBox();
               }
 
-              final card = state.cards[cardIndex];
+              final card = state.cards[index];
 
-              return FlipCardWidget(
+              return ShapeFlipCardWidget(
                 card: card,
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  ref.read(memoryGameProvider.notifier).flipCard(card.id);
+                  ref.read(shapeGameProvider.notifier).flipCard(card.id);
                 },
                 disabled: state.isChecking || card.isMatched,
               );
@@ -561,22 +494,22 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
     );
   }
 
-  Widget _buildBottomInfo(MemoryGameState state) {
+  Widget _buildBottomInfo(ShapeGameState state) {
     String message;
     Color messageColor;
     IconData icon;
 
     if (state.isChecking) {
-      message = 'Yanlış! Kartlar kapanıyor...';
-      messageColor = _neonRed;
-      icon = Icons.close_rounded;
-    } else if (state.matchedCount > 0) {
-      message = '${state.matchedCount}/10 kart bulundu';
+      message = 'Kontrol ediliyor...';
+      messageColor = _neonYellow;
+      icon = Icons.hourglass_bottom_rounded;
+    } else if (state.matches > 0) {
+      message = '${state.matches}/5 eşleşme bulundu';
       messageColor = _neonGreen;
       icon = Icons.check_circle_rounded;
     } else {
-      message = '1\'den başlayarak sırayla bul!';
-      messageColor = _neonYellow;
+      message = 'Aynı şekilleri eşleştir!';
+      messageColor = _neonPink;
       icon = Icons.lightbulb_rounded;
     }
 
@@ -629,7 +562,4 @@ class _MemoryGameScreenState extends ConsumerState<MemoryGameScreen>
       ),
     );
   }
-
-
-
 }

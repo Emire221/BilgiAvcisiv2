@@ -240,11 +240,9 @@ class NotificationService {
   // ========== HAFTALIK BİLDİRİMLER ==========
 
   /// Haftalık bildirimleri planlar (MainScreen açılışında)
-  Future<void> initializeScheduledNotifications() async {
+  /// @param mascotName Maskot ismi (bildirim içeriklerinde kullanılır)
+  Future<void> initializeScheduledNotifications({String? mascotName}) async {
     try {
-      // Önce mevcutları iptal et (temiz başlangıç)
-      await ScheduledNotificationHelper.cancelAllAlarms();
-      
       // Bildirim ayarını kontrol et
       final prefs = await SharedPreferences.getInstance();
       final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
@@ -254,14 +252,24 @@ class NotificationService {
         return;
       }
 
+      // Maskot ismini al veya varsayılan kullan
+      final storedMascotName = mascotName ?? prefs.getString('mascot_name') ?? 'Dostum';
+
       // Haftalık bildirimleri ScheduledNotificationHelper ile kur
-      // (Platform kontrolü helper içinde yapılıyor)
-      await ScheduledNotificationHelper.scheduleWeeklyNotifications();
+      // 54 haftalık döngüde planlanır, maskot ismi ile kişiselleştirilir
+      await ScheduledNotificationHelper.scheduleWeeklyNotifications(
+        mascotName: storedMascotName,
+      );
       
-      debugPrint('✅ Haftalık bildirimler başarıyla kuruldu');
+      debugPrint('✅ Haftalık bildirimler başarıyla kuruldu (Maskot: $storedMascotName)');
     } catch (e) {
       debugPrint('Haftalık bildirim kurulum hatası: $e');
     }
+  }
+  
+  /// Maskot ismini güncelle ve bildirimleri yeniden planla
+  Future<void> updateMascotName(String mascotName) async {
+    await ScheduledNotificationHelper.updateMascotName(mascotName);
   }
 
   // Okunmamış bildirim sayısı için notifier
@@ -318,6 +326,9 @@ class NotificationService {
             playSound: true,
             enableVibration: true,
             visibility: NotificationVisibility.public,
+            icon: '@drawable/splash_logo',
+            largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
+            color: Color(0xFF667EEA),
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -421,6 +432,9 @@ class NotificationService {
           importance: Importance.max,
           priority: Priority.high,
           showWhen: true,
+          icon: '@drawable/splash_logo',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
+          color: Color(0xFF667EEA),
         );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -490,6 +504,9 @@ class NotificationService {
           importance: Importance.max,
           priority: Priority.high,
           showWhen: true,
+          icon: '@drawable/splash_logo',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
+          color: Color(0xFF667EEA),
         );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(

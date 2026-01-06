@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../models/test_model.dart';
 import '../services/database_helper.dart';
 import 'test_repository.dart';
@@ -38,7 +39,8 @@ class TestRepositoryImpl implements TestRepository {
     int wrong,
   ) async {
     await _dbHelper.saveTestResult(testId, score, correct, wrong);
-    // ignore: avoid_print
-    print('Test Result Saved: $testId - Score: $score');
+    if (kDebugMode) {
+      debugPrint('Test Result Saved: $testId - Score: $score');
+    }
   }
 }

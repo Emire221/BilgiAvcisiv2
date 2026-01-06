@@ -1,42 +1,50 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
-
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  # Üretilen (generated) dosyaları analiz dışı bırakıyoruz ki karmaşa olmasın
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "lib/generated_plugin_registrant.dart"
+    - "tools/**"
+
+  # DART GÜÇLÜ MOD - Strict modları kapatıyoruz (mevcut kod uyumluluğu için)
+  language:
+    strict-casts: false
+    strict-inference: false
+    strict-raw-types: false
+
   errors:
-    # Deprecation uyarılarını info seviyesinden ignore'a çevir
+    # Mevcut tercihlerini korudum
     deprecated_member_use: ignore
     deprecated_member_use_from_same_package: ignore
-    # Dokümantasyon uyarılarını ignore et
     unintended_html_in_doc_comment: ignore
 
+    # Warning ve info seviyesindeki kuralları ignore et
+    inference_failure_on_instance_creation: ignore
+    inference_failure_on_function_invocation: ignore
+    inference_failure_on_function_return_type: ignore
+    inference_failure_on_untyped_parameter: ignore
+
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
+    # Mevcut kuralların
     avoid_print: true
     prefer_single_quotes: true
     avoid_empty_else: true
     cancel_subscriptions: true
     close_sinks: true
     always_declare_return_types: true
-    # Super parameter önerilerini kapat
     use_super_parameters: false
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # Info seviyesi kuralları kapatıyoruz (mevcut kod için)
+    unawaited_futures: false
+    prefer_final_locals: false
+    prefer_const_constructors: false
+    avoid_void_async: false
+    await_only_futures: true
+    require_trailing_commas: false
+    annotate_overrides: true
+    avoid_unnecessary_containers: true
+    prefer_is_not_empty: true         # .length > 0 yerine .isNotEmpty kullanmanı sağlar
+    sort_child_properties_last: true  # Flutter widget ağacında 'child'ın en sonda olmasını sağlar

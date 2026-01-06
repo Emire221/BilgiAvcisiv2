@@ -64,7 +64,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     ),
     _TabData(
       id: 'memory',
-      title: 'Bul',
+      title: 'Hafıza',
       icon: FontAwesomeIcons.brain,
       gradientColors: [const Color(0xFF00E676), const Color(0xFF00C853)],
       glowColor: const Color(0xFF00E676),
@@ -1317,14 +1317,20 @@ class _MemoryResultCard extends StatelessWidget {
 
     int moves = 0;
     int seconds = 0;
+    String gameType = 'number_sequence'; // default
     if (details != null && details.isNotEmpty) {
       try {
         final movesMatch = RegExp(r'"moves":\s*(\d+)').firstMatch(details);
         final secondsMatch = RegExp(r'"seconds":\s*(\d+)').firstMatch(details);
+        final gameTypeMatch = RegExp(r'"gameType":\s*"([^"]+)"').firstMatch(details);
         if (movesMatch != null) moves = int.parse(movesMatch.group(1)!);
         if (secondsMatch != null) seconds = int.parse(secondsMatch.group(1)!);
+        if (gameTypeMatch != null) gameType = gameTypeMatch.group(1)!;
       } catch (_) {}
     }
+
+    // Oyun türüne göre başlık
+    final gameTitle = gameType == 'shape_match' ? 'Şekil Eşleştir' : 'Sıralı Bulma';
 
     int starCount;
     if (wrongCount == 0) {
@@ -1401,9 +1407,9 @@ class _MemoryResultCard extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Bul Bakalım',
-                                  style: TextStyle(
+                                Text(
+                                  gameTitle,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,

@@ -1,844 +1,1052 @@
-# BİLGİ AVCISI 🎓
+<p align="center">
+  <img src="assets/appicon/main_logo.png" alt="Bilgi Avcısı Logo" width="150"/>
+</p>
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.9.2-02569B?logo=flutter)](https://flutter.dev)
-[![Firebase](https://img.shields.io/badge/Firebase-Enabled-FFCA28?logo=firebase)](https://firebase.google.com)
-[![Tests](https://img.shields.io/badge/Tests-37%20Passing-success)](./test)
-[![Quality](https://img.shields.io/badge/Analysis-No%20Issues-success)](./analyze_output.txt)
-[![License](https://img.shields.io/badge/License-Private-red)]()
+<h1 align="center">🎯 Bilgi Avcısı</h1>
 
-**BİLGİ AVCISI**, Türk öğrenciler için geliştirilmiş kapsamlı bir mobil eğitim platformudur. Sınıf bazlı içerik, interaktif testler, bilgi kartları ve gamification özellikleriyle öğrenmeyi kolaylaştırır.
+<p align="center">
+  <strong>Türk öğrenciler için oyunlaştırılmış kapsamlı eğitim platformu</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.9.2+-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
+  <img src="https://img.shields.io/badge/Dart-3.9.2+-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/>
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"/>
+  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green?style=for-the-badge" alt="Platform"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square" alt="Status"/>
+  <img src="https://img.shields.io/badge/License-Proprietary-red?style=flat-square" alt="License"/>
+</p>
 
 ---
 
 ## 📋 İçindekiler
 
-- [Özellikler](#-özellikler)
-- [Ekranlar](#-ekranlar)
-- [Teknoloji Stack](#-teknoloji-stack)
-- [Mimari](#-mimari)
-- [Kurulum](#-kurulum)
-- [Proje Yapısı](#-proje-yapısı)
-- [Sync Sistemi](#-sync-sistemi)
-- [Testler](#-testler)
-- [Son Güncellemeler](#-son-güncellemeler)
+- [🎯 Proje Hakkında](#-proje-hakkında)
+- [📱 Uygulama Ekran Görüntüleri](#-uygulama-ekran-görüntüleri)
+- [✨ Tüm Özellikler](#-tüm-özellikler)
+  - [🔐 Kimlik Doğrulama Sistemi](#-kimlik-doğrulama-sistemi)
+  - [🐾 Maskot Sistemi](#-maskot-sistemi)
+  - [📚 Test Çözme Sistemi](#-test-çözme-sistemi)
+  - [🃏 Bilgi Kartları Sistemi](#-bilgi-kartları-sistemi)
+  - [🏆 Haftalık Deneme Sınavları](#-haftalık-deneme-sınavları)
+  - [⚔️ 1v1 Düello Sistemi](#️-1v1-düello-sistemi)
+  - [🎮 Mini Oyunlar](#-mini-oyunlar)
+  - [📊 Başarılar ve İstatistikler](#-başarılar-ve-istatistikler)
+  - [⏱️ Ekran Süresi Takibi](#️-ekran-süresi-takibi)
+  - [🔔 Bildirim Sistemi](#-bildirim-sistemi)
+  - [📱 Sallama Özelliği](#-sallama-özelliği)
+- [🎨 Tasarım Sistemi](#-tasarım-sistemi)
+- [🏗️ Mimari](#️-mimari)
+- [📦 Bağımlılıklar](#-bağımlılıklar)
+- [🚀 Kurulum](#-kurulum)
+- [📁 Proje Yapısı](#-proje-yapısı)
+- [💾 Veritabanı Yapısı](#-veritabanı-yapısı)
 
 ---
 
-## ✨ Özellikler
+## 🎯 Proje Hakkında
 
-### 🎯 Eğitim İçeriği
-- **Sınıf Bazlı Organizasyon**: Her sınıf için özel içerik
-- **Ders Kategorileri**: Matematik, Fen, Türkçe, Sosyal Bilimler ve daha fazlası
-- **İnteraktif Testler**: Zorluk seviyelerine göre sınıflandırılmış testler
-- **Bilgi Kartları (Flashcards)**: Konuları pekiştirmek için swipe-tabanlı kartlar
-- **Sonuç Ekranları**: Detaylı puan ve istatistik gösterimi
+**Bilgi Avcısı**, 3-8. sınıf öğrencileri için tasarlanmış, oyunlaştırma mekanikleri ile zenginleştirilmiş kapsamlı bir eğitim platformudur. 
 
-### 📱 Kullanıcı Deneyimi
-- **Profil Yönetimi**: Öğrenci bilgilerini kaydetme ve takip
-- **İlerleme Takibi**: Test sonuçları ve öğrenme geçmişi
-- **Karanlık Mod**: Optimize edilmiş göz dostu arayüz
-- **Offline Desteği**: İnternetsiz çalışabilme
-- **Bildirimler (v1.6.0)**: 
-  - 🔴 **Akıllı Red Dot**: Sadece okunmamış bildirimlerde yanar.
-  - 🔔 **In-App Overlay**: Uygulama açıkken rahatsız etmeyen bildirimler.
-  - 📅 **Haftalık Senaryo**: 14 farklı otomatik bildirim.
-  - [Detaylı Rapor İçin Tıklayın](./NOTIFICATION_SYSTEM_REPORT.md)
-- **Türkçe Localization**: Tam Türkçe tarih ve zaman desteği
+### 🎯 Hedef Kitle
+- **Yaş Grubu:** 8-14 yaş (3-8. sınıf)
+- **Platform:** Android & iOS
+- **Dil:** Türkçe
 
-### 🎮 Mini Oyunlar (4 Oyun)
-- **Cümle Tamamlama**: Drag & drop ile boşluk doldurma (seviye seçimli)
-- **1v1 Düello**: Akıllı bot ile yarış modu (Test veya Cümle Tamamlama)
-- **Salla Bakalım**: Telefonu salla, sayıyı tahmin et (seviye seçimli)
-- **Bul Bakalım**: 1'den 10'a kadar sıralı hafıza oyunu
-- **Maskot Sistemi**: Öğrenme sürecinde eşlik eden sanal arkadaş
-
-### 📳 Akıllı Shake Sistemi
-- **Ana Sayfa Shake**: Telefonu salla, rastgele içerik önerisi al
-- **sensors_plus ile Hassas Algılama**: Daha güvenilir shake detection
-- **Çakışma Önleme**: Oyun ekranlarında otomatik devre dışı (pause/resume)
-- **İçerik Türleri**: Test, Bilgi Kartı veya 4 oyundan rastgele biri
-
-### 🤖 Akıllı 1v1 Düello Sistemi
-- **100 Türkçe Bot İsmi**: 50 erkek, 50 kadın ismi (Ahmet, Ayşe, Zeynep vb.)
-- **Akıllı Bot Algoritması**:
-  - Kullanıcı öndeyse → Bot doğru cevap verir (kullanıcıyı zorlar)
-  - Kullanıcı gerideyse → Bot yanlış cevap verir (kullanıcıya şans verir)
-  - Berabere → Sırayla doğru/yanlış cevap verir
-- **İnternet Kontrolü**: Eğlenceli deneyim için internet bağlantısı kontrolü
-- **Matchmaking Animasyonu**: 3-5 saniye "Rakip Aranıyor" efekti
-- **2 Oyun Modu**: Test soruları veya Cümle Tamamlama
-
-### 📝 Türkiye Geneli Haftalık Sınav
-- **500 Tam Puan**: Her sınav 500 puan üzerinden değerlendirilir
-- **Haftalık Sınav**: Her hafta yeni sınav yayınlanır
-- **Zaman Duyarlı**: Pazartesi 00:00 - Çarşamba 23:59 arası aktif
-- **Tek Giriş Hakkı**: Kullanıcı sınava sadece 1 kez girebilir
-- **Sonuç Beklemesi**: Pazar 12:00'da sonuçlar açıklanır
-- **Türkiye Sıralaması**: Tüm katılımcılar arasında sıralama
-- **4 Yanlış = 1 Doğru**: Net hesaplama formülü
-- **Otomatik Temizlik**: Yeni sınav geldiğinde eski veriler silinir
-
-### 🔄 Akıllı Sync Sistemi
-- **Manifest Tabanlı**: Sadece yeni içerikleri indirir
-- **Haftalık Güncellemeler**: Otomatik içerik güncellemeleri
-- **tar.bz2 Formatı**: Optimize edilmiş sıkıştırma
-- **İnkremental Sync**: Bandwidth tasarrufu
-- **Veritabanı İlk Depolama**: Tüm oyun içerikleri lokal SQLite'ta
+### 🌟 Temel Değerler
+- 🎮 **Oyunlaştırma:** XP, seviye, rozetler ve yarışmalarla motivasyon
+- 🎭 **Kişiselleştirme:** 6 farklı maskot karakterle özdeşleşme
+- 📊 **Takip:** Detaylı ilerleme ve süre analizleri
+- 🏆 **Rekabet:** 1v1 düello modu ile arkadaşlarla yarışma
 
 ---
 
-## 📱 Ekranlar
+## 📱 Uygulama Ekran Görüntüleri
 
-Uygulamada toplam **33 ekran/dialog** bulunmaktadır:
+### 🚀 Başlangıç Akışı
 
-### 🔐 1. Giriş ve Onboarding (4 Ekran)
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/1-Profil kurulum.png" width="200"/>
+      <br/><b>Profil Kurulum</b>
+      <br/><sub>Şehir, okul ve sınıf seçimi</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/2-Maskot Seçim Ekranı.png" width="200"/>
+      <br/><b>Maskot Seçimi</b>
+      <br/><sub>6 farklı karakter</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/3-İçerik Yükleniyor Ekranı.png" width="200"/>
+      <br/><b>İçerik Yükleme</b>
+      <br/><sub>Eğlenceli mesajlarla bekleme</sub>
+    </td>
+  </tr>
+</table>
 
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 1 | Splash Screen | `lib/screens/splash_screen.dart` | Uygulama açılış ekranı, logo animasyonu |
-| 2 | Login Screen | `lib/screens/login_screen.dart` | Google ile giriş |
-| 3 | Profile Setup Screen | `lib/screens/profile_setup_screen.dart` | İl/İlçe/Okul/Sınıf seçimi |
-| 4 | Mascot Selection Screen | `lib/features/mascot/presentation/screens/pet_selection_screen.dart` | Kedi/Köpek/Tavşan maskot seçimi |
+### 🏠 Ana Ekranlar
 
-### 🏠 2. Ana Uygulama - Tab Yapısı (5 Ekran)
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/4-Anasayfa.png" width="200"/>
+      <br/><b>Ana Sayfa</b>
+      <br/><sub>Maskot ve hızlı erişim</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/5-Bunu Biliyor musun POP_UP.png" width="200"/>
+      <br/><b>Günlük Bilgi</b>
+      <br/><sub>Her gün yeni ilginç bilgi</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/6-Bildirim Paneli.png" width="200"/>
+      <br/><b>Bildirim Paneli</b>
+      <br/><sub>Uygulama bildirimleri</sub>
+    </td>
+  </tr>
+</table>
 
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 5 | Main Screen | `lib/screens/main_screen.dart` | Tab bar host, bottom navigation |
-| 6 | Home Tab | `lib/screens/tabs/home_tab.dart` | Ana sayfa, interaktif maskot, hızlı erişim kartları |
-| 7 | Lessons Tab | `lib/screens/tabs/lessons_tab.dart` | Dersler, haftalık sınav kartı, bilgi kartları |
-| 8 | Games Tab | `lib/screens/tabs/games_tab.dart` | Oyunlar listesi (4 oyun) |
-| 9 | Profile Tab | `lib/screens/tabs/profile_tab.dart` | Kullanıcı profili, ayarlar |
+### 📚 Test Çözme Akışı
 
-### 📚 3. Ders ve İçerik Ekranları (6 Ekran)
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/7-Test Çöz Ders Seçimi.png" width="200"/>
+      <br/><b>Ders Seçimi</b>
+      <br/><sub>Holografik ders kartları</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/8-Test Çöz Konu Seçim Ekranı.png" width="200"/>
+      <br/><b>Konu Seçimi</b>
+      <br/><sub>Level map tarzı navigasyon</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/9-Test Seçim Ekranı.png" width="200"/>
+      <br/><b>Test Seçimi</b>
+      <br/><sub>Zorluk seviyeli testler</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/10-Testçöz-Soru Ekranı.png" width="200"/>
+      <br/><b>Soru Ekranı</b>
+      <br/><sub>Cyber Quiz Arena</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/11-Test Çöz-Soru_dogru_cevap Ekranı.png" width="200"/>
+      <br/><b>Doğru Cevap</b>
+      <br/><sub>Yeşil onay animasyonu</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/12-Test Çöz-Soru_Yanlış_Cevap Ekranı.png" width="200"/>
+      <br/><b>Yanlış Cevap</b>
+      <br/><sub>Doğru cevap gösterimi</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/13-Test Çöz Sonuç Ekranı.png" width="200"/>
+      <br/><b>Sonuç Ekranı</b>
+      <br/><sub>Konfeti ve skor animasyonu</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/14-Test Çöz Cevap Anahtarı.png" width="200"/>
+      <br/><b>Cevap Anahtarı</b>
+      <br/><sub>Tüm soruları incele</sub>
+    </td>
+    <td></td>
+  </tr>
+</table>
 
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 10 | Lesson Selection Screen | `lib/screens/lesson_selection_screen.dart` | Ders seçimi (Matematik, Fen, Türkçe vb.) |
-| 11 | Topic Selection Screen | `lib/screens/topic_selection_screen.dart` | Konu/Ünite seçimi |
-| 12 | Test Screen | `lib/screens/test_screen.dart` | Çoktan seçmeli test ekranı |
-| 13 | Flashcards Screen | `lib/screens/flashcards_screen.dart` | Bilgi kartları (swipe) |
-| 14 | Flashcard Set Selection Screen | `lib/screens/flashcard_set_selection_screen.dart` | Bilgi kartı seti seçimi |
-| 15 | Result Screen | `lib/screens/result_screen.dart` | Test sonuç ekranı |
+### 🃏 Bilgi Kartları Akışı
 
-### 📝 4. Haftalık Sınav (3 Ekran)
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/15-Bilgi Kartları Ders Seçim Ekranı.png" width="200"/>
+      <br/><b>Ders Seçimi</b>
+    </td>
+    <td align="center">
+      <img src="assets/images/16-Bilgi Kartı Konu Seçim Ekranı.png" width="200"/>
+      <br/><b>Konu Seçimi</b>
+    </td>
+    <td align="center">
+      <img src="assets/images/17-Bilgi Kartı Set Seçim Ekranı.png" width="200"/>
+      <br/><b>Set Seçimi</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/18-Bilgi Kartı Soru Ekranı.png" width="200"/>
+      <br/><b>Kart Ön Yüzü</b>
+      <br/><sub>3D flip animasyonu</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/19-Bilgi Kartı Doğru Cevap Ekranı.png" width="200"/>
+      <br/><b>Ezberledim</b>
+      <br/><sub>Sağa kaydır</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/20-Bilgi Kartı Yanlış Cevap Ekranı.png" width="200"/>
+      <br/><b>Tekrar Et</b>
+      <br/><sub>Sola kaydır</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/21-Bilgi Kartı Sonuç Ekranı.png" width="200"/>
+      <br/><b>Sonuç Ekranı</b>
+    </td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
 
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 16 | Weekly Exam Card | `lib/features/exam/presentation/widgets/weekly_exam_card.dart` | Dersler tab'ındaki sınav kartı (widget) |
-| 17 | Weekly Exam Screen | `lib/features/exam/presentation/screens/weekly_exam_screen.dart` | Haftalık sınav soruları |
-| 18 | Weekly Exam Result Screen | `lib/features/exam/presentation/screens/weekly_exam_result_screen.dart` | Sınav sonuçları (500 puan üzerinden) |
+### 🎮 Oyunlar ve Düello
 
-### 🎮 5. Oyunlar
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/22-Dersler Sekmesi .png" width="200"/>
+      <br/><b>Dersler Sekmesi</b>
+      <br/><sub>Haftalık sınav kartı</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/23-Oyunlar Sekmesi.png" width="200"/>
+      <br/><b>Oyunlar Sekmesi</b>
+      <br/><sub>Neon Arcade tasarımı</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/24-1v1 Düello Seçim Ekranı.png" width="200"/>
+      <br/><b>Düello Seçimi</b>
+      <br/><sub>Oyun türü seçimi</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/25-1v1 Düello RAkip Arama Ekranı.png" width="200"/>
+      <br/><b>Rakip Arama</b>
+      <br/><sub>Eşleştirme animasyonu</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/26-1v1 Düello Rakip Bulundu Ekranı.png" width="200"/>
+      <br/><b>Rakip Bulundu</b>
+      <br/><sub>VS ekranı</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/27-1v1 Düello Test Ekranı.png" width="200"/>
+      <br/><b>Düello Ekranı</b>
+      <br/><sub>Neon Arena Battle</sub>
+    </td>
+  </tr>
+</table>
 
-#### 5.1 Cümle Tamamlama (2 Ekran)
+### 🎯 Mini Oyunlar
 
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 19 | Level Selection Screen | `lib/features/games/fill_blanks/presentation/screens/level_selection_screen.dart` | Seviye seçimi |
-| 20 | Fill Blanks Screen | `lib/features/games/fill_blanks/presentation/screens/fill_blanks_screen.dart` | Cümle tamamlama oyunu |
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/31-Cümle Tamamlama Seçim Ekranı.png" width="200"/>
+      <br/><b>Cümle Tamamla</b>
+      <br/><sub>Seviye seçimi</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/28-Cümle Tamamlama Ekranı.png" width="200"/>
+      <br/><b>Cümle Oyunu</b>
+      <br/><sub>Drag & Drop mekanizması</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/30-Salla Bakalım Seçim Ekranı.png" width="200"/>
+      <br/><b>Salla Bakalım</b>
+      <br/><sub>Seviye seçimi</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/29-Salla Bakalım Ekranı.png" width="200"/>
+      <br/><b>Salla Bakalım</b>
+      <br/><sub>Tahmin oyunu</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/30-1v1 Düello Bul Bakalım Ekranı.png" width="200"/>
+      <br/><b>Hafıza Oyunu</b>
+      <br/><sub>Kart eşleştirme</sub>
+    </td>
+    <td></td>
+  </tr>
+</table>
 
-#### 5.2 1v1 Düello (3 Ekran + 1 Dialog)
+### 👤 Profil ve İstatistikler
 
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 21 | Duel Selection Screen | `lib/features/duel/presentation/screens/duel_selection_screen.dart` | Test/Cümle Tamamlama seçimi |
-| 22 | Matchmaking Screen | `lib/features/duel/presentation/screens/matchmaking_screen.dart` | "Rakip Aranıyor" animasyonu |
-| 23 | Duel Game Screen | `lib/features/duel/presentation/screens/duel_game_screen.dart` | Düello oyun ekranı |
-| 24 | Duel Result Dialog | `lib/features/duel/presentation/widgets/duel_result_dialog.dart` | Kazanan/Kaybeden dialogu |
-
-#### 5.3 Salla Bakalım (3 Ekran)
-
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 25 | Guess Level Selection Screen | `lib/features/games/guess/presentation/screens/guess_level_selection_screen.dart` | Seviye seçimi |
-| 26 | Guess Game Screen | `lib/features/games/guess/presentation/screens/guess_game_screen.dart` | Sayı tahmin oyunu (telefon sallama) |
-| 27 | Guess Result Screen | `lib/features/games/guess/presentation/screens/guess_result_screen.dart` | Oyun sonucu |
-
-#### 5.4 Bul Bakalım (2 Ekran)
-
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 28 | Memory Game Screen | `lib/features/games/memory/presentation/screens/memory_game_screen.dart` | Hafıza kartı oyunu |
-| 29 | Memory Result Screen | `lib/features/games/memory/presentation/screens/memory_result_screen.dart` | Oyun sonucu |
-
-### 🏆 6. Başarılar ve İstatistikler (1 Ekran, 5 Sekme)
-
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 30 | Achievements Screen | `lib/screens/achievements_screen.dart` | 5 sekmeli başarı ekranı |
-| | - Tab 1: Testler | | Test sonuçları listesi |
-| | - Tab 2: Cümle | | Cümle tamamlama sonuçları |
-| | - Tab 3: Kartlar | | Bilgi kartı istatistikleri |
-| | - Tab 4: Salla | | Salla Bakalım sonuçları |
-| | - Tab 5: Bul | | Bul Bakalım sonuçları |
-
-### ⚙️ 7. Ayarlar ve Yasal (3 Ekran)
-
-| # | Ekran | Dosya | Açıklama |
-|---|-------|-------|----------|
-| 31 | Settings Screen | `lib/screens/settings_screen.dart` | Uygulama ayarları |
-| 32 | Privacy Policy Screen | `lib/screens/privacy_policy_screen.dart` | Gizlilik politikası |
-| 33 | Terms of Service Screen | `lib/screens/terms_of_service_screen.dart` | Kullanım şartları |
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/images/32-Profil Sekmesi.png" width="200"/>
+      <br/><b>Profil Sekmesi</b>
+      <br/><sub>RPG tarzı XP bar</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/33-Başarılarım Ekranı.png" width="200"/>
+      <br/><b>Başarılarım</b>
+      <br/><sub>Tüm sonuçlar</sub>
+    </td>
+    <td align="center">
+      <img src="assets/images/34-Gelişim Grafiği Ekranı.png" width="200"/>
+      <br/><b>Gelişim Grafiği</b>
+      <br/><sub>Ders bazlı analiz</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/images/35-Eğitimin için ayırdığın süre.png" width="200"/>
+      <br/><b>Süre Takibi</b>
+      <br/><sub>Haftalık çalışma süresi</sub>
+    </td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
 
 ---
 
-## 📊 Ekran Özet İstatistikleri
-
-| Kategori | Ekran Sayısı |
-|----------|--------------|
-| Giriş ve Onboarding | 4 |
-| Ana Uygulama (Tab Yapısı) | 5 |
-| Ders ve İçerik | 6 |
-| Haftalık Sınav | 3 |
-| Oyunlar - Cümle Tamamlama | 2 |
-| Oyunlar - 1v1 Düello | 4 |
-| Oyunlar - Salla Bakalım | 3 |
-| Oyunlar - Bul Bakalım | 2 |
-| Başarılar | 1 (5 sekme) |
-| Ayarlar ve Yasal | 3 |
-| **TOPLAM** | **33 Ekran/Dialog** |
+## ✨ Tüm Özellikler
 
 ---
 
-## 🗺️ Kullanıcı Akış Diyagramı
+### 🔐 Kimlik Doğrulama Sistemi
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        UYGULAMA BAŞLANGIÇ                        │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-                    ┌───────────────────┐
-                    │   Splash Screen   │
-                    └───────────────────┘
-                                │
-                    ┌───────────┴───────────┐
-                    │                       │
-            Giriş Yapılmış?           Giriş Yapılmamış
-                    │                       │
-                    ▼                       ▼
-          ┌─────────────────┐    ┌───────────────────┐
-          │   Main Screen   │    │   Login Screen    │
-          └─────────────────┘    └───────────────────┘
-                    │                       │
-                    │                       ▼
-                    │            ┌───────────────────────┐
-                    │            │ Profile Setup Screen  │
-                    │            └───────────────────────┘
-                    │                       │
-                    │                       ▼
-                    │            ┌───────────────────────┐
-                    │            │ Mascot Selection      │
-                    │            └───────────────────────┘
-                    │                       │
-                    └───────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                         MAIN SCREEN                              │
-│  ┌──────────┬──────────┬──────────┬──────────┐                  │
-│  │  🏠 Ana  │  📚 Ders │  🎮 Oyun │  👤 Profil│                  │
-│  │  Sayfa   │   ler    │   lar    │          │                  │
-│  └──────────┴──────────┴──────────┴──────────┘                  │
-└─────────────────────────────────────────────────────────────────┘
-         │              │              │              │
-         ▼              ▼              ▼              ▼
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│  Home Tab   │  │ Lessons Tab │  │  Games Tab  │  │ Profile Tab │
-│             │  │             │  │             │  │             │
-│ • Maskot    │  │ • Haftalık  │  │ • Cümle     │  │ • Başarılar │
-│ • Günlük    │  │   Sınav     │  │   Tamamlama │  │ • Ayarlar   │
-│   Bilgi     │  │ • Bilgi     │  │ • 1v1       │  │ • Çıkış     │
-│ • Hızlı     │  │   Kartları  │  │   Düello    │  │             │
-│   Erişim    │  │ • Testler   │  │ • Salla     │  │             │
-│             │  │             │  │   Bakalım   │  │             │
-│             │  │             │  │ • Bul       │  │             │
-│             │  │             │  │   Bakalım   │  │             │
-└─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
+#### Genel Bakış
+Firebase Authentication ile güvenli kullanıcı yönetimi. Email/şifre ile giriş ve kayıt.
+
+#### Özellikler
+- ✅ Email/şifre ile kayıt
+- ✅ Email/şifre ile giriş
+- ✅ Şifre güçlüğü göstergesi (Kozmik animasyonlu)
+- ✅ Şifremi unuttum fonksiyonu
+- ✅ Oturum durumu koruması
+- ✅ Otomatik giriş (remember me)
+
+#### Ekranlar
+| Ekran | Dosya | Açıklama |
+|-------|-------|----------|
+| Giriş | `login_screen.dart` | Glassmorphism + Haptic feedback |
+| Kayıt | `register_screen.dart` | Kozmik tema, yıldız partikülleri |
+| Splash | `splash_screen.dart` | Uygulama başlangıç kontrolü |
+
+#### Teknik Detaylar
+```dart
+// Firebase Auth entegrasyonu
+FirebaseAuth.instance.signInWithEmailAndPassword(
+  email: email,
+  password: password,
+);
+
+// Şifre validasyonu
+minPasswordLength: 6
 ```
 
 ---
 
-## 🎮 Oyun Akışları
+### 🐾 Maskot Sistemi
 
-### Cümle Tamamlama
-```
-Games Tab → Level Selection → Fill Blanks Screen → (Başarılar'a kayıt)
+#### Genel Bakış
+6 farklı karakterden biri seçilerek kişiselleştirilmiş bir deneyim sunulur. Maskotlar XP kazandıkça evrilir.
+
+#### Maskot Türleri
+
+| Maskot | Emoji | Renk | Animasyon Dosyası |
+|--------|-------|------|-------------------|
+| Kedi | 🐱 | Pembe `#FF6B9D` | `kedi_mascot.json` |
+| Köpek | 🐕 | Turuncu `#FFB347` | `kopek_mascot.json` |
+| Tavşan | 🐰 | Mavi `#87CEEB` | `tavsan_mascot.json` |
+| Astronot | 🧑‍🚀 | Mor `#9B59B6` | `astronot_mascot.json` |
+| Kaplan | 🐯 | Kırmızı `#E74C3C` | `kaplan_mascot.json` |
+| Maymun | 🐵 | Kahve `#8B4513` | `maymun_mascot.json` |
+
+#### XP ve Seviye Sistemi
+
+```dart
+// XP Kazanma Kuralları
++10 XP : Doğru test cevabı
++5 XP  : Doğru oyun cevabı
++20 XP : Test tamamlama bonusu
++50 XP : Haftalık sınav tamamlama
+
+// Seviye Hesaplama
+Level = (Total XP / 100) + 1
+Progress = (XP % 100) / 100
+
+// Maskot Evrimi
+Level 1-10  : Baby (Yavru) - Küçük ve sevimli
+Level 11-50 : Teen (Genç) - Büyüyen karakter
+Level 51+   : Wise (Bilge) - Tam gelişmiş
 ```
 
-### 1v1 Düello
-```
-Games Tab → Duel Selection → İnternet Kontrolü → Matchmaking (3-5s) → Duel Game → Result Dialog
+#### Maskot Duyguları
+```dart
+enum MascotMood {
+  happy,    // 😊 Test geçildi
+  sad,      // 😢 Test başarısız
+  excited,  // 🎉 Seviye atladı
+  neutral,  // 😐 Varsayılan
+}
 ```
 
-### Salla Bakalım
+#### Motivasyon Mesajları
+- Selamlaşma: "Günaydın!", "Selam!", "Merhaba kahraman!"
+- Motivasyon: "Bugün harika şeyler öğreneceğiz!"
+- Seviye atlama: "Tebrikler! Yeni seviyeye ulaştın!"
+- XP kazanma: "Harika iş! +10 XP kazandın!"
+
+---
+
+### 📚 Test Çözme Sistemi
+
+#### Genel Bakış
+Konu bazlı çoktan seçmeli testler. "Cyber Quiz Arena" temasıyla neon efektli modern tasarım.
+
+#### Akış
 ```
-Games Tab → Guess Level Selection → Guess Game → Guess Result → (Başarılar'a kayıt)
+Ders Seçimi → Konu Seçimi → Test Seçimi → Soru Çözme → Sonuç → Cevap Anahtarı
 ```
 
-### Bul Bakalım
+#### Özellikler
+- ✅ Ders bazlı filtreleme
+- ✅ Konu bazlı testler
+- ✅ Zorluk seviyeleri (Kolay/Orta/Zor)
+- ✅ Zamanlı testler (60 saniye varsayılan)
+- ✅ Anlık geri bildirim (doğru/yanlış animasyonu)
+- ✅ Detaylı sonuç ekranı
+- ✅ Cevap anahtarı inceleme
+- ✅ XP kazanma
+
+#### Test Konfigürasyonu
+```dart
+static const int defaultTestDuration = 60; // saniye
+static const int questionsPerTest = 10;
+static const int pointsPerCorrectAnswer = 10;
 ```
-Games Tab → Memory Game → Memory Result → (Başarılar'a kayıt)
+
+#### Veritabanı Yapısı
+```sql
+CREATE TABLE Testler(
+  testID TEXT PRIMARY KEY,
+  konuID TEXT,
+  testAdi TEXT,
+  zorluk INTEGER,      -- 1: Kolay, 2: Orta, 3: Zor
+  sorular TEXT         -- JSON formatında sorular
+);
+
+CREATE TABLE TestResults(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  testId TEXT,
+  score INTEGER,
+  correctCount INTEGER,
+  wrongCount INTEGER,
+  completedAt TEXT
+);
 ```
 
 ---
 
-## 🛠️ Teknoloji Stack
+### 🃏 Bilgi Kartları Sistemi (Flashcards)
 
-### Framework & Dil
-- **Flutter** `3.9.2+` - Cross-platform UI framework
-- **Dart** `^3.9.2` - Programming language
+#### Genel Bakış
+"Holografik Bilgi Dojo'su" temasıyla 3D flip animasyonlu flashcard sistemi.
 
-### Backend & Cloud
-- **Firebase Core** `^3.8.0` - Firebase temel servisleri
-- **Firebase Auth** `^5.3.3` - Kullanıcı kimlik doğrulama
-- **Firebase Storage** `^12.3.7` - Dosya depolama
-- **Cloud Firestore** `^5.5.1` - NoSQL veritabanı
+#### Özellikler
+- ✅ 3D kart çevirme animasyonu
+- ✅ Swipe ile "Ezberledim" / "Tekrar Et" seçimi
+- ✅ İlerleme takibi
+- ✅ Set bazlı organizasyon
+- ✅ Tamamlanan kartları ayırma
 
-### State Management & Architecture
-- **Riverpod** `^2.6.1` - State management
-- **Freezed** `^2.5.7` - Immutable models ve code generation
-- **JSON Serialization** `^4.9.0` - JSON parsing
+#### Mekanik
+```
+Sağa Kaydır → Ezberledim ✅
+Sola Kaydır → Tekrar Et 🔄
+Dokunma → Kartı Çevir 🔄
+```
 
-### Local Storage
-- **SQLite** (sqflite `^2.3.0`) - Yerel veritabanı
-- **Shared Preferences** `^2.2.2` - Key-value storage
-- **Flutter Secure Storage** `^9.2.2` - Güvenli veri saklama
+#### Veritabanı Yapısı
+```sql
+CREATE TABLE BilgiKartlari(
+  setID TEXT PRIMARY KEY,
+  konuID TEXT,
+  setAdi TEXT,
+  kartlar TEXT         -- JSON: [{soru, cevap}, ...]
+);
 
-### UI & Media
-- **Google Fonts** `^6.2.1` - Özel fontlar (Orbitron, Roboto)
-- **Lottie** `^3.1.0` - Animasyonlar
-- **flutter_animate** `^4.5.2` - Smooth UI animasyonları
-- **Cached Network Image** `^3.4.1` - Resim cache
-- **Confetti** `^0.7.0` - Kutlama animasyonları
+CREATE TABLE FlashcardResults(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  setId TEXT,
+  knownCount INTEGER,
+  repeatCount INTEGER,
+  completedAt TEXT
+);
+```
 
-### Sensors & Games
-- **sensors_plus** `^6.1.1` - Accelerometer (Ana sayfa shake detection)
+---
 
-### Utilities
-- **Archive** `^3.3.7` - tar.bz2 sıkıştırma/açma desteği
-- **Logger** `^2.5.0` - Logging
-- **Timezone** `^0.9.2` - Zaman dilimi yönetimi
-- **Intl** `^0.19.0` - Internationalization (Türkçe desteği)
+### 🏆 Haftalık Deneme Sınavları
 
-### Development
-- **Build Runner** `^2.4.13` - Code generation
-- **Flutter Lints** `^5.0.0` - Lint kuralları
-- **Mockito** `^5.4.6` - Testing mocks
-- **Flutter Test** - Unit ve widget testleri
+#### Genel Bakış
+Her hafta yeni bir deneme sınavı! "Gold Class Exam" premium atmosferi ile ciddi sınav deneyimi.
+
+#### Özellikler
+- ✅ Haftalık otomatik yenileme (Her Pazartesi)
+- ✅ Geri sayım sayacı (Sınavın ne zaman başlayacağı)
+- ✅ Tek seferlik çözme hakkı
+- ✅ Premium altın tasarım
+- ✅ Sınav süresi takibi
+- ✅ Detaylı sonuç ve sıralama
+
+#### Durum Yönetimi
+```dart
+enum ExamRoomStatus {
+  beklemede,   // Sınav henüz açılmadı
+  aktif,       // Sınav açık, çözülebilir
+  tamamlandi,  // Kullanıcı sınavı tamamladı
+  sonuclandi,  // Sınav süresi bitti, sonuçlar açıklandı
+}
+```
+
+#### Zamanlama
+```dart
+// Sınav açılış: Her Pazartesi 00:00
+// Sınav kapanış: Her Pazar 23:59
+// Sonuç süresi: Pazar 23:59 - Pazartesi 00:00
+```
+
+#### Renk Paleti
+```dart
+// Aktif: Altın Sarısı
+_goldStart: Color(0xFFFFD700)
+_goldEnd: Color(0xFFFF8C00)
+
+// Tamamlandı: Zümrüt Yeşili
+_emeraldStart: Color(0xFF10B981)
+_emeraldEnd: Color(0xFF059669)
+
+// Kilitli: Metalik Gri
+_metalStart: Color(0xFF6B7280)
+_metalEnd: Color(0xFF4B5563)
+```
+
+#### Weekly Exam Card Widget
+Dersler sekmesinde gösterilen altın renkli haftalık sınav kartı:
+- Nefes alma efekti (breathing animation)
+- Pulse efekti (BAŞLA butonu için)
+- Shimmer efekti (parlaklık geçişi)
+- Lottie animasyonu entegrasyonu
+
+---
+
+### ⚔️ 1v1 Düello Sistemi
+
+#### Genel Bakış
+"Neon Arena Battle" temasıyla bot rakiplere karşı gerçek zamanlı yarışma.
+
+#### Düello Modları
+| Mod | Açıklama | Özellik |
+|-----|----------|---------|
+| Test Düellosu | Soru-cevap yarışması | Hız + Doğruluk |
+| Cümle Tamamla | Fill blanks yarışması | Drag & Drop |
+| Salla Bakalım | Tahmin yarışması | Termometre |
+| Hafıza Düellosu | Kart eşleştirme yarışması | Hafıza + Hız |
+
+#### Akış
+```
+Oyun Türü Seç → Rakip Ara → Eşleşme → Düello → Sonuç
+```
+
+#### Bot Mantığı
+```dart
+// Bot davranış parametreleri
+class BotLogic {
+  final double accuracy;     // 0.70 - 0.90 arası
+  final int minResponseTime; // 2-5 saniye
+  final int maxResponseTime; // 5-10 saniye
+}
+```
+
+#### Özellikler
+- ✅ Adaptif zorluk (kullanıcı seviyesine göre)
+- ✅ Gerçekçi bot davranışı
+- ✅ VS animasyonu
+- ✅ Canlı skor takibi
+- ✅ Kazanan kutlaması
+
+---
+
+### 🎮 Mini Oyunlar
+
+#### 🧠 Hafıza Oyunu (Memory Game)
+
+**İki Mod:**
+1. **Sıralı Bulma** - Sayı eşleştirme
+2. **Şekil Eşleştir** - Okul figürleri eşleştirme
+
+**Sıralı Bulma Özellikleri:**
+- 8 çift kart (16 kart toplam)
+- Cyberpunk Brain teması
+- Hamle ve süre takibi
+- 3 yıldız değerlendirme
+
+**Şekil Eşleştir Figürleri:**
+| Şekil | İkon | Renk |
+|-------|------|------|
+| Cetvel | 📏 | `#3B82F6` |
+| Kalem | ✏️ | `#EAB308` |
+| Kitap | 📖 | `#22C55E` |
+| Hesap Makinesi | 🔢 | `#A855F7` |
+| Palet | 🎨 | `#EC4899` |
+
+```dart
+// Yıldız değerlendirme
+0 hata    → ⭐⭐⭐ (3 yıldız)
+1-2 hata  → ⭐⭐ (2 yıldız)
+3-5 hata  → ⭐ (1 yıldız)
+5+ hata   → Yıldız yok
+```
+
+#### ✍️ Cümle Tamamla (Fill Blanks)
+
+**Konsept:** "Sky Journey" - Gökyüzünde kelime yakalama
+
+**Mekanik:**
+- Cümlede boşluk var
+- Alt kısımda kelime seçenekleri (bulutlar üzerinde)
+- Drag & Drop ile boşluğa yerleştirme
+- Doğru/yanlış animasyonu
+
+**Zorluk Seviyeleri:**
+- Kolay: 3-5 kelime seçeneği
+- Orta: 5-7 kelime seçeneği
+- Zor: 7-10 kelime seçeneği
+
+#### 📱 Salla Bakalım (Shake Game)
+
+**Konsept:** "Shake Wave" - Telefonu salla, sayıyı tahmin et
+
+**Mekanik:**
+1. Gizli bir sayı belirlenir (1-100 arası)
+2. Kullanıcı tahmin girer
+3. Telefonu salladığında ipucu alır
+4. Termometre widget ile sıcak/soğuk geri bildirim
+
+**Termometre Göstergesi:**
+```dart
+// Fark < 5  → 🔥 Çok Sıcak (Kırmızı)
+// Fark < 10 → ☀️ Sıcak (Turuncu)
+// Fark < 20 → 🌤 Ilık (Sarı)
+// Fark < 30 → ❄️ Soğuk (Mavi)
+// Fark >= 30 → 🥶 Çok Soğuk (Koyu Mavi)
+```
+
+---
+
+### 📊 Başarılar ve İstatistikler
+
+#### Genel Bakış
+"Macera Günlüğü" temasıyla tüm aktivitelerin kaydı ve analizi.
+
+#### Başarılar Sekmeleri
+| Tab | İçerik | İkon |
+|-----|--------|------|
+| Deneme | Haftalık sınav sonuçları | 📝 |
+| Testler | Test sonuçları | 📚 |
+| Kartlar | Flashcard sonuçları | 🃏 |
+| Cümle | Fill blanks sonuçları | ✍️ |
+| Salla | Shake game sonuçları | 📱 |
+| Hafıza | Memory game sonuçları | 🧠 |
+
+#### İstatistik Kartları
+Her sonuç kartında gösterilen bilgiler:
+- Tarih ve saat
+- Toplam soru/kart sayısı
+- Doğru/yanlış sayısı
+- Başarı yüzdesi
+- Yıldız değerlendirmesi
+- Kazanılan XP
+
+#### Gelişim Grafiği
+- **Ders bazlı başarı oranları** (fl_chart ile)
+- **Konu bazlı detaylı analiz**
+- **Trend çizgisi** (son 7 gün)
+
+---
+
+### ⏱️ Ekran Süresi Takibi
+
+#### Genel Bakış
+Uygulama içi süre takip sistemi. Her saniye otomatik kayıt.
+
+#### Özellikler
+- ✅ Saniye bazlı hassas takip
+- ✅ Gün değişimi algılama
+- ✅ Uygulama arka plana alındığında duraklatma
+- ✅ Haftalık grafik görünümü
+- ✅ Dünle karşılaştırma
+- ✅ Motivasyon mesajları
+
+#### Teknik Detaylar
+```dart
+class TimeTrackingService {
+  // Singleton pattern
+  static final TimeTrackingService _instance = TimeTrackingService._internal();
+  
+  // Her saniye kayıt
+  Timer.periodic(Duration(seconds: 1), (_) {
+    _todaySeconds++;
+    DatabaseHelper().saveDailyTime(_currentDate, _todaySeconds);
+  });
+  
+  // Uygulama yaşam döngüsü
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _startTimer();
+        break;
+      case AppLifecycleState.paused:
+        stop();
+        break;
+    }
+  }
+}
+```
+
+#### Veritabanı
+```sql
+CREATE TABLE DailyTime(
+  date TEXT PRIMARY KEY,        -- YYYY-MM-DD
+  durationSeconds INTEGER       -- Toplam saniye
+);
+```
+
+#### Grafik Ekranı
+- Haftalık bar chart
+- Günlük toplam süre
+- Ortalama hesaplama
+- Dünle karşılaştırma (% artış/azalış)
+
+---
+
+### 🔔 Bildirim Sistemi
+
+#### Genel Bakış
+Flutter Local Notifications ile yerel push bildirimleri. 54 haftalık döngüsel bildirim planlaması.
+
+#### Özellikler
+- ✅ Zamanlanmış günlük hatırlatıcılar
+- ✅ Özelleştirilebilir bildirim saati
+- ✅ 54 haftalık döngü (1 yıl+)
+- ✅ Farklı bildirim kategorileri
+- ✅ Uygulama içi bildirim paneli
+
+#### Bildirim Kategorileri
+| Kategori | Açıklama | Örnek |
+|----------|----------|-------|
+| `study_reminder` | Ders hatırlatması | "Bugün ders çalıştın mı?" |
+| `daily_challenge` | Günlük meydan okuma | "Günlük testini çözmeyi unutma!" |
+| `achievement` | Başarı bildirimi | "Tebrikler! Yeni seviyeye ulaştın!" |
+| `streak` | Seri hatırlatması | "3 günlük serisini koru!" |
+| `motivation` | Motivasyon mesajı | "Bugün harika şeyler öğreneceksin!" |
+
+#### Teknik Yapılandırma
+```dart
+// Android Bildirim Kanalı
+AndroidNotificationChannel(
+  'bilgi_avcisi_channel',
+  'Bilgi Avcısı Bildirimleri',
+  importance: Importance.high,
+  enableVibration: true,
+  playSound: true,
+)
+
+// Bildirim ikonları
+icon: '@drawable/splash_logo',
+largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
+```
+
+#### Zamanlama
+```dart
+// 54 haftalık döngü
+for (int week = 0; week < 54; week++) {
+  final scheduledDate = baseDate.add(Duration(days: week * 7));
+  // ...
+}
+```
+
+---
+
+### 📱 Sallama Özelliği (Shake to Discover)
+
+#### Genel Bakış
+Ana ekranda telefonu sallayarak rastgele içerik önerisi alma.
+
+#### Özellikler
+- ✅ Accelerometer ile hassas algılama (sensors_plus)
+- ✅ Rastgele içerik önerisi
+- ✅ Oyun ekranlarında otomatik duraklatma
+- ✅ Cooldown mekanizması (spam önleme)
+- ✅ Haptic feedback
+
+#### Desteklenen İçerik Türleri
+```dart
+enum ContentType {
+  test,        // Rastgele test
+  flashcard,   // Rastgele flashcard seti
+  fillBlanks,  // Cümle tamamla oyunu
+  sallabakalim,// Salla bakalım oyunu
+  bulbakalim,  // Hafıza oyunu
+  duel,        // 1v1 düello
+}
+```
+
+#### Teknik Parametreler
+```dart
+// Shake algılama
+static const double _shakeThreshold = 12.0; // m/s²
+static const Duration _shakeCooldown = Duration(milliseconds: 1500);
+static const int _requiredShakeCount = 2;
+
+// Örnekleme hızı
+samplingPeriod: Duration(milliseconds: 50), // 20 Hz
+```
+
+---
+
+## 🎨 Tasarım Sistemi
+
+### 🎨 Renk Paleti
+
+#### Ana Renkler
+```dart
+class AppColors {
+  static const Color primary = Color(0xFF3b82f6);        // Ana mavi
+  static const Color backgroundLight = Color(0xFFe0f2fe); // Açık arka plan
+  static const Color backgroundDark = Color(0xFF0c1425);  // Koyu arka plan
+}
+```
+
+#### Kart Renkleri
+```dart
+static const Color card1 = Color(0xFF4338ca); // İndigo
+static const Color card2 = Color(0xFFd97706); // Amber
+static const Color card3 = Color(0xFF10b981); // Yeşil
+static const Color card4 = Color(0xFFEAB308); // Sarı
+```
+
+#### Neon Efekt Renkleri
+```dart
+static const Color neonCyan = Color(0xFF00f5ff);
+static const Color neonPurple = Color(0xFFbf00ff);
+static const Color neonPink = Color(0xFFff006e);
+static const Color neonGreen = Color(0xFF00ff88);
+```
+
+### 🔤 Tipografi
+
+**Ana Font:** Google Fonts - **Nunito**
+**Başlık Font:** Google Fonts - **Poppins**
+
+```dart
+// Font boyutları
+fontSizeSmall: 12.0
+fontSizeMedium: 14.0
+fontSizeLarge: 18.0
+fontSizeXLarge: 20.0
+fontSizeTitle: 24.0
+```
+
+### 📐 Spacing
+
+```dart
+// Border Radius
+borderRadiusSmall: 8.0
+borderRadiusMedium: 16.0
+borderRadiusLarge: 24.0
+borderRadiusXLarge: 30.0
+
+// Padding
+paddingSmall: 8.0
+paddingMedium: 16.0
+paddingLarge: 24.0
+```
+
+### 🪟 Glassmorphism
+
+```dart
+Container(
+  decoration: BoxDecoration(
+    color: Colors.white.withOpacity(0.1),
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(color: Colors.white.withOpacity(0.2)),
+  ),
+  child: ClipRRect(
+    child: BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: content,
+    ),
+  ),
+)
+```
 
 ---
 
 ## 🏗️ Mimari
 
-Proje **Clean Architecture** prensiplerine göre organize edilmiştir:
+### Clean Architecture + Feature-First
 
 ```
 lib/
-├── core/                    # Temel yapılar
-│   ├── constants/          # Sabitler
-│   ├── providers/          # Global provider'lar
-│   ├── theme/              # Tema yapılandırması
-│   └── utils/              # Yardımcı fonksiyonlar
+├── main.dart                 # Giriş noktası
+├── firebase_options.dart     # Firebase config
 │
-├── features/               # Özellik modülleri
-│   ├── auth/              # Kimlik doğrulama
-│   ├── mascot/            # Maskot sistemi
-│   │   ├── domain/        # Entities & Repository interfaces
-│   │   ├── data/          # Repository implementations
-│   │   └── presentation/  # UI & Controllers
-│   ├── test/              # Test modülü
-│   │   ├── domain/
-│   │   ├── controller/
-│   │   └── presentation/
-│   ├── duel/              # 1v1 Düello sistemi
-│   │   ├── domain/        # BotLogicController, BotProfile, DuelEntities
-│   │   ├── data/          # DuelRepository, ConnectivityService
-│   │   ├── logic/         # DuelController (Riverpod)
-│   │   └── presentation/  # Screens & Widgets
-│   ├── games/             # Mini oyunlar
-│   │   ├── fill_blanks/  # Cümle tamamlama
-│   │   ├── guess/        # Salla Bakalım
-│   │   └── memory/       # Bul Bakalım
-│   ├── exam/              # Haftalık sınav
-│   └── sync/              # Senkronizasyon
+├── core/                     # Çekirdek
+│   ├── constants/           # Sabitler
+│   ├── gamification/        # XP/Seviye mantığı
+│   ├── providers/           # Global providers
+│   └── utils/               # Yardımcılar
 │
-├── models/                # Veri modelleri (Freezed)
-│   ├── lesson.dart
-│   ├── topic.dart
-│   ├── test.dart
-│   ├── flashcard_model.dart
-│   └── ...
+├── features/                 # Özellik modülleri
+│   ├── auth/               # Kimlik doğrulama
+│   ├── duel/               # 1v1 düello
+│   ├── exam/               # Haftalık sınav
+│   ├── games/              # Mini oyunlar
+│   ├── mascot/             # Maskot sistemi
+│   ├── sync/               # Veri senkronizasyonu
+│   ├── test/               # Test sistemi
+│   └── user/               # Kullanıcı yönetimi
 │
-├── repositories/          # Veri erişim katmanı
-│   ├── test_repository.dart
-│   ├── flashcard_repository.dart
-│   └── ...
-│
-├── services/              # Servisler
-│   ├── firebase_storage_service.dart
-│   ├── database_helper.dart
-│   ├── data_service.dart
-│   ├── notification_service.dart
-│   ├── shake_service.dart
-│   └── ...
-│
-├── screens/               # UI Ekranları
-│   ├── main_screen.dart
-│   ├── test_screen.dart
-│   ├── flashcards_screen.dart
-│   ├── result_screen.dart
-│   └── tabs/
-│       ├── home_tab.dart
-│       ├── lessons_tab.dart
-│       ├── games_tab.dart
-│       └── profile_tab.dart
-│
-├── widgets/               # Yeniden kullanılabilir widget'lar
-│   ├── glass_container.dart
-│   ├── custom_button.dart
-│   └── ...
-│
-└── main.dart              # Uygulama giriş noktası
+├── models/                   # Veri modelleri
+├── providers/                # Riverpod providers
+├── repositories/             # Repository pattern
+├── screens/                  # Ekranlar
+├── services/                 # Servisler
+├── util/                     # Utilities
+└── widgets/                  # Ortak widgetlar
 ```
 
-### Veri Akışı
+### State Management: Riverpod
 
+```dart
+// Provider tanımlama
+final gameControllerProvider = StateNotifierProvider.autoDispose<
+    GameController, GameState>((ref) => GameController());
+
+// Kullanım
+final state = ref.watch(gameControllerProvider);
+final controller = ref.read(gameControllerProvider.notifier);
 ```
-Firebase Storage (tar.bz2)
-         ↓
-  FirebaseStorageService
-         ↓
-  Local SQLite Database
-         ↓
-    Repositories
-         ↓
-  Riverpod Providers
-         ↓
-        UI
-```
+
+---
+
+## 📦 Bağımlılıklar
+
+### Ana Bağımlılıklar
+
+| Paket | Versiyon | Kullanım |
+|-------|----------|----------|
+| `flutter_riverpod` | ^2.6.1 | State management |
+| `firebase_core` | ^3.8.0 | Firebase |
+| `firebase_auth` | ^5.3.3 | Authentication |
+| `cloud_firestore` | ^5.5.1 | Database |
+| `firebase_storage` | ^12.3.7 | Storage |
+| `sqflite` | ^2.3.0 | Local SQLite |
+| `google_fonts` | ^6.3.3 | Typography |
+| `lottie` | ^3.3.0 | Animations |
+| `flutter_local_notifications` | ^18.0.1 | Notifications |
+| `fl_chart` | ^0.69.0 | Charts |
+| `sensors_plus` | ^6.1.1 | Sensors |
+| `flutter_animate` | ^4.5.2 | UI animations |
+| `confetti` | ^0.8.0 | Celebrations |
 
 ---
 
 ## 🚀 Kurulum
 
-### Gereksinimler
-
-- Flutter SDK `^3.9.2`
-- Dart SDK `^3.9.2`
-- Android Studio / VS Code
-- Firebase hesabı ve yapılandırması
-
-### Adımlar
-
-1. **Repository'yi klonlayın**
-   ```bash
-   git clone https://github.com/Emire221/para.git
-   cd para
-   ```
-
-2. **Bağımlılıkları yükleyin**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Code generation çalıştırın**
-   ```bash
-   flutter pub run build_runner build --delete-conflicting-outputs
-   ```
-
-4. **Firebase yapılandırması**
-   - `lib/firebase_options.dart` dosyasını kendi Firebase projenize göre güncelleyin
-   - Android ve iOS için `google-services.json` ve `GoogleService-Info.plist` ekleyin
-
-5. **Uygulamayı çalıştırın**
-   ```bash
-   flutter run
-   ```
-
-### Testleri Çalıştırma
-
 ```bash
-# Tüm testleri çalıştır
-flutter test
+# 1. Repository'yi klonla
+git clone https://github.com/your-username/bilgi-avcisi.git
+cd bilgi-avcisi
 
-# Belirli bir test dosyasını çalıştır
-flutter test test/services/firebase_storage_service_test.dart
+# 2. Bağımlılıkları yükle
+flutter pub get
 
-# Test coverage raporu
-flutter test --coverage
+# 3. Kod üretimi
+dart run build_runner build --delete-conflicting-outputs
+
+# 4. Firebase yapılandırması
+flutterfire configure
+
+# 5. Çalıştır
+flutter run
 ```
-
-### Analiz
-
-```bash
-# Kod analizi
-flutter analyze
-
-# Lint kontrolleri
-flutter analyze --no-fatal-warnings
-```
-
-**Güncel Durum:** ✅ No issues found!
 
 ---
 
 ## 📁 Proje Yapısı
 
-### Veritabanı Şeması (SQLite)
+```
+bilgi-avcisi/
+├── android/                  # Android native
+├── ios/                      # iOS native
+├── lib/                      # Dart kodu
+├── assets/
+│   ├── animation/           # Lottie (11 dosya)
+│   ├── appicon/             # App icons
+│   ├── images/              # Screenshots (35+ dosya)
+│   └── json/                # Data files
+├── test/                     # Tests
+├── pubspec.yaml
+└── README.md
+```
+
+---
+
+## 💾 Veritabanı Yapısı
+
+### SQLite Tabloları
 
 ```sql
 -- Dersler
-CREATE TABLE Dersler (
-  dersID TEXT PRIMARY KEY,
-  dersAdi TEXT,
-  ikon TEXT,
-  renk TEXT
-);
+CREATE TABLE Dersler(dersID TEXT PRIMARY KEY, dersAdi TEXT, ikon TEXT, renk TEXT);
 
 -- Konular
-CREATE TABLE Konular (
-  konuID TEXT PRIMARY KEY,
-  dersID TEXT,
-  konuAdi TEXT,
-  sira INTEGER,
-  FOREIGN KEY(dersID) REFERENCES Dersler(dersID)
-);
+CREATE TABLE Konular(konuID TEXT PRIMARY KEY, dersID TEXT, konuAdi TEXT, sira INTEGER);
 
 -- Testler
-CREATE TABLE Testler (
-  testID TEXT PRIMARY KEY,
-  konuID TEXT,
-  testAdi TEXT,
-  zorluk INTEGER,
-  cozumVideoURL TEXT,
-  sorular TEXT, -- JSON
-  FOREIGN KEY(konuID) REFERENCES Konular(konuID)
-);
+CREATE TABLE Testler(testID TEXT PRIMARY KEY, konuID TEXT, testAdi TEXT, zorluk INTEGER, sorular TEXT);
 
 -- Bilgi Kartları
-CREATE TABLE BilgiKartlari (
-  kartSetID TEXT PRIMARY KEY,
-  konuID TEXT,
-  kartAdi TEXT,
-  kartlar TEXT, -- JSON
-  FOREIGN KEY(konuID) REFERENCES Konular(konuID)
-);
+CREATE TABLE BilgiKartlari(setID TEXT PRIMARY KEY, konuID TEXT, setAdi TEXT, kartlar TEXT);
 
--- Fill Blanks Levels (Cümle Tamamlama)
-CREATE TABLE FillBlanksLevels (
-  levelID TEXT PRIMARY KEY,
-  title TEXT,
-  description TEXT,
-  difficulty INTEGER,
-  category TEXT,
-  questions TEXT -- JSON
-);
+-- Test Sonuçları
+CREATE TABLE TestResults(id INTEGER PRIMARY KEY, testId TEXT, score INTEGER, correctCount INTEGER, wrongCount INTEGER, completedAt TEXT);
 
--- Guess Levels (Salla Bakalım)
-CREATE TABLE GuessLevels (
-  guessID TEXT PRIMARY KEY,
-  title TEXT,
-  description TEXT,
-  difficulty INTEGER,
-  category TEXT,
-  questions TEXT -- JSON
-);
+-- Oyun Sonuçları
+CREATE TABLE GameResults(id INTEGER PRIMARY KEY, gameType TEXT, score INTEGER, details TEXT, completedAt TEXT);
 
--- Game Results (Oyun Sonuçları)
-CREATE TABLE GameResults (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  gameType TEXT NOT NULL,
-  score INTEGER,
-  correctCount INTEGER,
-  wrongCount INTEGER,
-  totalQuestions INTEGER,
-  completedAt TEXT,
-  details TEXT
-);
+-- Günlük Süre
+CREATE TABLE DailyTime(date TEXT PRIMARY KEY, durationSeconds INTEGER);
 
--- Memory Game Results (Bul Bakalım)
-CREATE TABLE MemoryGameResults (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  moves INTEGER,
-  timeTaken INTEGER,
-  mistakes INTEGER,
-  completedAt TEXT
-);
-
--- User Pets (Maskot)
-CREATE TABLE UserPets (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  petType TEXT NOT NULL,
-  petName TEXT NOT NULL,
-  currentXp INTEGER DEFAULT 0,
-  level INTEGER DEFAULT 1,
-  mood INTEGER DEFAULT 100,
-  createdAt TEXT DEFAULT (datetime('now'))
-);
-
--- Haftalık Sınavlar
-CREATE TABLE WeeklyExams (
-  weeklyExamId TEXT PRIMARY KEY,
-  title TEXT,
-  weekStart TEXT,
-  duration INTEGER,
-  description TEXT,
-  questions TEXT -- JSON
-);
-
--- Haftalık Sınav Sonuçları
-CREATE TABLE WeeklyExamResults (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  examId TEXT NOT NULL,
-  odaId TEXT NOT NULL,
-  odaIsmi TEXT,
-  odaBaslangic TEXT,
-  odaBitis TEXT,
-  sonucTarihi TEXT,
-  odaDurumu TEXT,
-  odaKatilimciId TEXT NOT NULL,
-  cevaplar TEXT, -- JSON
-  dogru INTEGER,
-  yanlis INTEGER,
-  bos INTEGER,
-  puan INTEGER, -- 500 üzerinden
-  siralama INTEGER,
-  toplamKatilimci INTEGER,
-  completedAt TEXT
-);
+-- Bildirimler
+CREATE TABLE Notifications(id INTEGER PRIMARY KEY, title TEXT, body TEXT, type TEXT, isRead INTEGER, createdAt TEXT);
 ```
 
 ---
 
-## 🔄 Sync Sistemi
+<p align="center">
+  <strong>🎯 Bilgi Avcısı - Öğrenmeyi Eğlenceye Dönüştür!</strong>
+</p>
 
-### Manifest Tabanlı Senkronizasyon
-
-Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
-
-#### 1. Manifest Yapısı (`manifest.json`)
-
-```json
-{
-  "version": "v2.0",
-  "updatedAt": "2024-12-05T10:00:00Z",
-  "files": [
-    {
-      "path": "3_Sinif/hafta_1.tar.bz2",
-      "type": "tar.bz2",
-      "version": "v1",
-      "hash": "abc123...",
-      "addedAt": "2024-12-05T10:00:00Z"
-    }
-  ]
-}
-```
-
-#### 2. Sync Akışı
-
-```
-1. Manifest Download
-   ↓
-2. Versiyon Karşılaştırma
-   ↓
-3. Yeni Dosyaları Tespit Et
-   ↓
-4. tar.bz2 Arşivleri İndir
-   ↓
-5. BZip2 → Tar Decode
-   ↓
-6. Dosyaları Çıkart
-   ↓
-7. SQLite'a Kaydet (Oyun verileri de dahil)
-   ↓
-8. Local Manifest Güncelle
-```
-
----
-
-## 🧪 Testler
-
-### Test İstatistikleri
-
-- **Toplam Test**: 38
-- **Başarılı**: 37
-- **Başarısız**: 1 (firebase_storage_service_test)
-- **Başarı Oranı**: %97.3
-- **Coverage**: Unit, Widget, Integration
-
----
-
-## 📊 Kod Kalitesi
-
-### Analiz Sonuçları
-
-```
-✅ No issues found!
-📊 Analyzed in 7.9s
-🧪 37/38 tests passing
-📈 97.3% success rate
-```
-
----
-
-## 📝 Son Güncellemeler
-
-### [v1.6.0] - 2025-12-31
-
-#### Added ✨
-- **Akıllı Bildirim Sistemi**:
-  - **Red Dot**: Sadece okunmamış bildirim varsa yanar.
-  - **UI Overhaul**: Bildirim popup tasarımı yenilendi, header ortalandı, yükseklik optimize edildi.
-  - **In-App Overlay**: Uygulama açıkken gelen bildirimler için özel Snackbar.
-  - **14 Senaryo**: Haftalık otomatik bildirim planı.
-
-#### Fixed 🐛
-- **Notifications Screen**: Sola dayalı başlık ve tasarım sorunları giderildi.
-- **Red Dot Logic**: Sürekli yanma sorunu çözüldü.
-
----
-
-### [v1.5.0] - 2025-12-06
-
-#### Added ✨
-- **UI/UX Redesign**: Modern Neon tema sistemi
-  - **Glassmorphism Design**: Buzlu cam efektli container'lar
-  - **Neon Color Palette**: Vibrant gradient renkler
-  - **flutter_animate Paketi**: Smooth animasyonlar
-  - **Google Fonts (Orbitron)**: Futuristik tipografi
-  - **2 Yeni Lottie Animasyonu**: `card_thoropy.json`, `match_macking.json`
-
-- **Tema Grupları**:
-  - **Neon Arena**: Matchmaking, Duel Selection, Duel Game
-  - **Neon Brain**: Memory Game, Memory Result
-  - **Shake Wave**: Guess Level Selection, Guess Game, Guess Result
-  - **Neon Review**: Answer Key Screen
-  - **Neon Notification**: Notifications Screen
-
-#### Changed 🔄
-- **Matchmaking Screen**: Neon Arena tema + Lottie animasyonu
-- **Duel Selection Screen**: Glass bottom sheet design
-- **Duel Game Screen**: Battle Arena tema
-- **Memory Game Screen**: Neon Brain tema ile akıcı kart animasyonları
-- **Memory Result Screen**: Victory Celebration tasarımı
-- **Guess Level Selection**: Shake Wave gradient tema
-- **Guess Game Screen**: Temperature-based arka plan renkleri
-- **Guess Result Screen**: Shake Wave Victory kutlaması
-- **Notifications Screen**: Neon Notification popup tasarımı
-- **Answer Key Screen**: Neon Review tema ile glassmorphism kartlar
-- **Fill Blanks Screen**: Neon gradient arka planlar
-- **Level Selection Screen**: Modern glass morphism
-- **Weekly Exam Screens**: Modern tasarım güncellemeleri
-
-#### İstatistikler (v1.5.0)
-- 📝 18 dosya değişti
-- ➕ 10,453 satır eklendi
-- ➖ 3,115 satır silindi
-- 🎨 5 yeni tema grubu
-- 🎬 2 yeni Lottie animasyonu
-- ✅ 0 lint hatası
-
----
-
-### [v1.4.0] - 2025-12-05
-
-#### Added ✨
-- **1v1 Düello Sistemi**: Akıllı bot ile yarış modu
-  - 100 Türkçe bot ismi (50 erkek, 50 kadın)
-  - Akıllı bot algoritması (kullanıcı durumuna göre davranış)
-  - Test ve Cümle Tamamlama modları
-  - İnternet kontrolü (ConnectivityService)
-  - Matchmaking animasyonu (3-5 saniye)
-  - Skor tablosu ve sonuç dialogu
-
-#### Removed 🗑️
-- **Arena Düello Sistemi**: Eski arena modülü tamamen kaldırıldı
-  - `lib/features/games/arena/` klasörü silindi
-  - ArenaSets veritabanı tablosu kaldırıldı
-  - İlgili tüm referanslar temizlendi
-
-#### Changed 🔄
-- **Games Tab**: Arena yerine 1v1 Düello kartı
-- **ShakeService**: Düello içerik tipi eklendi
-- **DatabaseHelper**: Arena metodları kaldırıldı
-
-#### Fixed 🐛
-- **Lint Sorunları**: duel_controller.dart'taki curly braces eksiklikleri giderildi
-- **Import Çakışmaları**: DuelFillBlankQuestion widget/entity isim çakışması çözüldü
-
-### İstatistikler (v1.4.0)
-- 📝 20+ dosya değişti
-- ➕ 2000+ satır eklendi
-- ➖ 1500+ satır silindi (Arena kaldırıldı)
-- 🎮 1v1 Düello sistemi eklendi
-- ✅ 0 lint hatası
-
----
-
-### [v1.3.0] - 2025-12-04
-
-#### Added ✨
-- **Salla Bakalım Oyunu**: Telefonu sallayarak sayı tahmin etme (10 seviyeli)
-- **Bul Bakalım Oyunu**: 1-10 arası sıralı hafıza oyunu
-- **sensors_plus Entegrasyonu**: Ana sayfa shake algılama daha hassas ve güvenilir
-- **ShakeService pause/resume**: Oyun ekranlarında çakışma önleme mekanizması
-- **500 Puan Sistemi**: Haftalık sınav puanlaması 500 tam puan üzerinden
-- **Confetti Kutlamaları**: Oyun sonunda konfeti animasyonları
-
----
-
-### [v1.2.0] - 2025-12-04
-
-#### Added ✨
-- **Haftalık Sınav Sistemi**: Türkiye geneli deneme sınavı özelliği
-- **WeeklyExamCard**: Dersler ekranında her zaman görünen sınav kartı
-- **clearOldWeeklyExamData()**: Yeni sınav geldiğinde eski verileri temizleme
-
----
-
-### [v1.1.0] - 2024-12-03
-
-#### Added ✨
-- **Maskot Sistemi**: Öğrencilere eşlik eden sanal arkadaş
-- **ResultScreen Entegrasyonu**: Flashcards için detaylı sonuç ekranı
-- **Türkçe Localization**: İntl paketi ile tam Türkçe tarih desteği
-
----
-
-## 🤝 Katkıda Bulunma
-
-Bu proje özel bir projedir. Katkı kabul edilmemektedir.
-
----
-
-## 📄 Lisans
-
-Bu proje özel mülkiyettir. Tüm hakları saklıdır.
-
----
-
-## 📞 İletişim
-
-- **Repository**: [github.com/Emire221/BilgiAvcisi](https://github.com/Emire221/BilgiAvcisi)
-- **Issues**: GitHub Issues'ı kullanın
-
----
-
-## 📚 Ek Kaynaklar
-
-- [Flutter Documentation](https://docs.flutter.dev/)
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Riverpod Guide](https://riverpod.dev/)
-- [Freezed Package](https://pub.dev/packages/freezed)
-
----
-
-**Geliştirici**: Emire221  
-**Son Güncelleme**: 31 Aralık 2025  
-**Versiyon**: 1.6.0
-
----
-
-<p align="center">Made with ❤️ for Turkish Students</p>
+<p align="center">
+  Made with ❤️ and Flutter
+</p>
