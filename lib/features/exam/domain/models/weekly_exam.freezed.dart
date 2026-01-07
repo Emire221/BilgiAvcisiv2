@@ -25,6 +25,9 @@ mixin _$WeeklyExam {
   int get duration => throw _privateConstructorUsedError; // Dakika cinsinden
   List<WeeklyExamQuestion> get questions => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
+  int? get totalUser =>
+      throw _privateConstructorUsedError; // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  Map<String, double>? get turkeyAverages => throw _privateConstructorUsedError;
 
   /// Create a copy of WeeklyExam
   /// with the given fields replaced by the non-null parameter values.
@@ -47,6 +50,8 @@ abstract class $WeeklyExamCopyWith<$Res> {
     int duration,
     List<WeeklyExamQuestion> questions,
     String? description,
+    int? totalUser,
+    Map<String, double>? turkeyAverages,
   });
 }
 
@@ -71,6 +76,8 @@ class _$WeeklyExamCopyWithImpl<$Res, $Val extends WeeklyExam>
     Object? duration = null,
     Object? questions = null,
     Object? description = freezed,
+    Object? totalUser = freezed,
+    Object? turkeyAverages = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -98,6 +105,14 @@ class _$WeeklyExamCopyWithImpl<$Res, $Val extends WeeklyExam>
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
                       as String?,
+            totalUser: freezed == totalUser
+                ? _value.totalUser
+                : totalUser // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            turkeyAverages: freezed == turkeyAverages
+                ? _value.turkeyAverages
+                : turkeyAverages // ignore: cast_nullable_to_non_nullable
+                      as Map<String, double>?,
           )
           as $Val,
     );
@@ -120,6 +135,8 @@ abstract class _$$WeeklyExamImplCopyWith<$Res>
     int duration,
     List<WeeklyExamQuestion> questions,
     String? description,
+    int? totalUser,
+    Map<String, double>? turkeyAverages,
   });
 }
 
@@ -143,6 +160,8 @@ class __$$WeeklyExamImplCopyWithImpl<$Res>
     Object? duration = null,
     Object? questions = null,
     Object? description = freezed,
+    Object? totalUser = freezed,
+    Object? turkeyAverages = freezed,
   }) {
     return _then(
       _$WeeklyExamImpl(
@@ -170,6 +189,14 @@ class __$$WeeklyExamImplCopyWithImpl<$Res>
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
                   as String?,
+        totalUser: freezed == totalUser
+            ? _value.totalUser
+            : totalUser // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        turkeyAverages: freezed == turkeyAverages
+            ? _value._turkeyAverages
+            : turkeyAverages // ignore: cast_nullable_to_non_nullable
+                  as Map<String, double>?,
       ),
     );
   }
@@ -185,7 +212,10 @@ class _$WeeklyExamImpl implements _WeeklyExam {
     required this.duration,
     required final List<WeeklyExamQuestion> questions,
     this.description,
-  }) : _questions = questions;
+    this.totalUser,
+    final Map<String, double>? turkeyAverages,
+  }) : _questions = questions,
+       _turkeyAverages = turkeyAverages;
 
   /// JSON'da weeklyExamId olarak gelir
   @override
@@ -209,10 +239,23 @@ class _$WeeklyExamImpl implements _WeeklyExam {
 
   @override
   final String? description;
+  @override
+  final int? totalUser;
+  // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  final Map<String, double>? _turkeyAverages;
+  // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  @override
+  Map<String, double>? get turkeyAverages {
+    final value = _turkeyAverages;
+    if (value == null) return null;
+    if (_turkeyAverages is EqualUnmodifiableMapView) return _turkeyAverages;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
 
   @override
   String toString() {
-    return 'WeeklyExam(examId: $examId, title: $title, weekStart: $weekStart, duration: $duration, questions: $questions, description: $description)';
+    return 'WeeklyExam(examId: $examId, title: $title, weekStart: $weekStart, duration: $duration, questions: $questions, description: $description, totalUser: $totalUser, turkeyAverages: $turkeyAverages)';
   }
 
   @override
@@ -231,7 +274,13 @@ class _$WeeklyExamImpl implements _WeeklyExam {
               _questions,
             ) &&
             (identical(other.description, description) ||
-                other.description == description));
+                other.description == description) &&
+            (identical(other.totalUser, totalUser) ||
+                other.totalUser == totalUser) &&
+            const DeepCollectionEquality().equals(
+              other._turkeyAverages,
+              _turkeyAverages,
+            ));
   }
 
   @override
@@ -243,6 +292,8 @@ class _$WeeklyExamImpl implements _WeeklyExam {
     duration,
     const DeepCollectionEquality().hash(_questions),
     description,
+    totalUser,
+    const DeepCollectionEquality().hash(_turkeyAverages),
   );
 
   /// Create a copy of WeeklyExam
@@ -262,6 +313,8 @@ abstract class _WeeklyExam implements WeeklyExam {
     required final int duration,
     required final List<WeeklyExamQuestion> questions,
     final String? description,
+    final int? totalUser,
+    final Map<String, double>? turkeyAverages,
   }) = _$WeeklyExamImpl;
 
   /// JSON'da weeklyExamId olarak gelir
@@ -277,6 +330,10 @@ abstract class _WeeklyExam implements WeeklyExam {
   List<WeeklyExamQuestion> get questions;
   @override
   String? get description;
+  @override
+  int? get totalUser; // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  @override
+  Map<String, double>? get turkeyAverages;
 
   /// Create a copy of WeeklyExam
   /// with the given fields replaced by the non-null parameter values.
@@ -639,16 +696,17 @@ mixin _$WeeklyExamResult {
   String get examId => throw _privateConstructorUsedError;
   String get odaId => throw _privateConstructorUsedError; // Sınav oturumu ID'si
   String get odaIsmi =>
-      throw _privateConstructorUsedError; // "Hafta 45 - 2025" gibi
+      throw _privateConstructorUsedError; // "Hafta 2 - 2026" gibi
   String get odaBaslangic => throw _privateConstructorUsedError; // ISO 8601
   String get odaBitis =>
-      throw _privateConstructorUsedError; // ISO 8601 (Çarşamba 23:59)
-  String get sonucTarihi => throw _privateConstructorUsedError; // Pazar 12:00
+      throw _privateConstructorUsedError; // ISO 8601 (Perşembe 23:59)
+  String get sonucTarihi =>
+      throw _privateConstructorUsedError; // Cumartesi 12:00
   String get odaDurumu =>
-      throw _privateConstructorUsedError; // "aktif", "kapali", "sonuclanmis"
+      throw _privateConstructorUsedError; // "tamamlandi", "sonuclar_aciklandi"
   String get kullaniciId => throw _privateConstructorUsedError;
   Map<String, String> get cevaplar =>
-      throw _privateConstructorUsedError; // {"1": "A", "2": "EMPTY"}
+      throw _privateConstructorUsedError; // {"WQ001": "A", "WQ002": "B"}
   int? get dogru => throw _privateConstructorUsedError;
   int? get yanlis => throw _privateConstructorUsedError;
   int? get bos => throw _privateConstructorUsedError;
@@ -656,6 +714,7 @@ mixin _$WeeklyExamResult {
   int? get siralama => throw _privateConstructorUsedError; // Türkiye sıralaması
   int? get toplamKatilimci => throw _privateConstructorUsedError;
   DateTime? get completedAt => throw _privateConstructorUsedError;
+  bool get resultViewed => throw _privateConstructorUsedError;
 
   /// Serializes this WeeklyExamResult to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -692,6 +751,7 @@ abstract class $WeeklyExamResultCopyWith<$Res> {
     int? siralama,
     int? toplamKatilimci,
     DateTime? completedAt,
+    bool resultViewed,
   });
 }
 
@@ -727,6 +787,7 @@ class _$WeeklyExamResultCopyWithImpl<$Res, $Val extends WeeklyExamResult>
     Object? siralama = freezed,
     Object? toplamKatilimci = freezed,
     Object? completedAt = freezed,
+    Object? resultViewed = null,
   }) {
     return _then(
       _value.copyWith(
@@ -798,6 +859,10 @@ class _$WeeklyExamResultCopyWithImpl<$Res, $Val extends WeeklyExamResult>
                 ? _value.completedAt
                 : completedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            resultViewed: null == resultViewed
+                ? _value.resultViewed
+                : resultViewed // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -831,6 +896,7 @@ abstract class _$$WeeklyExamResultImplCopyWith<$Res>
     int? siralama,
     int? toplamKatilimci,
     DateTime? completedAt,
+    bool resultViewed,
   });
 }
 
@@ -865,6 +931,7 @@ class __$$WeeklyExamResultImplCopyWithImpl<$Res>
     Object? siralama = freezed,
     Object? toplamKatilimci = freezed,
     Object? completedAt = freezed,
+    Object? resultViewed = null,
   }) {
     return _then(
       _$WeeklyExamResultImpl(
@@ -936,6 +1003,10 @@ class __$$WeeklyExamResultImplCopyWithImpl<$Res>
             ? _value.completedAt
             : completedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        resultViewed: null == resultViewed
+            ? _value.resultViewed
+            : resultViewed // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -962,6 +1033,7 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
     this.siralama,
     this.toplamKatilimci,
     this.completedAt,
+    this.resultViewed = false,
   }) : _cevaplar = cevaplar;
 
   factory _$WeeklyExamResultImpl.fromJson(Map<String, dynamic> json) =>
@@ -976,19 +1048,19 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
   // Sınav oturumu ID'si
   @override
   final String odaIsmi;
-  // "Hafta 45 - 2025" gibi
+  // "Hafta 2 - 2026" gibi
   @override
   final String odaBaslangic;
   // ISO 8601
   @override
   final String odaBitis;
-  // ISO 8601 (Çarşamba 23:59)
+  // ISO 8601 (Perşembe 23:59)
   @override
   final String sonucTarihi;
-  // Pazar 12:00
+  // Cumartesi 12:00
   @override
   final String odaDurumu;
-  // "aktif", "kapali", "sonuclanmis"
+  // "tamamlandi", "sonuclar_aciklandi"
   @override
   final String kullaniciId;
   final Map<String, String> _cevaplar;
@@ -999,7 +1071,7 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
     return EqualUnmodifiableMapView(_cevaplar);
   }
 
-  // {"1": "A", "2": "EMPTY"}
+  // {"WQ001": "A", "WQ002": "B"}
   @override
   final int? dogru;
   @override
@@ -1015,10 +1087,13 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
   final int? toplamKatilimci;
   @override
   final DateTime? completedAt;
+  @override
+  @JsonKey()
+  final bool resultViewed;
 
   @override
   String toString() {
-    return 'WeeklyExamResult(id: $id, examId: $examId, odaId: $odaId, odaIsmi: $odaIsmi, odaBaslangic: $odaBaslangic, odaBitis: $odaBitis, sonucTarihi: $sonucTarihi, odaDurumu: $odaDurumu, kullaniciId: $kullaniciId, cevaplar: $cevaplar, dogru: $dogru, yanlis: $yanlis, bos: $bos, puan: $puan, siralama: $siralama, toplamKatilimci: $toplamKatilimci, completedAt: $completedAt)';
+    return 'WeeklyExamResult(id: $id, examId: $examId, odaId: $odaId, odaIsmi: $odaIsmi, odaBaslangic: $odaBaslangic, odaBitis: $odaBitis, sonucTarihi: $sonucTarihi, odaDurumu: $odaDurumu, kullaniciId: $kullaniciId, cevaplar: $cevaplar, dogru: $dogru, yanlis: $yanlis, bos: $bos, puan: $puan, siralama: $siralama, toplamKatilimci: $toplamKatilimci, completedAt: $completedAt, resultViewed: $resultViewed)';
   }
 
   @override
@@ -1050,7 +1125,9 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
             (identical(other.toplamKatilimci, toplamKatilimci) ||
                 other.toplamKatilimci == toplamKatilimci) &&
             (identical(other.completedAt, completedAt) ||
-                other.completedAt == completedAt));
+                other.completedAt == completedAt) &&
+            (identical(other.resultViewed, resultViewed) ||
+                other.resultViewed == resultViewed));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1074,6 +1151,7 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
     siralama,
     toplamKatilimci,
     completedAt,
+    resultViewed,
   );
 
   /// Create a copy of WeeklyExamResult
@@ -1112,6 +1190,7 @@ abstract class _WeeklyExamResult implements WeeklyExamResult {
     final int? siralama,
     final int? toplamKatilimci,
     final DateTime? completedAt,
+    final bool resultViewed,
   }) = _$WeeklyExamResultImpl;
 
   factory _WeeklyExamResult.fromJson(Map<String, dynamic> json) =
@@ -1124,19 +1203,19 @@ abstract class _WeeklyExamResult implements WeeklyExamResult {
   @override
   String get odaId; // Sınav oturumu ID'si
   @override
-  String get odaIsmi; // "Hafta 45 - 2025" gibi
+  String get odaIsmi; // "Hafta 2 - 2026" gibi
   @override
   String get odaBaslangic; // ISO 8601
   @override
-  String get odaBitis; // ISO 8601 (Çarşamba 23:59)
+  String get odaBitis; // ISO 8601 (Perşembe 23:59)
   @override
-  String get sonucTarihi; // Pazar 12:00
+  String get sonucTarihi; // Cumartesi 12:00
   @override
-  String get odaDurumu; // "aktif", "kapali", "sonuclanmis"
+  String get odaDurumu; // "tamamlandi", "sonuclar_aciklandi"
   @override
   String get kullaniciId;
   @override
-  Map<String, String> get cevaplar; // {"1": "A", "2": "EMPTY"}
+  Map<String, String> get cevaplar; // {"WQ001": "A", "WQ002": "B"}
   @override
   int? get dogru;
   @override
@@ -1151,6 +1230,8 @@ abstract class _WeeklyExamResult implements WeeklyExamResult {
   int? get toplamKatilimci;
   @override
   DateTime? get completedAt;
+  @override
+  bool get resultViewed;
 
   /// Create a copy of WeeklyExamResult
   /// with the given fields replaced by the non-null parameter values.

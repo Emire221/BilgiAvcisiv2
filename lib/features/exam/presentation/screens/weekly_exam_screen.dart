@@ -259,11 +259,9 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldPop = await _showExitDialog();
-        if (shouldPop && context.mounted) {
-          Navigator.of(context).pop();
-        }
+        // Sınav esnasında geri tuşu devre dışı
+        // Kullanıcı sınavı tamamlayana kadar çıkamaz
+        return;
       },
       child: Scaffold(
         body: Stack(
@@ -285,7 +283,7 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
-                      physics: const BouncingScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       onPageChanged: (index) {
                         HapticFeedback.lightImpact();
                         setState(() {
@@ -374,16 +372,8 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Geri butonu
-          _buildGlassButton(
-            onTap: () async {
-              final shouldPop = await _showExitDialog();
-              if (shouldPop && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Icon(Icons.close, color: Colors.white, size: 20),
-          ),
+          // Geri butonu kaldırıldı - sınav esnasında çıkış yasak
+          const SizedBox(width: 48),
 
           const Spacer(),
 
@@ -863,33 +853,50 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
   // ─────────────────────────────────────────────────────────────────────────
   // DİALOGLAR
   // ─────────────────────────────────────────────────────────────────────────
-  Future<bool> _showExitDialog() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => _buildGlassDialog(
-            title: 'Sınavı Bırak',
-            content:
-                'Sınavdan çıkmak istediğine emin misin?\n\n⚠️ Cevapların kaydedilmeyecek!',
-            confirmText: 'Evet, Çık',
-            cancelText: 'Devam Et',
-            isDestructive: true,
-          ),
-        ) ??
-        false;
-  }
-
   void _showFinishDialog() {
     final unanswered = widget.exam.questions.length - _answers.length;
+    final remainingMinutes = (_remainingSeconds / 60).floor();
+
+    // Komik/samimi mesajlar
+    String friendlyMessage;
+    if (unanswered > 0) {
+      friendlyMessage =
+          'Yavaş ol dostum! 🤔\n\n'
+          'Henüz $unanswered soru boş bıraktın. '
+          'Kalan $remainingMinutes dakikanı değerlendir, '
+          'belki aklına gelir! 💡\n\n'
+          'Yoksa gerçekten bitirmek mi istiyorsun?';
+    } else {
+      if (remainingMinutes > 10) {
+        friendlyMessage =
+            'Vay be şampiyon! 🌟\n\n'
+            'Tüm soruları cevapladın ama daha $remainingMinutes dakikan var! '
+            'İstersen cevaplarını bir gözden geçir, '
+            'bazen acele etmek fena oluyor! 😊\n\n'
+            'Yine de bitirmek istersen tabii ki senin kararın!';
+      } else if (remainingMinutes > 5) {
+        friendlyMessage =
+            'Bravo! 🎯\n\n'
+            'Tamamladın ama acele etme! '
+            'Daha $remainingMinutes dakikan var, '
+            'cevaplarına bir göz at istersen. 👀\n\n'
+            'Yoksa hızlı bitirip kahramanlık mı yapacaksın? 😄';
+      } else {
+        friendlyMessage =
+            'Süper! 🚀\n\n'
+            'Tüm soruları hallettiniz efendim! '
+            'Son bir kontrol yapacak mısın yoksa '
+            'süper güvenli misin cevaplarına? 💪';
+      }
+    }
 
     showDialog(
       context: context,
       builder: (context) => _buildGlassDialog(
-        title: '🏆 Sınavı Bitir',
-        content: unanswered > 0
-            ? '${widget.exam.questions.length} sorudan ${_answers.length} tanesini cevapladın.\n\n⚠️ $unanswered soru boş bırakılacak.\n\nSınavı bitirmek istediğine emin misin?'
-            : 'Tüm soruları cevapladın! 🎉\n\nSınavı bitirmek istediğine emin misin?',
-        confirmText: 'Bitir',
-        cancelText: 'İptal',
+        title: unanswered > 0 ? '⏳ Dur Bir Dakika!' : '🎉 Tamamdır!',
+        content: friendlyMessage,
+        confirmText: unanswered > 0 ? 'Evet, Bitir' : 'Eminim, Bitir',
+        cancelText: unanswered > 0 ? 'Gözden Geçireyim' : 'Kontrol Edeyim',
         onConfirm: () {
           Navigator.of(context).pop();
           _finishExam();

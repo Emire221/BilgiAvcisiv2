@@ -388,7 +388,9 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
           .replaceAll('İ', 'I');
 
       // Sync başlat
-      await ref.read(syncControllerProvider.notifier).syncContent(safeClassName);
+      await ref
+          .read(syncControllerProvider.notifier)
+          .syncContent(safeClassName);
 
       final syncState = ref.read(syncControllerProvider);
       if (syncState.error != null) throw Exception(syncState.error);
@@ -414,7 +416,8 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
   Future<void> _scheduleWelcomeNotificationIfFirstTime(String userName) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final hasReceivedWelcome = prefs.getBool('has_received_welcome_notification') ?? false;
+      final hasReceivedWelcome =
+          prefs.getBool('has_received_welcome_notification') ?? false;
 
       if (!hasReceivedWelcome) {
         await NotificationService().scheduleWelcomeNotification(
@@ -432,7 +435,8 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
   void _showInAppWelcomeNotification() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final hasShownInAppWelcome = prefs.getBool('has_shown_inapp_welcome') ?? false;
+      final hasShownInAppWelcome =
+          prefs.getBool('has_shown_inapp_welcome') ?? false;
 
       if (!hasShownInAppWelcome) {
         final user = FirebaseAuth.instance.currentUser;
@@ -463,15 +467,18 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
     Navigator.pushAndRemoveUntil(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const MainScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainScreen(),
         transitionDuration: const Duration(milliseconds: 800),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          );
-          final scaleUp = Tween<double>(begin: 0.95, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          );
+          final fadeIn = Tween<double>(
+            begin: 0.0,
+            end: 1.0,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut));
+          final scaleUp = Tween<double>(
+            begin: 0.95,
+            end: 1.0,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut));
           return FadeTransition(
             opacity: fadeIn,
             child: ScaleTransition(scale: scaleUp, child: child),
@@ -969,16 +976,18 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                         end: Alignment.centerRight,
                       ),
                       borderRadius: BorderRadius.circular(buttonHeight / 2),
-                      boxShadow: _isHatching
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: _energeticCoral.withValues(alpha: 0.5),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: _isHatching
+                              ? Colors.transparent
+                              : _energeticCoral.withValues(alpha: 0.5),
+                          blurRadius: _isHatching ? 0 : 20,
+                          spreadRadius: _isHatching ? 0 : 2,
+                          offset: _isHatching
+                              ? Offset.zero
+                              : const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Stack(
                       alignment: Alignment.center,
@@ -1047,7 +1056,7 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
 
   Widget _buildCelebrationOverlay(Size size) {
     final syncState = ref.watch(syncControllerProvider);
-    
+
     return Stack(
       children: [
         // Animasyonlu arka plan
@@ -1128,9 +1137,13 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
-                          value: syncState.progress > 0 ? syncState.progress : null,
+                          value: syncState.progress > 0
+                              ? syncState.progress
+                              : null,
                           backgroundColor: Colors.white.withValues(alpha: 0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(_softYellow),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            _softYellow,
+                          ),
                           minHeight: 8,
                         ),
                       ),
@@ -1152,7 +1165,10 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
 
                     // Eğlenceli mesaj
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(25),
@@ -1167,13 +1183,15 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                           key: ValueKey(_currentMessageIndex),
                           children: [
                             Text(
-                              _funMessages[_currentMessageIndex]['emoji'] as String,
+                              _funMessages[_currentMessageIndex]['emoji']
+                                  as String,
                               style: const TextStyle(fontSize: 24),
                             ),
                             const SizedBox(width: 12),
                             Flexible(
                               child: Text(
-                                _funMessages[_currentMessageIndex]['text'] as String,
+                                _funMessages[_currentMessageIndex]['text']
+                                    as String,
                                 style: GoogleFonts.nunito(
                                   color: Colors.white,
                                   fontSize: 15,
@@ -1217,7 +1235,11 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
           ),
           child: Column(
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white, size: 40),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.white,
+                size: 40,
+              ),
               const SizedBox(height: 12),
               Text(
                 'Bir sorun oluştu 😔',
@@ -1256,7 +1278,10 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: _softYellow,
                 foregroundColor: Colors.black87,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),

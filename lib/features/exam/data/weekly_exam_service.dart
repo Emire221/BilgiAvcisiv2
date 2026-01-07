@@ -1,29 +1,693 @@
 ﻿import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sqflite/sqflite.dart';
 import '../domain/models/weekly_exam.dart';
 import '../../../services/database_helper.dart';
+import '../../../core/constants/lesson_weights.dart';
 
-/// Haftalık sınav servisi - Zamana duyarlı sınav yönetimi
+// ═══════════════════════════════════════════════════════════════════════════
+// 🏆 TÜRKİYE GENELİ DENEME SINAVI SERVİSİ
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// HAFTALIK DÖNGÜ:
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │ PAZARTESİ 00:00 ──────────► PERŞEMBE 23:59  │ YAYIN (Sarı Kart)        │
+// │ CUMA 00:00 ───────────────► CUMARTESİ 11:59 │ SONUÇ BEKLENİYOR         │
+// │ CUMARTESİ 12:00 ──────────► PAZAR 23:59     │ SONUÇLAR YAYINDA (Mor)   │
+// │ PAZAR 23:59 ──────────────► PAZARTESİ 00:00 │ Yeni sınav başlar        │
+// └─────────────────────────────────────────────────────────────────────────┘
+// ═══════════════════════════════════════════════════════════════════════════
+
 class WeeklyExamService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  /// Sınav odasının mevcut durumunu hesapla
+  // ─────────────────────────────────────────────────────────────────────────
+  // ZAMAN HESAPLAMALARI
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Bu haftanın Pazartesi'sini hesapla (00:00:00)
+  DateTime getThisWeekMonday() {
+    final now = DateTime.now();
+    final daysToSubtract = now.weekday - 1; // Pazartesi = 1
+    return DateTime(now.year, now.month, now.day - daysToSubtract, 0, 0, 0);
+  }
+
+  /// Belirli bir tarihin haftasının Pazartesi'sini bul
+  DateTime getMondayOfWeek(DateTime date) {
+    final daysToSubtract = date.weekday - 1;
+    return DateTime(date.year, date.month, date.day - daysToSubtract, 0, 0, 0);
+  }
+
+  /// Hafta numarasını hesapla (ISO 8601)
+  int getWeekNumber(DateTime date) {
+    final firstDayOfYear = DateTime(date.year, 1, 1);
+    final daysDifference = date.difference(firstDayOfYear).inDays;
+    return ((daysDifference + firstDayOfYear.weekday) / 7).ceil();
+  }
+
+  /// Oda ismini oluştur (örn: "Hafta 2 - 2026")
+  String generateRoomName(DateTime monday) {
+    final weekNum = getWeekNumber(monday);
+    return 'Hafta $weekNum - ${monday.year}';
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // KART DURUMU HESAPLAMA (YENİ SİSTEM)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Kart durumunu hesapla - tüm mantık burada
+  Future<ExamCardStatus> getCardStatus({
+    WeeklyExam? currentExam,
+    WeeklyExamResult? currentResult,
+    WeeklyExamResult? previousUnviewedResult,
+  }) async {
+    // Önce görüntülenmemiş sonuç var mı kontrol et
+    if (previousUnviewedResult != null) {
+      return ExamCardStatus.onceSonucuGor;
+    }
+
+    // Sınav yoksa
+    if (currentExam == null) {
+      return ExamCardStatus.yakinda;
+    }
+
+    final now = DateTime.now();
+    DateTime examWeekStart;
+
+    try {
+      examWeekStart = DateTime.parse(currentExam.weekStart);
+    } catch (e) {
+      debugPrint('❌ weekStart parse hatası: $e');
+      return ExamCardStatus.yakinda;
+    }
+
+    final examMonday = getMondayOfWeek(examWeekStart);
+    final thisMonday = getThisWeekMonday();
+
+    // Sınav bu haftaya ait mi kontrol et
+    if (!_isSameDay(examMonday, thisMonday)) {
+      // Bu haftanın sınavı değil
+      debugPrint(
+        '⚠️ Sınav bu haftaya ait değil: examMonday=$examMonday, thisMonday=$thisMonday',
+      );
+      return ExamCardStatus.yakinda;
+    }
+
+    // Zaman dilimlerini hesapla
+    final examStart = examMonday; // Pazartesi 00:00
+    final examEnd = examMonday.add(
+      const Duration(days: 3, hours: 23, minutes: 59, seconds: 59),
+    ); // Perşembe 23:59:59
+    final resultTime = examMonday.add(
+      const Duration(days: 5, hours: 12),
+    ); // Cumartesi 12:00
+    final weekEnd = examMonday.add(
+      const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+    ); // Pazar 23:59:59
+
+    // DURUM 1: Sınav henüz başlamadı
+    if (now.isBefore(examStart)) {
+      return ExamCardStatus.yakinda;
+    }
+
+    // DURUM 2: Sınav yayında (Pazartesi 00:00 - Perşembe 23:59)
+    if (now.isAfter(examStart) && now.isBefore(examEnd)) {
+      if (currentResult != null) {
+        // Kullanıcı sınavı tamamlamış
+        return ExamCardStatus.tamampiSonucBekliyor;
+      }
+      // Sınav yayında, kullanıcı henüz girmemiş
+      return ExamCardStatus.yayinda;
+    }
+
+    // DURUM 3: Sınav kapandı, sonuç bekleniyor (Cuma 00:00 - Cumartesi 11:59)
+    if (now.isAfter(examEnd) && now.isBefore(resultTime)) {
+      if (currentResult != null) {
+        return ExamCardStatus.tamampiSonucBekliyor;
+      }
+      // Kaçırdı
+      return ExamCardStatus.kacpipidin;
+    }
+
+    // DURUM 4: Sonuçlar açıklandı (Cumartesi 12:00 - Pazar 23:59)
+    if (now.isAfter(resultTime) && now.isBefore(weekEnd)) {
+      if (currentResult != null) {
+        return ExamCardStatus.sonuclarAciklandi;
+      }
+      return ExamCardStatus.kacpipidin;
+    }
+
+    // DURUM 5: Hafta bitti
+    return ExamCardStatus.yakinda;
+  }
+
+  /// İki tarihin aynı gün olup olmadığını kontrol et
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // KALAN SÜRE HESAPLAMA
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Kalan süreyi hesapla
+  Duration getTimeRemaining(ExamCardStatus status, DateTime? examWeekStart) {
+    final now = DateTime.now();
+    final thisMonday = getThisWeekMonday();
+    final monday = examWeekStart != null
+        ? getMondayOfWeek(examWeekStart)
+        : thisMonday;
+
+    switch (status) {
+      case ExamCardStatus.yukleniyor:
+        return Duration.zero;
+
+      case ExamCardStatus.yakinda:
+        // Bir sonraki Pazartesi 00:00'a kalan
+        var nextMonday = thisMonday;
+        if (now.isAfter(thisMonday)) {
+          nextMonday = thisMonday.add(const Duration(days: 7));
+        }
+        return nextMonday.difference(now);
+
+      case ExamCardStatus.yayinda:
+        // Perşembe 23:59'a kalan
+        final examEnd = monday.add(
+          const Duration(days: 3, hours: 23, minutes: 59, seconds: 59),
+        );
+        return examEnd.difference(now);
+
+      case ExamCardStatus.tamampiSonucBekliyor:
+        // Cumartesi 12:00'a kalan
+        final resultTime = monday.add(const Duration(days: 5, hours: 12));
+        return resultTime.difference(now);
+
+      case ExamCardStatus.kacpipidin:
+        // Bir sonraki Pazartesi 00:00'a kalan
+        final nextMonday = monday.add(const Duration(days: 7));
+        return nextMonday.difference(now);
+
+      case ExamCardStatus.sonuclarAciklandi:
+        // Pazar 23:59'a kalan
+        final weekEnd = monday.add(
+          const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+        );
+        return weekEnd.difference(now);
+
+      case ExamCardStatus.onceSonucuGor:
+        return Duration.zero;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // VERİTABANI İŞLEMLERİ
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Bu haftanın sınavını yükle
+  Future<WeeklyExam?> loadCurrentWeekExam() async {
+    try {
+      final thisMonday = getThisWeekMonday();
+      final db = await _dbHelper.database;
+
+      // Tüm sınavları al
+      final results = await db.query('WeeklyExams', orderBy: 'weekStart DESC');
+
+      if (results.isEmpty) {
+        debugPrint('📭 Veritabanında hiç sınav yok');
+        return null;
+      }
+
+      // Bu haftanın sınavını bul
+      for (var examData in results) {
+        final exam = _parseExamData(examData);
+        if (exam == null) continue;
+
+        try {
+          final examWeekStart = DateTime.parse(exam.weekStart);
+          final examMonday = getMondayOfWeek(examWeekStart);
+
+          // Bu haftanın sınavı mı?
+          if (_isSameDay(examMonday, thisMonday)) {
+            debugPrint('✅ Bu haftanın sınavı bulundu: ${exam.examId}');
+            return exam;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+
+      debugPrint('⚠️ Bu hafta için sınav bulunamadı');
+      return null;
+    } catch (e) {
+      debugPrint('❌ Sınav yükleme hatası: $e');
+      return null;
+    }
+  }
+
+  /// Tüm sınavları yükle
+  Future<List<WeeklyExam>> loadAllExams() async {
+    try {
+      final db = await _dbHelper.database;
+      final results = await db.query('WeeklyExams', orderBy: 'weekStart DESC');
+
+      final exams = <WeeklyExam>[];
+      for (var examData in results) {
+        final exam = _parseExamData(examData);
+        if (exam != null) exams.add(exam);
+      }
+
+      debugPrint('📚 ${exams.length} sınav yüklendi');
+      return exams;
+    } catch (e) {
+      debugPrint('❌ Sınavları yükleme hatası: $e');
+      return [];
+    }
+  }
+
+  /// ID'ye göre sınavı getir
+  Future<WeeklyExam?> getExamById(String examId) async {
+    try {
+      final db = await _dbHelper.database;
+      final rows = await db.query(
+        'WeeklyExams',
+        where: 'weeklyExamId = ?',
+        whereArgs: [examId],
+        limit: 1,
+      );
+      if (rows.isEmpty) return null;
+      return _parseExamData(rows.first);
+    } catch (e) {
+      debugPrint('❌ getExamById hatası: $e');
+      return null;
+    }
+  }
+
+  /// Exam data'yı WeeklyExam modeline çevir
+  WeeklyExam? _parseExamData(Map<String, dynamic> examData) {
+    try {
+      final questionsJson = examData['questions']?.toString();
+      List<dynamic> questions = [];
+      if (questionsJson != null && questionsJson.isNotEmpty) {
+        questions = json.decode(questionsJson);
+      }
+
+      final examId = examData['weeklyExamId']?.toString() ?? '';
+      final title = examData['title']?.toString() ?? 'Türkiye Geneli Deneme';
+      final weekStart = examData['weekStart']?.toString() ?? '';
+      final description = examData['description']?.toString();
+
+      int duration = 50;
+      final durationValue = examData['duration'];
+      if (durationValue is int) {
+        duration = durationValue;
+      } else if (durationValue != null) {
+        duration = int.tryParse(durationValue.toString()) ?? 50;
+      }
+
+      int? totalUser;
+      final totalUserValue = examData['totalUser'];
+      if (totalUserValue is int) {
+        totalUser = totalUserValue;
+      } else if (totalUserValue != null) {
+        totalUser = int.tryParse(totalUserValue.toString());
+      }
+
+      Map<String, double>? turkeyAverages;
+      final turkeyAvgValue = examData['turkeyAverages'];
+      if (turkeyAvgValue is String) {
+        try {
+          final parsed = json.decode(turkeyAvgValue);
+          if (parsed is Map) {
+            turkeyAverages = (parsed as Map<String, dynamic>).map(
+              (key, value) => MapEntry(key, (value as num).toDouble()),
+            );
+          }
+        } catch (e) {
+          debugPrint('turkeyAverages parse hatası: $e');
+        }
+      } else if (turkeyAvgValue is Map) {
+        turkeyAverages = (turkeyAvgValue as Map<String, dynamic>).map(
+          (key, value) => MapEntry(key, (value as num).toDouble()),
+        );
+      }
+
+      if (examId.isEmpty || weekStart.isEmpty) {
+        return null;
+      }
+
+      return WeeklyExam(
+        examId: examId,
+        title: title,
+        weekStart: weekStart,
+        duration: duration,
+        description: description,
+        totalUser: totalUser,
+        turkeyAverages: turkeyAverages,
+        questions: questions
+            .map((q) => WeeklyExamQuestion.fromJson(q as Map<String, dynamic>))
+            .toList(),
+      );
+    } catch (e) {
+      debugPrint('❌ Exam parse hatası: $e');
+      return null;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // KULLANICI SINAVLARI
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Kullanıcının bu sınavı çözüp çözmediğini kontrol et
+  Future<bool> hasUserCompletedExam(String examId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    try {
+      final db = await _dbHelper.database;
+      final results = await db.query(
+        'WeeklyExamResults',
+        where: 'examId = ? AND odaKatilimciId = ?',
+        whereArgs: [examId, user.uid],
+      );
+      return results.isNotEmpty;
+    } catch (e) {
+      debugPrint('❌ Sınav kontrolü hatası: $e');
+      return false;
+    }
+  }
+
+  /// Kullanıcının sınav sonucunu getir
+  Future<WeeklyExamResult?> getUserExamResult(String examId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    try {
+      final db = await _dbHelper.database;
+      final results = await db.query(
+        'WeeklyExamResults',
+        where: 'examId = ? AND odaKatilimciId = ?',
+        whereArgs: [examId, user.uid],
+      );
+
+      if (results.isEmpty) return null;
+      return _parseResultData(results.first);
+    } catch (e) {
+      debugPrint('❌ Sonuç getirme hatası: $e');
+      return null;
+    }
+  }
+
+  /// Görüntülenmemiş sonucu getir (önce sonucu görmeli kontrolü için)
+  Future<WeeklyExamResult?> getUnviewedResult() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    try {
+      final db = await _dbHelper.database;
+
+      // resultViewed = 0 veya NULL olan sonuçları bul
+      final results = await db.query(
+        'WeeklyExamResults',
+        where:
+            'odaKatilimciId = ? AND (resultViewed = 0 OR resultViewed IS NULL)',
+        whereArgs: [user.uid],
+        orderBy: 'completedAt DESC',
+        limit: 1,
+      );
+
+      if (results.isEmpty) return null;
+
+      final result = results.first;
+
+      // Sonucun açıklanma zamanı geldi mi kontrol et
+      final sonucTarihi = result['sonucTarihi']?.toString();
+      if (sonucTarihi != null) {
+        try {
+          final resultDate = DateTime.parse(sonucTarihi);
+          if (DateTime.now().isAfter(resultDate)) {
+            // Sonuç açıklanmış ama görüntülenmemiş
+            return _parseResultData(result);
+          }
+        } catch (e) {
+          debugPrint('Sonuç tarihi parse hatası: $e');
+        }
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('❌ Görüntülenmemiş sonuç hatası: $e');
+      return null;
+    }
+  }
+
+  /// Tüm sonuçları getir (başarılarım için)
+  Future<List<WeeklyExamResult>> getAllUserResults() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return [];
+
+    try {
+      final db = await _dbHelper.database;
+      final results = await db.query(
+        'WeeklyExamResults',
+        where: 'odaKatilimciId = ?',
+        whereArgs: [user.uid],
+        orderBy: 'completedAt DESC',
+      );
+
+      return results
+          .map((r) => _parseResultData(r))
+          .whereType<WeeklyExamResult>()
+          .toList();
+    } catch (e) {
+      debugPrint('❌ Tüm sonuçları getirme hatası: $e');
+      return [];
+    }
+  }
+
+  /// Result data'yı WeeklyExamResult modeline çevir
+  WeeklyExamResult? _parseResultData(Map<String, dynamic> result) {
+    try {
+      Map<String, String> cevaplar = {};
+      final cevaplarJson = result['cevaplar']?.toString();
+      if (cevaplarJson != null && cevaplarJson.isNotEmpty) {
+        final decoded = json.decode(cevaplarJson);
+        if (decoded is Map) {
+          cevaplar = Map<String, String>.from(
+            decoded.map((k, v) => MapEntry(k.toString(), v.toString())),
+          );
+        }
+      }
+
+      return WeeklyExamResult(
+        id: result['id'] as int?,
+        examId: result['examId']?.toString() ?? '',
+        odaId: result['odaId']?.toString() ?? '',
+        odaIsmi: result['odaIsmi']?.toString() ?? '',
+        odaBaslangic: result['odaBaslangic']?.toString() ?? '',
+        odaBitis: result['odaBitis']?.toString() ?? '',
+        sonucTarihi: result['sonucTarihi']?.toString() ?? '',
+        odaDurumu: result['odaDurumu']?.toString() ?? '',
+        kullaniciId: result['odaKatilimciId']?.toString() ?? '',
+        cevaplar: cevaplar,
+        dogru: result['dogru'] as int?,
+        yanlis: result['yanlis'] as int?,
+        bos: result['bos'] as int?,
+        puan: result['puan'] as int?,
+        siralama: result['siralama'] as int?,
+        toplamKatilimci: result['toplamKatilimci'] as int?,
+        completedAt: result['completedAt'] != null
+            ? DateTime.tryParse(result['completedAt'].toString())
+            : null,
+        resultViewed: (result['resultViewed'] as int?) == 1,
+      );
+    } catch (e) {
+      debugPrint('❌ Result parse hatası: $e');
+      return null;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SONUÇ KAYDETME VE GÜNCELLEME
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Sınav sonucunu kaydet
+  Future<void> saveExamResult({
+    required String examId,
+    required Map<String, String> answers,
+    required WeeklyExam exam,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Kullanıcı oturumu bulunamadı');
+
+    try {
+      final examWeekStart = DateTime.parse(exam.weekStart);
+      final examMonday = getMondayOfWeek(examWeekStart);
+
+      final examEnd = examMonday.add(
+        const Duration(days: 3, hours: 23, minutes: 59, seconds: 59),
+      );
+      final resultTime = examMonday.add(const Duration(days: 5, hours: 12));
+
+      // Doğru/Yanlış/Boş hesapla
+      int dogru = 0;
+      int yanlis = 0;
+      int bos = 0;
+
+      for (int i = 0; i < exam.questions.length; i++) {
+        final question = exam.questions[i];
+        final questionIndex = (i + 1).toString(); // "1", "2", "3", ...
+        final userAnswer = answers[questionIndex];
+        final correctAnswer = question.correctAnswer.toUpperCase();
+
+        if (userAnswer == null || userAnswer.isEmpty || userAnswer == 'EMPTY') {
+          bos++;
+        } else if (userAnswer.toUpperCase() == correctAnswer) {
+          dogru++;
+        } else {
+          yanlis++;
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════
+      // AĞIRLIKLI PUANLAMA SİSTEMİ
+      // ═══════════════════════════════════════════════════════
+
+      // 1. Ders bazında doğru sayılarını hesapla
+      final subjectScores = <String, int>{};
+      for (int i = 0; i < exam.questions.length; i++) {
+        final question = exam.questions[i];
+        final questionIndex = (i + 1).toString();
+        final userAnswer = answers[questionIndex];
+        final correctAnswer = question.correctAnswer.toUpperCase();
+        final lessonName = question.lessonName ?? 'Genel';
+
+        if (userAnswer != null &&
+            userAnswer.isNotEmpty &&
+            userAnswer != 'EMPTY' &&
+            userAnswer.toUpperCase() == correctAnswer) {
+          subjectScores[lessonName] = (subjectScores[lessonName] ?? 0) + 1;
+        }
+      }
+
+      // 2. Ders bazında toplam soru sayısını hesapla
+      final subjectTotals = LessonWeights.calculateSubjectTotals(
+        exam.questions.map((q) => q.lessonName).toList(),
+      );
+
+      // 3. Ağırlıklı net puanı hesapla
+      final weightedScore = LessonWeights.calculateWeightedScore(
+        subjectScores,
+        subjectTotals,
+      );
+
+      // 4. Maksimum ağırlıklı puanı hesapla
+      final maxWeightedScore = LessonWeights.calculateMaxWeightedScore(
+        exam.questions.map((q) => q.lessonName).toList(),
+      );
+
+      // 5. 500 üzerinden puan hesapla (ağırlıklı)
+      final net = dogru - (yanlis / 4);
+      final soruPuani = 500.0 / exam.questions.length;
+      final basePuan = (net * soruPuani).clamp(0.0, 500.0);
+
+      // Ağırlıklı puana göre düzeltme uygula (%20 etki)
+      final weightedPercentage = (weightedScore / maxWeightedScore);
+      final weightedBonus =
+          (weightedPercentage - (dogru / exam.questions.length)) * 100;
+      final puan = (basePuan + weightedBonus).round().clamp(0, 500);
+
+      debugPrint(
+        '📊 Ağırlıklı Puan: ${weightedScore.toStringAsFixed(2)} / ${maxWeightedScore.toStringAsFixed(2)} (Bonus: ${weightedBonus.toStringAsFixed(1)})',
+      );
+
+      // ═══════════════════════════════════════════════════════
+      // SIRALAMA HESAPLAMA (Ağırlıklı Puana Göre)
+      // ═══════════════════════════════════════════════════════
+      int? siralama;
+      int? toplamKatilimci = exam.totalUser;
+
+      if (toplamKatilimci != null && toplamKatilimci > 0) {
+        // Ağırlıklı puana göre sıralama hesapla
+        // Yüksek ağırlıklı puan = düşük sıralama (1. yer en iyi)
+        final scorePercentage = weightedScore / maxWeightedScore;
+        final ustYuzde = (1.0 - scorePercentage); // Üstte kaç % var
+        siralama = ((toplamKatilimci * ustYuzde) + 1).round();
+        siralama = siralama.clamp(1, toplamKatilimci);
+
+        debugPrint(
+          '🏆 Sıralama: $siralama / $toplamKatilimci (Ağırlıklı: %${(scorePercentage * 100).toStringAsFixed(1)})',
+        );
+      }
+
+      final db = await _dbHelper.database;
+      await db.insert('WeeklyExamResults', {
+        'examId': examId,
+        'odaId': '${examId}_${examMonday.millisecondsSinceEpoch}',
+        'odaIsmi': generateRoomName(examMonday),
+        'odaBaslangic': examMonday.toIso8601String(),
+        'odaBitis': examEnd.toIso8601String(),
+        'sonucTarihi': resultTime.toIso8601String(),
+        'odaDurumu': 'tamamlandi',
+        'odaKatilimciId': user.uid,
+        'cevaplar': json.encode(answers),
+        'dogru': dogru,
+        'yanlis': yanlis,
+        'bos': bos,
+        'puan': puan,
+        'siralama': siralama,
+        'toplamKatilimci': toplamKatilimci,
+        'completedAt': DateTime.now().toIso8601String(),
+        'resultViewed': 0, // Henüz görüntülenmedi
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+      debugPrint(
+        '✅ Sınav kaydedildi: D=$dogru Y=$yanlis B=$bos P=$puan S=$siralama/$toplamKatilimci',
+      );
+    } catch (e) {
+      debugPrint('❌ Sınav kaydetme hatası: $e');
+      rethrow;
+    }
+  }
+
+  /// Sonucun görüntülendiğini işaretle
+  Future<void> markResultAsViewed(String examId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final db = await _dbHelper.database;
+      await db.update(
+        'WeeklyExamResults',
+        {'resultViewed': 1},
+        where: 'examId = ? AND odaKatilimciId = ?',
+        whereArgs: [examId, user.uid],
+      );
+      debugPrint('✅ Sonuç görüntülendi işaretlendi: $examId');
+    } catch (e) {
+      debugPrint('❌ Sonuç güncelleme hatası: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ESKİ API (Geriye Uyumluluk)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Eski API - loadWeeklyExam
+  Future<WeeklyExam?> loadWeeklyExam() async {
+    return loadCurrentWeekExam();
+  }
+
+  /// Eski API - getExamStatus
   ExamRoomStatus getExamStatus(DateTime weekStart) {
     final now = DateTime.now();
+    final examMonday = getMondayOfWeek(weekStart);
 
-    // Pazartesi 00:00
-    final examStart = DateTime(weekStart.year, weekStart.month, weekStart.day);
-
-    // Çarşamba 23:59:59
-    final examEnd = examStart.add(
-      const Duration(days: 2, hours: 23, minutes: 59, seconds: 59),
+    final examStart = examMonday;
+    final examEnd = examMonday.add(
+      const Duration(days: 3, hours: 23, minutes: 59, seconds: 59),
     );
-
-    // Pazar 12:00
-    final resultTime = examStart.add(const Duration(days: 6, hours: 12));
+    final resultTime = examMonday.add(const Duration(days: 5, hours: 12));
 
     if (now.isBefore(examStart)) {
       return ExamRoomStatus.beklemede;
@@ -36,273 +700,44 @@ class WeeklyExamService {
     }
   }
 
-  /// Bu hafta Pazartesi tarihini hesapla
-  DateTime getThisWeekMonday() {
+  /// Eski API - getTimeRemaining
+  Duration getTimeRemainingOld(DateTime weekStart, ExamRoomStatus status) {
     final now = DateTime.now();
-    // Pazartesi = 1, Pazar = 7
-    final daysToSubtract = now.weekday - 1;
-    return DateTime(now.year, now.month, now.day - daysToSubtract);
-  }
-
-  /// Hafta numarasını hesapla
-  int getWeekNumber(DateTime date) {
-    final firstDayOfYear = DateTime(date.year, 1, 1);
-    final daysDifference = date.difference(firstDayOfYear).inDays;
-    return ((daysDifference + firstDayOfYear.weekday) / 7).ceil();
-  }
-
-  /// Oda ismini oluştur (örn: "Hafta 45 - 2025")
-  String generateRoomName(DateTime weekStart) {
-    final weekNum = getWeekNumber(weekStart);
-    return 'Hafta $weekNum - ${weekStart.year}';
-  }
-
-  /// Veritabanından haftalık sınavı yükle
-  Future<WeeklyExam?> loadWeeklyExam() async {
-    try {
-      // Önce veritabanından en son sınavı kontrol et
-      final examData = await _dbHelper.getLatestWeeklyExam();
-
-      if (examData != null) {
-        // questions JSON string olarak saklandığı için decode et
-        final questionsJson = examData['questions'] as String?;
-        List<dynamic> questions = [];
-        if (questionsJson != null && questionsJson.isNotEmpty) {
-          questions = json.decode(questionsJson);
-        }
-
-        return WeeklyExam(
-          examId: examData['weeklyExamId'] as String,
-          title: examData['title'] as String? ?? 'Haftalık Sınav',
-          weekStart: examData['weekStart'] as String? ?? '',
-          duration: examData['duration'] as int? ?? 30,
-          description: examData['description'] as String?,
-          questions: questions
-              .map((q) => WeeklyExamQuestion.fromJson(q))
-              .toList(),
-        );
-      }
-
-      // Database'de yoksa dosya sisteminde ara (eski yöntem)
-      final directory = await getApplicationDocumentsDirectory();
-
-      // Kullanıcının sınıfına göre klasör adını bul
-      // Örn: 3_Sinif, 4_Sinif vs.
-      final dirList = directory.listSync();
-
-      for (var entity in dirList) {
-        if (entity is Directory) {
-          final examFile = File('${entity.path}/haftalik_sinav.json');
-          if (await examFile.exists()) {
-            final jsonString = await examFile.readAsString();
-            final jsonData = json.decode(jsonString);
-            return WeeklyExam.fromJson(jsonData);
-          }
-        }
-      }
-
-      // Doğrudan kök dizinde de kontrol et
-      final rootExamFile = File('${directory.path}/haftalik_sinav.json');
-      if (await rootExamFile.exists()) {
-        final jsonString = await rootExamFile.readAsString();
-        final jsonData = json.decode(jsonString);
-        return WeeklyExam.fromJson(jsonData);
-      }
-
-      if (kDebugMode) debugPrint('haftalik_sinav.json bulunamadı');
-      return null;
-    } catch (e) {
-      if (kDebugMode) debugPrint('Haftalık sınav yükleme hatası: $e');
-      return null;
-    }
-  }
-
-  /// Kullanıcının bu haftaki sınavı çözüp çözmediğini kontrol et
-  Future<bool> hasUserCompletedExam(String examId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-
-    final db = await _dbHelper.database;
-    final results = await db.query(
-      'WeeklyExamResults',
-      where: 'examId = ? AND odaKatilimciId = ?',
-      whereArgs: [examId, user.uid],
-    );
-
-    return results.isNotEmpty;
-  }
-
-  /// Kullanıcının sınav sonucunu getir
-  Future<WeeklyExamResult?> getUserExamResult(String examId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-
-    final db = await _dbHelper.database;
-    final results = await db.query(
-      'WeeklyExamResults',
-      where: 'examId = ? AND odaKatilimciId = ?',
-      whereArgs: [examId, user.uid],
-    );
-
-    if (results.isEmpty) return null;
-
-    final result = results.first;
-    return WeeklyExamResult(
-      id: result['id'] as int?,
-      examId: result['examId'] as String,
-      odaId: result['odaId'] as String,
-      odaIsmi: result['odaIsmi'] as String,
-      odaBaslangic: result['odaBaslangic'] as String,
-      odaBitis: result['odaBitis'] as String,
-      sonucTarihi: result['sonucTarihi'] as String,
-      odaDurumu: result['odaDurumu'] as String,
-      kullaniciId: result['odaKatilimciId'] as String,
-      cevaplar: json.decode(result['cevaplar'] as String),
-      dogru: result['dogru'] as int?,
-      yanlis: result['yanlis'] as int?,
-      bos: result['bos'] as int?,
-      puan: result['puan'] as int?,
-      siralama: result['siralama'] as int?,
-      toplamKatilimci: result['toplamKatilimci'] as int?,
-      completedAt: result['completedAt'] != null
-          ? DateTime.parse(result['completedAt'] as String)
-          : null,
-    );
-  }
-
-  /// Sınav sonucunu kaydet
-  Future<void> saveExamResult({
-    required String examId,
-    required Map<String, String> answers,
-    required WeeklyExam exam,
-  }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('Kullanıcı oturumu bulunamadı');
-
-    final weekStart = getThisWeekMonday();
-    final examEnd = weekStart.add(
-      const Duration(days: 2, hours: 23, minutes: 59, seconds: 59),
-    );
-    final resultTime = weekStart.add(const Duration(days: 6, hours: 12));
-
-    // Doğru/Yanlış/Boş hesapla
-    int dogru = 0;
-    int yanlis = 0;
-    int bos = 0;
-
-    for (int i = 0; i < exam.questions.length; i++) {
-      final questionId = (i + 1).toString();
-      final userAnswer = answers[questionId];
-      final correctAnswer = exam.questions[i].correctAnswer;
-
-      if (userAnswer == null || userAnswer == 'EMPTY') {
-        bos++;
-      } else if (userAnswer == correctAnswer) {
-        dogru++;
-      } else {
-        yanlis++;
-      }
-    }
-
-    // 500 tam puan üzerinden hesaplama
-    // Her soru eşit puanlı: 500 / soru sayısı
-    // Yanlış cevap 1/4 doğruyu götürür
-    final soruPuani = 500.0 / exam.questions.length;
-    final net = dogru - (yanlis / 4);
-    final puan = (net * soruPuani).round().clamp(0, 500);
-
-    final db = await _dbHelper.database;
-    await db.insert('WeeklyExamResults', {
-      'examId': examId,
-      'odaId': '${examId}_${weekStart.millisecondsSinceEpoch}',
-      'odaIsmi': generateRoomName(weekStart),
-      'odaBaslangic': weekStart.toIso8601String(),
-      'odaBitis': examEnd.toIso8601String(),
-      'sonucTarihi': resultTime.toIso8601String(),
-      'odaDurumu': 'kapali',
-      'odaKatilimciId': user.uid,
-      'cevaplar': json.encode(answers),
-      'dogru': dogru,
-      'yanlis': yanlis,
-      'bos': bos,
-      'puan': puan,
-      'siralama': null, // Pazar günü hesaplanacak
-      'toplamKatilimci': null,
-      'completedAt': DateTime.now().toIso8601String(),
-    });
-
-    debugPrint(
-      'Sınav sonucu kaydedildi: Doğru=$dogru, Yanlış=$yanlis, Boş=$bos, Puan=$puan',
-    );
-  }
-
-  /// Sonuçlar açıklandı mı kontrol et (Pazar 12:00)
-  bool areResultsAvailable(DateTime weekStart) {
-    final now = DateTime.now();
-    final resultTime = DateTime(
-      weekStart.year,
-      weekStart.month,
-      weekStart.day + 6, // Pazar
-      12, // 12:00
-    );
-    return now.isAfter(resultTime);
-  }
-
-  /// Kalan süreyi hesapla
-  Duration getTimeRemaining(DateTime weekStart, ExamRoomStatus status) {
-    final now = DateTime.now();
+    final examMonday = getMondayOfWeek(weekStart);
 
     switch (status) {
       case ExamRoomStatus.beklemede:
-        // Pazartesi 00:00'a kalan süre
-        final examStart = DateTime(
-          weekStart.year,
-          weekStart.month,
-          weekStart.day,
-        );
-        return examStart.difference(now);
-
+        return examMonday.difference(now);
       case ExamRoomStatus.aktif:
-        // Çarşamba 23:59'a kalan süre
-        final examEnd = DateTime(
-          weekStart.year,
-          weekStart.month,
-          weekStart.day + 2,
-          23,
-          59,
-          59,
+        final examEnd = examMonday.add(
+          const Duration(days: 3, hours: 23, minutes: 59, seconds: 59),
         );
         return examEnd.difference(now);
-
       case ExamRoomStatus.kapali:
-        // Pazar 12:00'a kalan süre
-        final resultTime = DateTime(
-          weekStart.year,
-          weekStart.month,
-          weekStart.day + 6,
-          12,
-        );
+        final resultTime = examMonday.add(const Duration(days: 5, hours: 12));
         return resultTime.difference(now);
-
       case ExamRoomStatus.sonuclanmis:
         return Duration.zero;
     }
   }
 
-  /// Bu haftanın sınavı mı kontrol et
+  /// Eski API - areResultsAvailable
+  bool areResultsAvailable(DateTime weekStart) {
+    final now = DateTime.now();
+    final resultTime = getMondayOfWeek(
+      weekStart,
+    ).add(const Duration(days: 5, hours: 12));
+    return now.isAfter(resultTime);
+  }
+
+  /// Eski API - isCurrentWeekExam
   bool isCurrentWeekExam(WeeklyExam exam) {
     try {
       final examWeekStart = DateTime.parse(exam.weekStart);
-      final thisWeekMonday = getThisWeekMonday();
-
-      // Aynı hafta mı kontrol et (yıl, ay, gün)
-      return examWeekStart.year == thisWeekMonday.year &&
-          examWeekStart.month == thisWeekMonday.month &&
-          examWeekStart.day == thisWeekMonday.day;
+      final thisMonday = getThisWeekMonday();
+      return _isSameDay(getMondayOfWeek(examWeekStart), thisMonday);
     } catch (e) {
-      if (kDebugMode) debugPrint('Tarih parse hatası: $e');
       return false;
     }
   }
 }
-

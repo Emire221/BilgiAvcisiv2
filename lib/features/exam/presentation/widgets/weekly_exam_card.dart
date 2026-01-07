@@ -1,6 +1,6 @@
-﻿// ignore_for_file: deprecated_member_use
-import 'package:flutter/foundation.dart';
+// ignore_for_file: deprecated_member_use
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -13,10 +13,24 @@ import '../screens/weekly_exam_screen.dart';
 import '../screens/weekly_exam_result_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// 🏆 THE GOLDEN BOSS CARD - Haftalık Sınav Widget'ı
+/// 🏆 TÜRKİYE GENELİ DENEME KARTI
 /// ═══════════════════════════════════════════════════════════════════════════
-/// Ekrandaki en değerli, en ihtişamlı kart.
-/// Altın gradyanı, Lottie animasyonu ve nefes alan efektlerle.
+///
+/// HAFTALIK DÖNGÜ:
+/// ┌─────────────────────────────────────────────────────────────────────────┐
+/// │ PAZARTESİ 00:00 ──► PERŞEMBE 23:59  │ YAYIN (Sarı Kart)                 │
+/// │ CUMA 00:00 ────────► CUMARTESİ 11:59 │ SONUÇ BEKLENİYOR                  │
+/// │ CUMARTESİ 12:00 ──► PAZAR 23:59     │ SONUÇLAR YAYINDA (Mor)            │
+/// └─────────────────────────────────────────────────────────────────────────┘
+///
+/// 7 DURUM:
+/// 1. yukleniyor - Veriler yükleniyor (gri)
+/// 2. yakinda - Sınav henüz yayınlanmadı (gri)
+/// 3. yayinda - Sınav yayında, kullanıcı girebilir (sarı)
+/// 4. tamampiSonucBekliyor - Tamamlandı, sonuç bekleniyor (yeşil)
+/// 5. kacpipidin - Sınava giriş süresi geçti (turuncu)
+/// 6. sonuclarAciklandi - Sonuçlar açıklandı (mor)
+/// 7. onceSonucuGor - Önceki sonucu görmelisiniz (kırmızı)
 /// ═══════════════════════════════════════════════════════════════════════════
 
 class WeeklyExamCard extends ConsumerStatefulWidget {
@@ -29,17 +43,16 @@ class WeeklyExamCard extends ConsumerStatefulWidget {
 class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
     with TickerProviderStateMixin {
   // ─────────────────────────────────────────────────────────────────────────
-  // SERVICES & STATE (KORUNAN MANTIK)
+  // SERVICES & STATE
   // ─────────────────────────────────────────────────────────────────────────
   final WeeklyExamService _examService = WeeklyExamService();
 
   WeeklyExam? _exam;
-  ExamRoomStatus _status = ExamRoomStatus.beklemede;
-  bool _hasCompleted = false;
-  WeeklyExamResult? _userResult;
+  WeeklyExamResult? _currentResult;
+  WeeklyExamResult? _unviewedResult;
+  ExamCardStatus _status = ExamCardStatus.yukleniyor;
   Timer? _timer;
   Duration _remaining = Duration.zero;
-  bool _isLoading = true;
 
   // ─────────────────────────────────────────────────────────────────────────
   // ANİMASYON KONTROLCÜLERİ
@@ -48,47 +61,25 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
   late AnimationController _pulseController;
   late AnimationController _shimmerController;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // RENKLENDİRME PALETİ
-  // ─────────────────────────────────────────────────────────────────────────
-  // Aktif: Altın Sarısı -> Turuncu
-  static const Color _goldStart = Color(0xFFFFD700);
-  static const Color _goldEnd = Color(0xFFFF8C00);
-
-  // Tamamlandı: Zümrüt Yeşili
-  static const Color _emeraldStart = Color(0xFF10B981);
-  static const Color _emeraldEnd = Color(0xFF059669);
-
-  // Kilitli/Beklemede: Metalik Gri
-  static const Color _metalStart = Color(0xFF6B7280);
-  static const Color _metalEnd = Color(0xFF4B5563);
-
-  // Sonuçlanmış: Mor
-  static const Color _purpleStart = Color(0xFF8B5CF6);
-  static const Color _purpleEnd = Color(0xFF7C3AED);
-
   @override
   void initState() {
     super.initState();
     _initAnimations();
-    _loadExamData();
+    _loadData();
     _startTimer();
   }
 
   void _initAnimations() {
-    // Nefes alma efekti (sürekli)
     _breatheController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat(reverse: true);
 
-    // Pulse efekti (BAŞLA butonu için)
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
-    // Shimmer efekti
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -106,70 +97,93 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_exam != null && !_isLoading) {
+      if (mounted) {
         _updateStatus();
       }
     });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // VERİ YÜKLEME (KORUNAN MANTIK)
+  // VERİ YÜKLEME
   // ─────────────────────────────────────────────────────────────────────────
-  Future<void> _loadExamData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _status = ExamCardStatus.yukleniyor);
 
     try {
-      final exam = await _examService.loadWeeklyExam();
+      // 1. Bu haftanın sınavını yükle
+      final exam = await _examService.loadCurrentWeekExam();
 
-      if (exam != null && mounted) {
-        final hasCompleted = await _examService.hasUserCompletedExam(
-          exam.examId,
-        );
-        final result = hasCompleted
-            ? await _examService.getUserExamResult(exam.examId)
-            : null;
+      // 2. Görüntülenmemiş sonuç var mı kontrol et
+      final unviewedResult = await _examService.getUnviewedResult();
 
-        if (mounted) {
-          setState(() {
-            _exam = exam;
-            _hasCompleted = hasCompleted;
-            _userResult = result;
-            _isLoading = false;
-          });
-          _updateStatus();
-        }
+      // 3. Eğer sınav varsa, bu sınavın sonucunu al
+      WeeklyExamResult? currentResult;
+      if (exam != null) {
+        currentResult = await _examService.getUserExamResult(exam.examId);
+      }
 
-        if (kDebugMode) {
-          debugPrint(
-            'Sınav yüklendi: ${exam.examId}, Tamamlandı: $hasCompleted',
-          );
-        }
-      } else {
+      // 4. Kart durumunu hesapla
+      final status = await _examService.getCardStatus(
+        currentExam: exam,
+        currentResult: currentResult,
+        previousUnviewedResult: unviewedResult,
+      );
+
+      if (mounted) {
         setState(() {
-          _exam = null;
-          _isLoading = false;
+          _exam = exam;
+          _currentResult = currentResult;
+          _unviewedResult = unviewedResult;
+          _status = status;
         });
+        _updateRemaining();
+      }
+
+      if (kDebugMode) {
+        debugPrint('📌 Kart durumu: $_status');
+        debugPrint('📌 Sınav: ${exam?.examId ?? "yok"}');
+        debugPrint('📌 Mevcut sonuç: ${currentResult?.examId ?? "yok"}');
+        debugPrint('📌 Görüntülenmemiş: ${unviewedResult?.examId ?? "yok"}');
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('Sınav yükleme hatası: $e');
+      if (kDebugMode) debugPrint('❌ Veri yükleme hatası: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _status = ExamCardStatus.yakinda);
       }
     }
   }
 
-  void _updateStatus() {
-    if (_exam == null) return;
+  Future<void> _updateStatus() async {
+    if (!mounted) return;
 
-    final weekStart = _examService.getThisWeekMonday();
-    final newStatus = _examService.getExamStatus(weekStart);
-    final remaining = _examService.getTimeRemaining(weekStart, newStatus);
+    final status = await _examService.getCardStatus(
+      currentExam: _exam,
+      currentResult: _currentResult,
+      previousUnviewedResult: _unviewedResult,
+    );
+
+    if (mounted && status != _status) {
+      setState(() => _status = status);
+    }
+
+    _updateRemaining();
+  }
+
+  void _updateRemaining() {
+    DateTime? examWeekStart;
+    if (_exam != null) {
+      try {
+        examWeekStart = DateTime.parse(_exam!.weekStart);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    final remaining = _examService.getTimeRemaining(_status, examWeekStart);
 
     if (mounted) {
-      setState(() {
-        _status = newStatus;
-        _remaining = remaining;
-      });
+      setState(() => _remaining = remaining);
     }
   }
 
@@ -195,81 +209,19 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
 
-    // Yükleniyor durumu
-    if (_isLoading) {
-      return _buildLoadingCard();
-    }
-
-    // Sınav yoksa
-    if (_exam == null) {
-      return _buildNoExamCard(isTablet);
-    }
-
-    // Ana kart
-    return _buildGoldenBossCard(isTablet);
+    return _buildCard(isTablet);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // LOADING CARD
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildLoadingCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade800, Colors.grey.shade900],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 2),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 50,
-              height: 50,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _goldStart.withOpacity(0.8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Haftalık sınav yükleniyor...',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().shimmer(duration: 1500.ms, color: Colors.white24);
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // THE GOLDEN BOSS CARD 🏆
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildGoldenBossCard(bool isTablet) {
+  Widget _buildCard(bool isTablet) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Responsive boyutlar
     final cardHeight = isTablet ? 180.0 : 165.0;
     final lottieSize = isTablet ? 80.0 : (screenWidth * 0.18).clamp(55.0, 70.0);
-    // Lottie'nin kapladığı alan için padding hesapla
     final contentPaddingRight = lottieSize * 0.5 + 8;
 
     return AnimatedBuilder(
           animation: _breatheController,
           builder: (context, child) {
-            // Nefes alma efekti - çok hafif scale
             final breatheScale = 1.0 + (_breatheController.value * 0.008);
-
             return Transform.scale(scale: breatheScale, child: child);
           },
           child: GestureDetector(
@@ -281,7 +233,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
               margin: const EdgeInsets.symmetric(vertical: 8),
               height: cardHeight,
               decoration: BoxDecoration(
-                gradient: _getGradient(),
+                gradient: _status.gradient,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.3),
@@ -289,13 +241,13 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _getMainColor().withOpacity(0.5),
+                    color: _status.primaryColor.withOpacity(0.5),
                     blurRadius: 25,
                     offset: const Offset(0, 10),
                     spreadRadius: 2,
                   ),
                   BoxShadow(
-                    color: _getMainColor().withOpacity(0.3),
+                    color: _status.primaryColor.withOpacity(0.3),
                     blurRadius: 50,
                     offset: const Offset(0, 5),
                   ),
@@ -306,7 +258,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // ═══ KATMAN 0: Glass overlay ═══
+                    // Glass overlay
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
@@ -324,12 +276,14 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                       ),
                     ),
 
-                    // ═══ KATMAN 1: Lottie Animasyonu (Sağ Taraf) ═══
+                    // Lottie Animasyonu
                     Positioned(
                       right: -5,
                       bottom: 5,
                       child: Opacity(
-                        opacity: 0.85,
+                        opacity: _status == ExamCardStatus.yukleniyor
+                            ? 0.3
+                            : 0.85,
                         child: SizedBox(
                           width: lottieSize,
                           height: lottieSize,
@@ -337,13 +291,13 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                             'assets/animation/card_thoropy.json',
                             fit: BoxFit.contain,
                             repeat: true,
-                            animate: true,
+                            animate: _status != ExamCardStatus.yukleniyor,
                           ),
                         ),
                       ),
                     ),
 
-                    // ═══ KATMAN 2: Dekoratif Daireler ═══
+                    // Dekoratif Daireler
                     Positioned(
                       left: -40,
                       bottom: -40,
@@ -369,7 +323,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                       ),
                     ),
 
-                    // ═══ KATMAN 3: Ana İçerik ═══
+                    // Ana İçerik
                     Padding(
                       padding: EdgeInsets.only(
                         left: 12,
@@ -380,153 +334,44 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ─── Etiket: "TÜRKİYE GENELİ" ───
-                          Flexible(
-                            flex: 0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _hasCompleted
-                                        ? Icons.check_circle
-                                        : Icons.emoji_events,
-                                    color: Colors.white,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      _hasCompleted
-                                          ? 'TAMAMLANDI'
-                                          : 'TÜRKİYE GENELİ',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.8,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          // Etiket
+                          _buildStatusLabel(),
 
                           const SizedBox(height: 6),
 
-                          // ─── Başlık ───
-                          Flexible(
-                            flex: 0,
-                            child: Text(
-                              _exam?.title ?? '🏆 Türkiye Geneli Deneme',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isTablet ? 17 : 14,
-                                fontWeight: FontWeight.bold,
-                                height: 1.1,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          // Başlık
+                          _buildTitle(isTablet),
 
                           const SizedBox(height: 2),
 
-                          // ─── Alt Başlık ───
-                          Flexible(
-                            flex: 0,
-                            child: Text(
-                              _exam?.description ??
-                                  'Tüm derslerden karma sorularla kendini sına!',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
-                                fontSize: 10,
-                                height: 1.1,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          // Alt Başlık / Mesaj
+                          _buildSubtitle(),
 
                           const Spacer(),
 
-                          // ─── Alt Kısım: Sayaç/Skor + Buton ───
-                          SizedBox(
-                            height: 28,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Sayaç veya Puan
-                                Flexible(
-                                  flex: 1,
-                                  child: _buildCounterOrScore(),
-                                ),
-
-                                // BAŞLA Butonu (Aktifse)
-                                if (_canTakeAction()) ...[
-                                  const SizedBox(width: 6),
-                                  _buildStartButton(),
-                                ],
-                              ],
-                            ),
-                          ),
+                          // Alt Kısım: Sayaç + Buton
+                          _buildBottomRow(),
                         ],
                       ),
                     ),
 
-                    // ═══ KATMAN 4: Shimmer Efekti ═══
-                    Positioned.fill(
-                      child: AnimatedBuilder(
-                        animation: _shimmerController,
-                        builder: (context, child) {
-                          return ShaderMask(
-                            shaderCallback: (rect) {
-                              return LinearGradient(
-                                begin: Alignment(
-                                  -1 + _shimmerController.value * 3,
-                                  -1,
-                                ),
-                                end: Alignment(_shimmerController.value * 3, 1),
-                                colors: const [
-                                  Colors.transparent,
-                                  Color(0x15FFFFFF),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.5, 1.0],
-                              ).createShader(rect);
-                            },
-                            blendMode: BlendMode.srcATop,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
+                    // Shimmer Efekti
+                    if (_status == ExamCardStatus.yayinda ||
+                        _status == ExamCardStatus.onceSonucuGor)
+                      _buildShimmerEffect(),
+
+                    // Yükleniyor göstergesi
+                    if (_status == ExamCardStatus.yukleniyor)
+                      Positioned.fill(
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white.withOpacity(0.8),
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -540,11 +385,126 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SAYAÇ VEYA SKOR WIDGET'I
+  // WIDGET BİLEŞENLERİ
   // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildStatusLabel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_status.icon, color: Colors.white, size: 12),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              _status.label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitle(bool isTablet) {
+    return Flexible(
+      flex: 0,
+      child: Text(
+        _exam?.title ?? '🏆 Türkiye Geneli Deneme',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: isTablet ? 17 : 14,
+          fontWeight: FontWeight.bold,
+          height: 1.1,
+          shadows: [
+            Shadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    String message;
+
+    switch (_status) {
+      case ExamCardStatus.yukleniyor:
+        message = 'Yükleniyor...';
+        break;
+      case ExamCardStatus.yakinda:
+        message = 'Sınav henüz yayınlanmadı. Pazartesi başlayacak!';
+        break;
+      case ExamCardStatus.yayinda:
+        message = _exam?.description ?? 'Hemen başla ve kendini test et!';
+        break;
+      case ExamCardStatus.tamampiSonucBekliyor:
+        message = 'Sonuçlar Cumartesi 12:00\'de açıklanacak';
+        break;
+      case ExamCardStatus.kacpipidin:
+        message = 'Bu haftaki sınavı kaçırdın 😔 Gelecek hafta bekleriz!';
+        break;
+      case ExamCardStatus.sonuclarAciklandi:
+        message = 'Sonuçlar açıklandı! Tıkla ve gör.';
+        break;
+      case ExamCardStatus.onceSonucuGor:
+        message = '⚠️ Önce önceki sınavının sonucunu görmelisin!';
+        break;
+    }
+
+    return Flexible(
+      flex: 0,
+      child: Text(
+        message,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.85),
+          fontSize: 10,
+          height: 1.1,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _buildBottomRow() {
+    return SizedBox(
+      height: 28,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Sayaç veya Puan
+          Flexible(flex: 1, child: _buildCounterOrScore()),
+
+          // Aksiyon Butonu
+          if (_hasAction()) ...[const SizedBox(width: 6), _buildActionButton()],
+        ],
+      ),
+    );
+  }
+
   Widget _buildCounterOrScore() {
-    // Tamamlandıysa puan göster - tek satır
-    if (_hasCompleted && _userResult != null) {
+    // Sonuç varsa ve sonuçlar açıklandıysa puan göster
+    // NOT: tamampiSonucBekliyor durumunda puan GÖSTERİLMEZ - kullanıcı tıklayarak içeri girmeli
+    if (_currentResult != null &&
+        _status == ExamCardStatus.sonuclarAciklandi) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -557,7 +517,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
             const Text('🏆', style: TextStyle(fontSize: 12)),
             const SizedBox(width: 4),
             Text(
-              '${_userResult!.puan ?? 0} puan',
+              '${_currentResult!.puan ?? 0} puan',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -569,8 +529,11 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
       );
     }
 
-    // Aktifse geri sayım göster - tek satır
-    if (_status != ExamRoomStatus.sonuclanmis) {
+    // Geri sayım göster
+    if (_status == ExamCardStatus.yayinda ||
+        _status == ExamCardStatus.tamampiSonucBekliyor ||
+        _status == ExamCardStatus.yakinda ||
+        _status == ExamCardStatus.kacpipidin) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -581,7 +544,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _status == ExamRoomStatus.aktif
+              _status == ExamCardStatus.yayinda
                   ? Icons.timer
                   : Icons.hourglass_top,
               color: Colors.white.withOpacity(0.9),
@@ -605,10 +568,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
     return const SizedBox.shrink();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // BAŞLA BUTONU (Pulse Animasyonu ile)
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildStartButton() {
+  Widget _buildActionButton() {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
@@ -630,15 +590,15 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _getShortButtonText(),
+                  _status.buttonText,
                   style: TextStyle(
-                    color: _getMainColor(),
+                    color: _status.primaryColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
                   ),
                 ),
                 const SizedBox(width: 2),
-                Icon(_getButtonIcon(), size: 12, color: _getMainColor()),
+                Icon(_getButtonIcon(), size: 12, color: _status.primaryColor),
               ],
             ),
           ),
@@ -647,392 +607,264 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
     );
   }
 
-  String _getShortButtonText() {
-    if (_hasCompleted) {
-      if (_status == ExamRoomStatus.sonuclanmis) return 'Gör';
-      return '';
-    }
-    switch (_status) {
-      case ExamRoomStatus.beklemede:
-        return '';
-      case ExamRoomStatus.aktif:
-        return 'Git';
-      case ExamRoomStatus.kapali:
-        return '';
-      case ExamRoomStatus.sonuclanmis:
-        return 'Gör';
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // SINAV YOK KARTI
-  // ─────────────────────────────────────────────────────────────────────────
-  Widget _buildNoExamCard(bool isTablet) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final cardHeight = isTablet ? 160.0 : 140.0;
-    final lottieSize = isTablet ? 80.0 : (screenWidth * 0.18).clamp(55.0, 70.0);
-
-    return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          height: cardHeight,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_metalStart, _metalEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: _metalStart.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+  Widget _buildShimmerEffect() {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _shimmerController,
+        builder: (context, child) {
+          return ShaderMask(
+            shaderCallback: (rect) {
+              return LinearGradient(
+                begin: Alignment(-1 + _shimmerController.value * 3, -1),
+                end: Alignment(_shimmerController.value * 3, 1),
+                colors: const [
+                  Colors.transparent,
+                  Color(0x15FFFFFF),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ).createShader(rect);
+            },
+            blendMode: BlendMode.srcATop,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: Stack(
-              children: [
-                // Lottie (soluk)
-                Positioned(
-                  right: -10,
-                  bottom: 5,
-                  child: Opacity(
-                    opacity: 0.3,
-                    child: SizedBox(
-                      width: lottieSize,
-                      height: lottieSize,
-                      child: Lottie.asset(
-                        'assets/animation/card_thoropy.json',
-                        fit: BoxFit.contain,
-                        repeat: true,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // İçerik
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: lottieSize * 0.5 + 8,
-                    top: 12,
-                    bottom: 10,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Etiket
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.event_busy,
-                              color: Colors.white70,
-                              size: 12,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'YAKINDA',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Başlık
-                      Text(
-                        '🏆 Türkiye Geneli Deneme',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isTablet ? 16 : 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      // Hafta bilgisi
-                      Text(
-                        _examService.generateRoomName(
-                          _examService.getThisWeekMonday(),
-                        ),
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                          fontSize: 11,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const Spacer(),
-
-                      // Bilgilendirme mesajı
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Sınav henüz yayınlanmadı 📚',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 10,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
-          ),
-        )
-        .animate()
-        .fadeIn(duration: 600.ms)
-        .scale(begin: const Offset(0.95, 0.95), duration: 600.ms);
+          );
+        },
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // YARDIMCI METODLAR (KORUNAN MANTIK)
+  // YARDIMCI METODLAR
   // ─────────────────────────────────────────────────────────────────────────
-
-  bool _canTakeAction() {
-    if (_isLoading || _exam == null) return false;
-
-    if (_hasCompleted && _status == ExamRoomStatus.sonuclanmis) {
-      return true;
-    }
-
-    if (_hasCompleted) {
-      return false;
-    }
-
-    if (_status == ExamRoomStatus.aktif) {
-      return true;
-    }
-
-    if (_status == ExamRoomStatus.sonuclanmis) {
-      return true;
-    }
-
-    return false;
-  }
-
-  LinearGradient _getGradient() {
-    // Tamamlandı ve sonuçlar açıklanmadı
-    if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
-      return LinearGradient(
-        colors: [_emeraldStart, _emeraldEnd],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    }
-
+  bool _hasAction() {
     switch (_status) {
-      case ExamRoomStatus.beklemede:
-        return LinearGradient(
-          colors: [_metalStart, _metalEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case ExamRoomStatus.aktif:
-        return LinearGradient(
-          colors: [_goldStart, _goldEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case ExamRoomStatus.kapali:
-        return LinearGradient(
-          colors: [Colors.orange.shade400, Colors.orange.shade700],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case ExamRoomStatus.sonuclanmis:
-        return LinearGradient(
-          colors: [_purpleStart, _purpleEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-    }
-  }
-
-  Color _getMainColor() {
-    if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
-      return _emeraldStart;
-    }
-
-    switch (_status) {
-      case ExamRoomStatus.beklemede:
-        return _metalStart;
-      case ExamRoomStatus.aktif:
-        return _goldEnd;
-      case ExamRoomStatus.kapali:
-        return Colors.orange.shade600;
-      case ExamRoomStatus.sonuclanmis:
-        return _purpleStart;
+      case ExamCardStatus.yukleniyor:
+      case ExamCardStatus.yakinda:
+      case ExamCardStatus.kacpipidin:
+        return false;
+      case ExamCardStatus.yayinda:
+      case ExamCardStatus.tamampiSonucBekliyor:
+      case ExamCardStatus.sonuclarAciklandi:
+      case ExamCardStatus.onceSonucuGor:
+        return true;
     }
   }
 
   IconData _getButtonIcon() {
-    if (_hasCompleted) {
-      if (_status == ExamRoomStatus.sonuclanmis) {
-        return Icons.visibility;
-      }
-      return Icons.hourglass_empty;
-    }
-
     switch (_status) {
-      case ExamRoomStatus.beklemede:
+      case ExamCardStatus.yukleniyor:
+        return Icons.hourglass_empty;
+      case ExamCardStatus.yakinda:
         return Icons.lock_clock;
-      case ExamRoomStatus.aktif:
+      case ExamCardStatus.yayinda:
         return Icons.arrow_forward;
-      case ExamRoomStatus.kapali:
-        return Icons.lock;
-      case ExamRoomStatus.sonuclanmis:
-        return Icons.leaderboard;
+      case ExamCardStatus.tamampiSonucBekliyor:
+        return Icons.hourglass_top;
+      case ExamCardStatus.kacpipidin:
+        return Icons.sentiment_dissatisfied;
+      case ExamCardStatus.sonuclarAciklandi:
+        return Icons.visibility;
+      case ExamCardStatus.onceSonucuGor:
+        return Icons.warning;
     }
   }
 
   void _onCardTap() {
-    if (_exam == null) return;
+    switch (_status) {
+      case ExamCardStatus.yukleniyor:
+        // Yükleniyor, bekle
+        break;
 
-    // ÖNCELİK 1: Sınav tamamlandıysa ve sonuçlar HENÜZ açıklanmadıysa -> ENGELLE
-    if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.hourglass_top, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Bu sınavı zaten tamamladın! Sonuçlar Pazar 12:00\'da açıklanacak.',
-                ),
+      case ExamCardStatus.yakinda:
+        _showSnackBar(
+          'Sınav henüz başlamadı. Pazartesi başlayacak!',
+          Icons.schedule,
+          Colors.grey.shade700,
+        );
+        break;
+
+      case ExamCardStatus.yayinda:
+        // Sınava git
+        if (_exam != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WeeklyExamScreen(exam: _exam!),
+            ),
+          ).then((_) => _loadData());
+        }
+        break;
+
+      case ExamCardStatus.tamampiSonucBekliyor:
+        _showSnackBar(
+          'Sınavı tamamladın! Sonuçlar Cumartesi 12:00\'de açıklanacak.',
+          Icons.hourglass_top,
+          Colors.green.shade600,
+        );
+        break;
+
+      case ExamCardStatus.kacpipidin:
+        _showSnackBar(
+          'Bu haftaki sınavı kaçırdın 😔 Gelecek hafta bekleriz!',
+          Icons.sentiment_dissatisfied,
+          Colors.orange.shade700,
+        );
+        break;
+
+      case ExamCardStatus.sonuclarAciklandi:
+        // Sonuç ekranına git
+        if (_exam != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  WeeklyExamResultScreen(exam: _exam!, result: _currentResult),
+            ),
+          ).then((_) async {
+            // Sonucu görüntülenmiş olarak işaretle
+            if (_currentResult != null) {
+              await _examService.markResultAsViewed(_currentResult!.examId);
+            }
+            _loadData();
+          });
+        }
+        break;
+
+      case ExamCardStatus.onceSonucuGor:
+        // Görüntülenmemiş sonucu göster
+        if (_unviewedResult != null) {
+          _showUnviewedResultDialog();
+        }
+        break;
+    }
+  }
+
+  void _showSnackBar(String message, IconData icon, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showUnviewedResultDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.emoji_events, color: Colors.amber.shade600, size: 28),
+            const SizedBox(width: 8),
+            const Text('Sonucun Hazır!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Önceki sınavının sonucu açıklandı!',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade50,
+                borderRadius: BorderRadius.circular(12),
               ),
-            ],
-          ),
-          backgroundColor: _emeraldEnd,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-
-    // ÖNCELİK 2: Sonuçlar açıklandıysa sonuç ekranına git
-    if (_status == ExamRoomStatus.sonuclanmis) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              WeeklyExamResultScreen(exam: _exam!, result: _userResult),
-        ),
-      );
-      return;
-    }
-
-    // Sınav aktif ve kullanıcı henüz çözmemişse sınav ekranına git
-    if (_status == ExamRoomStatus.aktif && !_hasCompleted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => WeeklyExamScreen(exam: _exam!)),
-      ).then((_) {
-        _loadExamData();
-      });
-      return;
-    }
-
-    // Beklemede veya kapalı ise bilgi göster
-    if (_status == ExamRoomStatus.beklemede) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.schedule, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Sınav henüz başlamadı. Pazartesi başlayacak!'),
-            ],
-          ),
-          backgroundColor: _metalEnd,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    } else if (_status == ExamRoomStatus.kapali && !_hasCompleted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.sentiment_dissatisfied, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Bu haftaki sınavı kaçırdın 😔 Gelecek hafta bekleriz!',
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🏆 ', style: TextStyle(fontSize: 24)),
+                  Text(
+                    '${_unviewedResult?.puan ?? 0} Puan',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple.shade700,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          backgroundColor: Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 2),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Doğru: ${_unviewedResult?.dogru ?? 0}  |  Yanlış: ${_unviewedResult?.yanlis ?? 0}  |  Boş: ${_unviewedResult?.bos ?? 0}',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            ),
+          ],
         ),
-      );
-    } else if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.hourglass_top, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Sonuçlar Pazar 12:00\'da açıklanacak!'),
-            ],
+        actions: [
+          TextButton(
+            onPressed: () async {
+              if (!mounted) return;
+              // Sonucu görüntülenmiş olarak işaretle
+              if (_unviewedResult != null) {
+                await _examService.markResultAsViewed(_unviewedResult!.examId);
+              }
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              Navigator.pop(context);
+              _loadData();
+            },
+            child: const Text('Tamam'),
           ),
-          backgroundColor: _emeraldEnd,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+          ElevatedButton(
+            onPressed: () async {
+              if (!mounted) return;
+              // Sonucu görüntülenmiş olarak işaretle
+              if (_unviewedResult != null) {
+                await _examService.markResultAsViewed(_unviewedResult!.examId);
+              }
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              Navigator.pop(context);
+              // İlgili sınavı getir ve detay ekranına git
+              if (_unviewedResult != null) {
+                final exam = await _examService.getExamById(
+                  _unviewedResult!.examId,
+                );
+                if (!mounted) return;
+                if (exam != null) {
+                  // Detaylı sonuç ekranına git
+                  Navigator.push(
+                    // ignore: use_build_context_synchronously
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => WeeklyExamResultScreen(
+                        exam: exam,
+                        result: _unviewedResult,
+                      ),
+                    ),
+                  ).then((_) => _loadData());
+                  return;
+                }
+              }
+              _loadData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Detayları Gör'),
           ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+        ],
+      ),
+    );
   }
 }

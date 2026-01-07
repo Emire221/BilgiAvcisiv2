@@ -37,7 +37,7 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 13,
+      version: 15,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -193,6 +193,8 @@ class DatabaseHelper implements IDatabaseHelper {
         weekStart TEXT,
         duration INTEGER,
         description TEXT,
+        totalUser INTEGER,
+        turkeyAverages TEXT,
         questions TEXT
       )
     ''');
@@ -216,7 +218,8 @@ class DatabaseHelper implements IDatabaseHelper {
         puan INTEGER,
         siralama INTEGER,
         toplamKatilimci INTEGER,
-        completedAt TEXT
+        completedAt TEXT,
+        resultViewed INTEGER DEFAULT 0
       )
     ''');
 
@@ -400,6 +403,8 @@ class DatabaseHelper implements IDatabaseHelper {
           weekStart TEXT,
           duration INTEGER,
           description TEXT,
+          totalUser INTEGER,
+          turkeyAverages TEXT,
           questions TEXT
         )
       ''');
@@ -463,6 +468,36 @@ class DatabaseHelper implements IDatabaseHelper {
           durationSeconds INTEGER NOT NULL DEFAULT 0
         )
       ''');
+    }
+
+    if (oldVersion < 14) {
+      // WeeklyExamResults tablosuna resultViewed kolonu ekle
+      // Kullanıcı sonucu görmeden yeni sınava giremez kuralı için
+      try {
+        await db.execute('''
+          ALTER TABLE WeeklyExamResults ADD COLUMN resultViewed INTEGER DEFAULT 0
+        ''');
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
+    }
+
+    if (oldVersion < 15) {
+      // WeeklyExams tablosuna totalUser ve turkeyAverages kolonları ekle
+      try {
+        await db.execute(
+          'ALTER TABLE WeeklyExams ADD COLUMN totalUser INTEGER',
+        );
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
+      try {
+        await db.execute(
+          'ALTER TABLE WeeklyExams ADD COLUMN turkeyAverages TEXT',
+        );
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
     }
   }
 
@@ -545,28 +580,15 @@ class DatabaseHelper implements IDatabaseHelper {
     return results.isNotEmpty ? results.first : null;
   }
 
-  /// Eski haftalık sınav verilerini temizle
-  /// Yeni sınav geldiğinde eski sınav ve sonuçlarını siler
-  /// @param newExamId: Yeni gelen sınavın ID'si - bu silinmeyecek
+  /// Eski haftalık sınav verilerini temizle (ARTIK SADECE ESKİ SINAVLARI SAKLIYORUZ)
+  /// Bu metod artık hiçbir şey silmiyor - tüm sınavlar ve sonuçlar kalıcı olarak saklanıyor
+  /// Başarılarım sekmesinde geçmiş sonuçları gösterebilmek için gerekli
+  /// @param newExamId: Yeni gelen sınavın ID'si - artık kullanılmıyor ama geriye uyumluluk için kalıyor
   @override
   Future<void> clearOldWeeklyExamData(String newExamId) async {
-    Database db = await database;
-
-    await db.transaction((txn) async {
-      // Yeni sınav dışındaki tüm sınavları sil
-      await txn.delete(
-        'WeeklyExams',
-        where: 'weeklyExamId != ?',
-        whereArgs: [newExamId],
-      );
-
-      // Yeni sınav dışındaki tüm sonuçları sil
-      await txn.delete(
-        'WeeklyExamResults',
-        where: 'examId != ?',
-        whereArgs: [newExamId],
-      );
-    });
+    // Artık hiçbir şey silmiyoruz - tüm sınavlar ve sonuçlar kalıcı
+    // Eski davranış: Yeni sınav dışındaki tüm sınavları ve sonuçları siliyordu
+    // Yeni davranış: Hiçbir şey silinmiyor
   }
 
   // Bildirimler için CRUD Metotları
@@ -601,9 +623,12 @@ class DatabaseHelper implements IDatabaseHelper {
 
   Future<int> getUnreadNotificationCount() async {
     Database db = await database;
-    return Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM Notifications WHERE isRead = 0',
-    )) ?? 0;
+    return Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM Notifications WHERE isRead = 0',
+          ),
+        ) ??
+        0;
   }
 
   // Temizleme Metodu (Yeni sınıf indirildiğinde eskileri silmek için)
@@ -792,12 +817,12 @@ class DatabaseHelper implements IDatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getGameResults(String gameType) async {
     Database db = await database;
-    
+
     if (gameType == 'test') {
       // Test için detaylı sorgu (Ders ve Konu adlarını da getir)
       // GameResults tablosunda 'testId' sütunu var mı? Hayır, 'key' sütunu var.
       // GameResults tablosu: id, gameType, score, correct, wrong, completedAt, key (testId olabilir)
-      
+
       // Önce tüm sonuçları al
       final results = await db.query(
         'GameResults',
@@ -805,23 +830,26 @@ class DatabaseHelper implements IDatabaseHelper {
         whereArgs: [gameType],
         orderBy: 'completedAt DESC',
       );
-      
+
       List<Map<String, dynamic>> enrichedResults = [];
-      
+
       for (final result in results) {
         final resultMap = Map<String, dynamic>.from(result);
         final testId = result['key'] as String?;
-        
+
         if (testId != null && testId.isNotEmpty) {
           // Bu testin konusunu ve dersini bul
-          final testData = await db.rawQuery('''
+          final testData = await db.rawQuery(
+            '''
             SELECT T.testAdi, K.konuAdi, D.dersAdi 
             FROM Testler T
             JOIN Konular K ON T.konuID = K.konuID
             JOIN Dersler D ON K.dersID = D.dersID
             WHERE T.testID = ?
-          ''', [testId]);
-          
+          ''',
+            [testId],
+          );
+
           if (testData.isNotEmpty) {
             resultMap['testAdi'] = testData.first['testAdi'];
             resultMap['konuAdi'] = testData.first['konuAdi'];
@@ -839,22 +867,25 @@ class DatabaseHelper implements IDatabaseHelper {
         whereArgs: [gameType],
         orderBy: 'completedAt DESC',
       );
-      
+
       List<Map<String, dynamic>> enrichedResults = [];
-      
+
       for (final result in results) {
         final resultMap = Map<String, dynamic>.from(result);
         final topicId = result['key'] as String?;
-        
+
         if (topicId != null && topicId.isNotEmpty) {
           // Bu konuyu ve dersini bul
-          final topicData = await db.rawQuery('''
+          final topicData = await db.rawQuery(
+            '''
             SELECT K.konuAdi, D.dersAdi 
             FROM Konular K
             JOIN Dersler D ON K.dersID = D.dersID
             WHERE K.konuID = ?
-          ''', [topicId]);
-          
+          ''',
+            [topicId],
+          );
+
           if (topicData.isNotEmpty) {
             resultMap['konuAdi'] = topicData.first['konuAdi'];
             resultMap['dersAdi'] = topicData.first['dersAdi'];
@@ -879,12 +910,47 @@ class DatabaseHelper implements IDatabaseHelper {
   }
 
   /// Haftalık sınav sonuçlarını getir
-  Future<List<Map<String, dynamic>>> getWeeklyExamResults() async {
+  /// @param userId: Kullanıcı ID'si - eğer verilirse sadece bu kullanıcının sonuçları döner
+  /// @param onlyAnnounced: true ise sadece sonucu açıklanmış sınavları döner (sonucTarihi geçmiş olanlar)
+  Future<List<Map<String, dynamic>>> getWeeklyExamResults({
+    String? userId,
+    bool onlyAnnounced = true,
+  }) async {
     Database db = await database;
-    return await db.query(
-      'WeeklyExamResults',
-      orderBy: 'completedAt DESC',
-    );
+    List<Map<String, dynamic>> results;
+
+    if (userId != null) {
+      results = await db.query(
+        'WeeklyExamResults',
+        where: 'odaKatilimciId = ?',
+        whereArgs: [userId],
+        orderBy: 'completedAt DESC',
+      );
+    } else {
+      results = await db.query(
+        'WeeklyExamResults',
+        orderBy: 'completedAt DESC',
+      );
+    }
+
+    // Sadece sonucu açıklanmış sınavları filtrele
+    if (onlyAnnounced) {
+      final now = DateTime.now();
+      results = results.where((result) {
+        final sonucTarihiStr = result['sonucTarihi'] as String?;
+        if (sonucTarihiStr == null || sonucTarihiStr.isEmpty) {
+          return false; // sonucTarihi yoksa gösterme
+        }
+        try {
+          final sonucTarihi = DateTime.parse(sonucTarihiStr);
+          return now.isAfter(sonucTarihi); // Sadece geçmiş tarihlileri göster
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+    }
+
+    return results;
   }
 
   // ============================================================
@@ -895,34 +961,34 @@ class DatabaseHelper implements IDatabaseHelper {
   /// Her ders için çözülen testlerdeki doğru/toplam oranını döner
   Future<List<Map<String, dynamic>>> getLessonSuccessRates() async {
     Database db = await database;
-    
+
     // Dersleri al
     final dersler = await db.query('Dersler');
-    
+
     List<Map<String, dynamic>> result = [];
-    
+
     for (final ders in dersler) {
       final dersId = ders['dersID'] as String;
       final dersAdi = ders['dersAdi'] as String? ?? '';
-      
+
       // Bu derse ait konuları al
       final konular = await db.query(
         'Konular',
         where: 'dersID = ?',
         whereArgs: [dersId],
       );
-      
+
       if (konular.isEmpty) continue;
-      
+
       final konuIds = konular.map((k) => k['konuID'] as String).toList();
-      
+
       // Bu konulara ait testleri al
       final placeholders = List.filled(konuIds.length, '?').join(',');
       final testler = await db.rawQuery(
         'SELECT testID FROM Testler WHERE konuID IN ($placeholders)',
         konuIds,
       );
-      
+
       if (testler.isEmpty) {
         result.add({
           'dersID': dersId,
@@ -933,16 +999,16 @@ class DatabaseHelper implements IDatabaseHelper {
         });
         continue;
       }
-      
+
       final testIds = testler.map((t) => t['testID'] as String).toList();
       final testPlaceholders = List.filled(testIds.length, '?').join(',');
-      
+
       // Bu testlerden çözülenlerin sonuçlarını al
       final sonuclar = await db.rawQuery(
         'SELECT correct, wrong FROM TestResults WHERE testId IN ($testPlaceholders)',
         testIds,
       );
-      
+
       if (sonuclar.isEmpty) {
         result.add({
           'dersID': dersId,
@@ -953,20 +1019,22 @@ class DatabaseHelper implements IDatabaseHelper {
         });
         continue;
       }
-      
+
       // Toplam doğru ve yanlış hesapla
       int toplamDogru = 0;
       int toplamSoru = 0;
-      
+
       for (final sonuc in sonuclar) {
         final dogru = sonuc['correct'] as int? ?? 0;
         final yanlis = sonuc['wrong'] as int? ?? 0;
         toplamDogru += dogru;
         toplamSoru += dogru + yanlis;
       }
-      
-      final basariOrani = toplamSoru > 0 ? (toplamDogru / toplamSoru) * 100 : 0.0;
-      
+
+      final basariOrani = toplamSoru > 0
+          ? (toplamDogru / toplamSoru) * 100
+          : 0.0;
+
       result.add({
         'dersID': dersId,
         'dersAdi': dersAdi,
@@ -975,14 +1043,14 @@ class DatabaseHelper implements IDatabaseHelper {
         'cozulenTest': sonuclar.length,
       });
     }
-    
+
     return result;
   }
 
   /// Seçilen derse ait konu başarı oranlarını hesapla
   Future<List<Map<String, dynamic>>> getTopicSuccessRates(String dersId) async {
     Database db = await database;
-    
+
     // Derse ait konuları al
     final konular = await db.query(
       'Konular',
@@ -990,13 +1058,13 @@ class DatabaseHelper implements IDatabaseHelper {
       whereArgs: [dersId],
       orderBy: 'sira ASC',
     );
-    
+
     List<Map<String, dynamic>> result = [];
-    
+
     for (final konu in konular) {
       final konuId = konu['konuID'] as String;
       final konuAdi = konu['konuAdi'] as String? ?? '';
-      
+
       // Bu konuya ait testleri al
       final testler = await db.query(
         'Testler',
@@ -1004,7 +1072,7 @@ class DatabaseHelper implements IDatabaseHelper {
         where: 'konuID = ?',
         whereArgs: [konuId],
       );
-      
+
       if (testler.isEmpty) {
         result.add({
           'konuID': konuId,
@@ -1014,16 +1082,16 @@ class DatabaseHelper implements IDatabaseHelper {
         });
         continue;
       }
-      
+
       final testIds = testler.map((t) => t['testID'] as String).toList();
       final placeholders = List.filled(testIds.length, '?').join(',');
-      
+
       // Bu testlerin sonuçlarını al
       final sonuclar = await db.rawQuery(
         'SELECT correct, wrong FROM TestResults WHERE testId IN ($placeholders)',
         testIds,
       );
-      
+
       if (sonuclar.isEmpty) {
         result.add({
           'konuID': konuId,
@@ -1033,20 +1101,22 @@ class DatabaseHelper implements IDatabaseHelper {
         });
         continue;
       }
-      
+
       // Başarı oranını hesapla
       int toplamDogru = 0;
       int toplamSoru = 0;
-      
+
       for (final sonuc in sonuclar) {
         final dogru = sonuc['correct'] as int? ?? 0;
         final yanlis = sonuc['wrong'] as int? ?? 0;
         toplamDogru += dogru;
         toplamSoru += dogru + yanlis;
       }
-      
-      final basariOrani = toplamSoru > 0 ? (toplamDogru / toplamSoru) * 100 : 0.0;
-      
+
+      final basariOrani = toplamSoru > 0
+          ? (toplamDogru / toplamSoru) * 100
+          : 0.0;
+
       result.add({
         'konuID': konuId,
         'konuAdi': konuAdi,
@@ -1054,7 +1124,7 @@ class DatabaseHelper implements IDatabaseHelper {
         'cozulenTest': sonuclar.length,
       });
     }
-    
+
     return result;
   }
 
@@ -1344,17 +1414,16 @@ class DatabaseHelper implements IDatabaseHelper {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /// Düelloda gösterilen içeriği işaretle
-  Future<void> markDuelContentAsSeen(String contentType, String contentId) async {
+  Future<void> markDuelContentAsSeen(
+    String contentType,
+    String contentId,
+  ) async {
     Database db = await database;
-    await db.insert(
-      'SeenDuelContent',
-      {
-        'contentType': contentType,
-        'contentId': contentId,
-        'seenAt': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('SeenDuelContent', {
+      'contentType': contentType,
+      'contentId': contentId,
+      'seenAt': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   /// Belirli türdeki görülen içerik ID'lerini getir
@@ -1395,11 +1464,10 @@ class DatabaseHelper implements IDatabaseHelper {
   /// Bugünün süresini kaydet veya güncelle (saniye cinsinden)
   Future<void> saveDailyTime(String date, int durationSeconds) async {
     Database db = await database;
-    await db.insert(
-      'DailyTimeTracking',
-      {'date': date, 'durationSeconds': durationSeconds},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('DailyTimeTracking', {
+      'date': date,
+      'durationSeconds': durationSeconds,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Belirli bir günün süresini getir (saniye cinsinden)
@@ -1423,9 +1491,10 @@ class DatabaseHelper implements IDatabaseHelper {
 
     for (int i = 0; i < 7; i++) {
       final date = monday.add(Duration(days: i));
-      final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final dateStr =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       final seconds = await getDailyTime(dateStr);
-      
+
       weekData.add({
         'date': dateStr,
         'dayName': _getDayName(date.weekday),
@@ -1438,14 +1507,22 @@ class DatabaseHelper implements IDatabaseHelper {
 
   String _getDayName(int weekday) {
     switch (weekday) {
-      case 1: return 'Pzt';
-      case 2: return 'Sal';
-      case 3: return 'Çar';
-      case 4: return 'Per';
-      case 5: return 'Cum';
-      case 6: return 'Cmt';
-      case 7: return 'Paz';
-      default: return '';
+      case 1:
+        return 'Pzt';
+      case 2:
+        return 'Sal';
+      case 3:
+        return 'Çar';
+      case 4:
+        return 'Per';
+      case 5:
+        return 'Cum';
+      case 6:
+        return 'Cmt';
+      case 7:
+        return 'Paz';
+      default:
+        return '';
     }
   }
 }

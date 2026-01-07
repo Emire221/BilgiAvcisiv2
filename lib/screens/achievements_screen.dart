@@ -22,7 +22,9 @@ class AchievementsScreen extends StatefulWidget {
 class _AchievementsScreenState extends State<AchievementsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final ValueNotifier<int> _currentTabIndex = ValueNotifier(0); // FAB görünürlüğü için
+  final ValueNotifier<int> _currentTabIndex = ValueNotifier(
+    0,
+  ); // FAB görünürlüğü için
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   // Tab verileri
@@ -104,7 +106,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           SafeArea(
             child: TabBarView(
               controller: _tabController,
-            children: _tabs.map((tab) {
+              children: _tabs.map((tab) {
                 if (tab.id == 'guess') {
                   return _buildGuessResultList(tab);
                 } else if (tab.id == 'memory') {
@@ -121,7 +123,9 @@ class _AchievementsScreenState extends State<AchievementsScreen>
       floatingActionButton: ValueListenableBuilder<int>(
         valueListenable: _currentTabIndex,
         builder: (context, index, child) {
-          return _shouldShowFab(index) ? _buildAnalyticsFab(index) : Container();
+          return _shouldShowFab(index)
+              ? _buildAnalyticsFab(index)
+              : Container();
         },
       ),
     );
@@ -136,7 +140,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   Widget _buildAnalyticsFab(int index) {
     final currentTab = _tabs[index];
     final isDenemTab = currentTab.id == 'weekly_exam';
-    
+
     return FloatingActionButton.extended(
       onPressed: () {
         HapticFeedback.mediumImpact();
@@ -157,15 +161,18 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: isDenemTab 
+            colors: isDenemTab
                 ? [const Color(0xFF11998e), const Color(0xFF38ef7d)]
                 : [const Color(0xFF667eea), const Color(0xFF764ba2)],
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: (isDenemTab ? const Color(0xFF11998e) : const Color(0xFF667eea))
-                  .withValues(alpha: 0.4),
+              color:
+                  (isDenemTab
+                          ? const Color(0xFF11998e)
+                          : const Color(0xFF667eea))
+                      .withValues(alpha: 0.4),
               blurRadius: 15,
               spreadRadius: 2,
             ),
@@ -175,7 +182,9 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             FaIcon(
-              isDenemTab ? FontAwesomeIcons.chartColumn : FontAwesomeIcons.chartLine,
+              isDenemTab
+                  ? FontAwesomeIcons.chartColumn
+                  : FontAwesomeIcons.chartLine,
               color: Colors.white,
               size: 18,
             ),
@@ -554,7 +563,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const LessonSelectionScreen(mode: 'flashcard'),
+            builder: (context) =>
+                const LessonSelectionScreen(mode: 'flashcard'),
           ),
         );
         break;
@@ -761,7 +771,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           itemCount: results.length,
           itemBuilder: (context, index) {
             final result = results[index];
-            return _WeeklyExamResultCard(result: result, tab: tab, index: index);
+            return _WeeklyExamResultCard(
+              result: result,
+              tab: tab,
+              index: index,
+            );
           },
         );
       },
@@ -876,166 +890,173 @@ class _AchievementCardState extends State<_AchievementCard> {
     }
 
     return GestureDetector(
-      onTap: () => setState(() => _isExpanded = !_isExpanded),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: widget.tab.glowColor.withValues(alpha: 0.3),
-              blurRadius: 15,
-              spreadRadius: 2,
+          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.tab.glowColor.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    widget.tab.gradientColors[0].withValues(alpha: 0.8),
-                    widget.tab.gradientColors[1].withValues(alpha: 0.6),
-                  ],
-                ),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // Üst kısım: İkon, başlık ve yıldızlar
-                    Row(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        widget.tab.gradientColors[0].withValues(alpha: 0.8),
+                        widget.tab.gradientColors[1].withValues(alpha: 0.6),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                       children: [
-                        // İkon
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: FaIcon(
-                            widget.tab.icon,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-
-                        // Başlık
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.result['dersAdi'] != null &&
-                                        widget.result['konuAdi'] != null
-                                    ? '${widget.result['dersAdi']} - ${widget.result['konuAdi']}'
-                                    : (widget.result['testAdi'] ?? _getGameTitle(widget.tab.id)),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: _isExpanded ? null : 1,
-                                overflow: _isExpanded
-                                    ? TextOverflow.visible
-                                    : TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                '${date.day}.${date.month}.${date.year} • ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Yıldızlar
+                        // Üst kısım: İkon, başlık ve yıldızlar
                         Row(
-                          children: List.generate(5, (i) {
-                            return Padding(
-                              padding: const EdgeInsets.only(left: 2),
-                              child: Icon(
-                                i < starCount
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: Colors.amber,
-                                size: 22,
+                          children: [
+                            // İkon
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
                               ),
+                              child: FaIcon(
+                                widget.tab.icon,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Başlık
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.result['dersAdi'] != null &&
+                                            widget.result['konuAdi'] != null
+                                        ? '${widget.result['dersAdi']} - ${widget.result['konuAdi']}'
+                                        : (widget.result['testAdi'] ??
+                                              _getGameTitle(widget.tab.id)),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: _isExpanded ? null : 1,
+                                    overflow: _isExpanded
+                                        ? TextOverflow.visible
+                                        : TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${date.day}.${date.month}.${date.year} • ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Yıldızlar
+                            Row(
+                              children: List.generate(5, (i) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 2),
+                                  child: Icon(
+                                    i < starCount
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 22,
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // İstatistikler - Responsive
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isNarrow = constraints.maxWidth < 280;
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Flexible(
+                                  child: _buildStatItem(
+                                    'Skor',
+                                    '$score',
+                                    FontAwesomeIcons.star,
+                                    isCompact: isNarrow,
+                                  ),
+                                ),
+                                Flexible(
+                                  child: _buildStatItem(
+                                    'Doğru',
+                                    '$correctCount',
+                                    FontAwesomeIcons.check,
+                                    color: Colors.greenAccent,
+                                    isCompact: isNarrow,
+                                  ),
+                                ),
+                                Flexible(
+                                  child: _buildStatItem(
+                                    'Yanlış',
+                                    '$wrongCount',
+                                    FontAwesomeIcons.xmark,
+                                    color: Colors.redAccent,
+                                    isCompact: isNarrow,
+                                  ),
+                                ),
+                                Flexible(
+                                  child: _buildStatItem(
+                                    'Başarı',
+                                    '${(percentage * 100).round()}%',
+                                    FontAwesomeIcons.percent,
+                                    isCompact: isNarrow,
+                                  ),
+                                ),
+                              ],
                             );
-                          }),
+                          },
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // İstatistikler - Responsive
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isNarrow = constraints.maxWidth < 280;
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Flexible(
-                              child: _buildStatItem(
-                                'Skor',
-                                '$score',
-                                FontAwesomeIcons.star,
-                                isCompact: isNarrow,
-                              ),
-                            ),
-                            Flexible(
-                              child: _buildStatItem(
-                                'Doğru',
-                                '$correctCount',
-                                FontAwesomeIcons.check,
-                                color: Colors.greenAccent,
-                                isCompact: isNarrow,
-                              ),
-                            ),
-                            Flexible(
-                              child: _buildStatItem(
-                                'Yanlış',
-                                '$wrongCount',
-                                FontAwesomeIcons.xmark,
-                                color: Colors.redAccent,
-                                isCompact: isNarrow,
-                              ),
-                            ),
-                            Flexible(
-                              child: _buildStatItem(
-                                'Başarı',
-                                '${(percentage * 100).round()}%',
-                                FontAwesomeIcons.percent,
-                                isCompact: isNarrow,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
-        .fadeIn(delay: Duration(milliseconds: widget.index < 5 ? 100 * widget.index : 0))
+        .fadeIn(
+          delay: Duration(
+            milliseconds: widget.index < 5 ? 100 * widget.index : 0,
+          ),
+        )
         .slideX(begin: 0.2, end: 0);
   }
 }
@@ -1322,7 +1343,9 @@ class _MemoryResultCard extends StatelessWidget {
       try {
         final movesMatch = RegExp(r'"moves":\s*(\d+)').firstMatch(details);
         final secondsMatch = RegExp(r'"seconds":\s*(\d+)').firstMatch(details);
-        final gameTypeMatch = RegExp(r'"gameType":\s*"([^"]+)"').firstMatch(details);
+        final gameTypeMatch = RegExp(
+          r'"gameType":\s*"([^"]+)"',
+        ).firstMatch(details);
         if (movesMatch != null) moves = int.parse(movesMatch.group(1)!);
         if (secondsMatch != null) seconds = int.parse(secondsMatch.group(1)!);
         if (gameTypeMatch != null) gameType = gameTypeMatch.group(1)!;
@@ -1330,7 +1353,9 @@ class _MemoryResultCard extends StatelessWidget {
     }
 
     // Oyun türüne göre başlık
-    final gameTitle = gameType == 'shape_match' ? 'Şekil Eşleştir' : 'Sıralı Bulma';
+    final gameTitle = gameType == 'shape_match'
+        ? 'Şekil Eşleştir'
+        : 'Sıralı Bulma';
 
     int starCount;
     if (wrongCount == 0) {
@@ -1578,189 +1603,191 @@ class _WeeklyExamResultCard extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  tab.gradientColors[0].withValues(alpha: 0.8),
-                  tab.gradientColors[1].withValues(alpha: 0.6),
-                ],
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: tab.glowColor.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tab.gradientColors[0].withValues(alpha: 0.8),
+                      tab.gradientColors[1].withValues(alpha: 0.6),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: tab.glowColor.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Üst kısım
-                  Row(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: FaIcon(
-                          tab.icon,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              odaIsmi,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              '${date.day}.${date.month}.${date.year}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.7),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Yıldızlar
+                      // Üst kısım
                       Row(
-                        children: List.generate(3, (i) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: Icon(
-                              i < starCount ? Icons.star : Icons.star_border,
-                              color: Colors.amber,
-                              size: 22,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            child: FaIcon(
+                              tab.icon,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  odaIsmi,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '${date.day}.${date.month}.${date.year}',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Yıldızlar
+                          Row(
+                            children: List.generate(3, (i) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Icon(
+                                  i < starCount
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 22,
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Sıralama Bilgisi
+                      if (siralama > 0 && toplamKatilimci > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.amber.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const FaIcon(
+                                FontAwesomeIcons.trophy,
+                                color: Colors.amber,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$siralama. / $toplamKatilimci kişi',
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 12),
+
+                      // İstatistikler
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 280;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Puan',
+                                  '$puan',
+                                  FontAwesomeIcons.star,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Doğru',
+                                  '$dogru',
+                                  FontAwesomeIcons.check,
+                                  color: Colors.greenAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Yanlış',
+                                  '$yanlis',
+                                  FontAwesomeIcons.xmark,
+                                  color: yanlis == 0
+                                      ? Colors.greenAccent
+                                      : Colors.redAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Boş',
+                                  '$bos',
+                                  FontAwesomeIcons.minus,
+                                  color: bos == 0
+                                      ? Colors.greenAccent
+                                      : Colors.orangeAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                            ],
                           );
-                        }),
+                        },
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Sıralama Bilgisi
-                  if (siralama > 0 && toplamKatilimci > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const FaIcon(
-                            FontAwesomeIcons.trophy,
-                            color: Colors.amber,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '$siralama. / $toplamKatilimci kişi',
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  const SizedBox(height: 12),
-
-                  // İstatistikler
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isNarrow = constraints.maxWidth < 280;
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Flexible(
-                            child: _buildStatItem(
-                              'Puan',
-                              '$puan',
-                              FontAwesomeIcons.star,
-                              isCompact: isNarrow,
-                            ),
-                          ),
-                          Flexible(
-                            child: _buildStatItem(
-                              'Doğru',
-                              '$dogru',
-                              FontAwesomeIcons.check,
-                              color: Colors.greenAccent,
-                              isCompact: isNarrow,
-                            ),
-                          ),
-                          Flexible(
-                            child: _buildStatItem(
-                              'Yanlış',
-                              '$yanlis',
-                              FontAwesomeIcons.xmark,
-                              color: yanlis == 0
-                                  ? Colors.greenAccent
-                                  : Colors.redAccent,
-                              isCompact: isNarrow,
-                            ),
-                          ),
-                          Flexible(
-                            child: _buildStatItem(
-                              'Boş',
-                              '$bos',
-                              FontAwesomeIcons.minus,
-                              color: bos == 0
-                                  ? Colors.greenAccent
-                                  : Colors.orangeAccent,
-                              isCompact: isNarrow,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: Duration(milliseconds: index < 5 ? 100 * index : 0))
         .slideX(begin: 0.2, end: 0);
@@ -1806,14 +1833,63 @@ class _WeeklyExamResultCard extends StatelessWidget {
 }
 
 /// Deneme Trend Grafiği Modal'ı
-class _DenemeTrendModal extends StatelessWidget {
+class _DenemeTrendModal extends StatefulWidget {
   final DatabaseHelper dbHelper;
-  
+
   const _DenemeTrendModal({required this.dbHelper});
-  
+
+  @override
+  State<_DenemeTrendModal> createState() => _DenemeTrendModalState();
+}
+
+class _DenemeTrendModalState extends State<_DenemeTrendModal>
+    with SingleTickerProviderStateMixin {
   static const Color _primaryGreen = Color(0xFF11998e);
   static const Color _secondaryGreen = Color(0xFF38ef7d);
-  
+
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // Önce yukarı çık (0->1), sonra gerçek değere in (custom curve)
+    _animation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0.0,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 60,
+      ),
+    ]).animate(_animationController);
+
+    // Animasyonu başlat
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1838,7 +1914,7 @@ class _DenemeTrendModal extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // Header
           Padding(
             padding: const EdgeInsets.all(20),
@@ -1847,10 +1923,16 @@ class _DenemeTrendModal extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [_primaryGreen, _secondaryGreen]),
+                    gradient: const LinearGradient(
+                      colors: [_primaryGreen, _secondaryGreen],
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const FaIcon(FontAwesomeIcons.chartColumn, color: Colors.white, size: 20),
+                  child: const FaIcon(
+                    FontAwesomeIcons.chartColumn,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 const Text(
@@ -1864,24 +1946,32 @@ class _DenemeTrendModal extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Chart
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: dbHelper.getWeeklyExamResults(),
+              future: widget.dbHelper.getWeeklyExamResults(
+                onlyAnnounced: false,
+              ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(color: _primaryGreen),
                   );
                 }
-                
+
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return _buildEmptyState();
                 }
-                
-                final results = snapshot.data!.reversed.toList(); // Eski -> Yeni
-                return _buildTrendChart(results);
+
+                final results = snapshot.data!.reversed
+                    .toList(); // Eski -> Yeni
+                return AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    return _buildTrendChart(results, _animation.value);
+                  },
+                );
               },
             ),
           ),
@@ -1889,7 +1979,7 @@ class _DenemeTrendModal extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -1921,13 +2011,26 @@ class _DenemeTrendModal extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildTrendChart(List<Map<String, dynamic>> results) {
+
+  Widget _buildTrendChart(
+    List<Map<String, dynamic>> results,
+    double animationValue,
+  ) {
     // Maximum 10 sonuç göster
-    final displayResults = results.length > 10 
-        ? results.sublist(results.length - 10) 
+    final displayResults = results.length > 10
+        ? results.sublist(results.length - 10)
         : results;
-    
+
+    // Dinamik maxY hesapla
+    final maxPuan = displayResults
+        .map((r) => (r['puan'] as int?) ?? 0)
+        .fold<int>(0, (max, p) => p > max ? p : max);
+    final dynamicMaxY = ((maxPuan / 100).ceil() * 100 + 50).toDouble().clamp(
+      100.0,
+      500.0,
+    );
+    final horizontalInterval = (dynamicMaxY / 5).roundToDouble();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       child: Column(
@@ -1946,7 +2049,7 @@ class _DenemeTrendModal extends StatelessWidget {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    horizontalInterval: 100,
+                    horizontalInterval: horizontalInterval,
                     getDrawingHorizontalLine: (v) => FlLine(
                       color: Colors.white.withValues(alpha: 0.1),
                       strokeWidth: 1,
@@ -1989,20 +2092,30 @@ class _DenemeTrendModal extends StatelessWidget {
                         },
                       ),
                     ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   borderData: FlBorderData(show: false),
                   minY: 0,
-                  maxY: 500,
+                  maxY: dynamicMaxY,
                   lineBarsData: [
                     LineChartBarData(
                       spots: displayResults.asMap().entries.map((entry) {
                         final puan = (entry.value['puan'] as int?) ?? 0;
-                        return FlSpot(entry.key.toDouble(), puan.toDouble());
+                        final realY = puan.toDouble();
+                        // Animasyon: 0'dan başla -> maxY'e çık -> gerçek değere in
+                        final animatedY =
+                            realY + (dynamicMaxY - realY) * animationValue;
+                        return FlSpot(entry.key.toDouble(), animatedY);
                       }).toList(),
                       isCurved: true,
-                      gradient: const LinearGradient(colors: [_primaryGreen, _secondaryGreen]),
+                      gradient: const LinearGradient(
+                        colors: [_primaryGreen, _secondaryGreen],
+                      ),
                       barWidth: 3,
                       isStrokeCapRound: true,
                       dotData: FlDotData(
@@ -2035,8 +2148,9 @@ class _DenemeTrendModal extends StatelessWidget {
                         return touchedSpots.map((spot) {
                           final result = displayResults[spot.spotIndex];
                           final odaIsmi = result['odaIsmi'] as String? ?? '';
+                          final actualPuan = (result['puan'] as int?) ?? 0;
                           return LineTooltipItem(
-                            '$odaIsmi\n${spot.y.toInt()} puan',
+                            '$odaIsmi\n$actualPuan puan',
                             const TextStyle(color: Colors.white, fontSize: 12),
                           );
                         }).toList();
@@ -2047,16 +2161,16 @@ class _DenemeTrendModal extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Summary
           _buildTrendSummary(displayResults),
         ],
       ),
     );
   }
-  
+
   Widget _buildTrendSummary(List<Map<String, dynamic>> results) {
     if (results.length < 2) {
       return Container(
@@ -2072,30 +2186,42 @@ class _DenemeTrendModal extends StatelessWidget {
         ),
       );
     }
-    
+
     final firstScore = (results.first['puan'] as int?) ?? 0;
     final lastScore = (results.last['puan'] as int?) ?? 0;
     final diff = lastScore - firstScore;
     final isImproving = diff > 0;
-    final average = results.map((r) => (r['puan'] as int?) ?? 0).reduce((a, b) => a + b) / results.length;
-    
+    final average =
+        results.map((r) => (r['puan'] as int?) ?? 0).reduce((a, b) => a + b) /
+        results.length;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isImproving 
-              ? [_primaryGreen.withValues(alpha: 0.2), _secondaryGreen.withValues(alpha: 0.1)]
-              : [Colors.red.withValues(alpha: 0.2), Colors.orange.withValues(alpha: 0.1)],
+          colors: isImproving
+              ? [
+                  _primaryGreen.withValues(alpha: 0.2),
+                  _secondaryGreen.withValues(alpha: 0.1),
+                ]
+              : [
+                  Colors.red.withValues(alpha: 0.2),
+                  Colors.orange.withValues(alpha: 0.1),
+                ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isImproving ? _primaryGreen.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3),
+          color: isImproving
+              ? _primaryGreen.withValues(alpha: 0.3)
+              : Colors.red.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
         children: [
           FaIcon(
-            isImproving ? FontAwesomeIcons.arrowTrendUp : FontAwesomeIcons.arrowTrendDown,
+            isImproving
+                ? FontAwesomeIcons.arrowTrendUp
+                : FontAwesomeIcons.arrowTrendDown,
             color: isImproving ? _secondaryGreen : Colors.orange,
             size: 28,
           ),
@@ -2105,7 +2231,9 @@ class _DenemeTrendModal extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isImproving ? 'Harika gidiyorsun! 🎉' : 'Biraz daha çalış! 💪',
+                  isImproving
+                      ? 'Harika gidiyorsun! 🎉'
+                      : 'Biraz daha çalış! 💪',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -2137,5 +2265,3 @@ class _DenemeTrendModal extends StatelessWidget {
     );
   }
 }
-
-

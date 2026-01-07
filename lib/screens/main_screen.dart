@@ -34,8 +34,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
   late AnimationController _glowController;
   late AnimationController _bounceController;
 
-
-
   // Navigation items
   final List<_NavItem> _navItems = [
     _NavItem(
@@ -82,13 +80,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
       duration: const Duration(milliseconds: 300),
     );
 
-
-
     // Shake servisi başlatma (build sonrası)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _shakeService = ShakeService(context);
       _shakeService?.start();
-      
+
       // Bildirim servisini başlat (izin kontrolü + zamanlanmış bildirimler)
       NotificationService().ensureInitialized();
     });
@@ -96,7 +92,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   /// Belirtilen tab'a geçiş yapar
   void _navigateToTab(int index) {
-    if (index >= 0 && index < 4) { // _tabs.length yerine sabit 4
+    if (index >= 0 && index < 4) {
+      // _tabs.length yerine sabit 4
       HapticFeedback.lightImpact();
       _bounceController.forward(from: 0);
       setState(() {
@@ -364,15 +361,15 @@ class _MainScreenState extends ConsumerState<MainScreen>
                 )
               : null,
           shape: BoxShape.circle,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: activeColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? activeColor.withValues(alpha: 0.3)
+                  : Colors.transparent,
+              blurRadius: isSelected ? 8 : 0,
+              offset: isSelected ? const Offset(0, 2) : Offset.zero,
+            ),
+          ],
         ),
         child: FaIcon(
           icon,
@@ -457,7 +454,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF6B6B).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFFFF6B6B,
+                              ).withValues(alpha: 0.4),
                               blurRadius: 4,
                               spreadRadius: 1,
                             ),
@@ -467,7 +466,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
                     );
                   },
                 ),
-
               ],
             ),
           ),

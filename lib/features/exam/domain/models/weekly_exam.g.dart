@@ -56,6 +56,7 @@ _$WeeklyExamResultImpl _$$WeeklyExamResultImplFromJson(
   completedAt: json['completedAt'] == null
       ? null
       : DateTime.parse(json['completedAt'] as String),
+  resultViewed: json['resultViewed'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$WeeklyExamResultImplToJson(
@@ -78,4 +79,5 @@ Map<String, dynamic> _$$WeeklyExamResultImplToJson(
   'siralama': instance.siralama,
   'toplamKatilimci': instance.toplamKatilimci,
   'completedAt': instance.completedAt?.toIso8601String(),
+  'resultViewed': instance.resultViewed,
 };

@@ -375,6 +375,13 @@ class FirebaseStorageService {
               if (examData.containsKey('questions')) {
                 examData['questions'] = json.encode(examData['questions']);
               }
+              // turkeyAverages Map'ini JSON string'e çevir
+              if (examData.containsKey('turkeyAverages') &&
+                  examData['turkeyAverages'] is Map) {
+                examData['turkeyAverages'] = json.encode(
+                  examData['turkeyAverages'],
+                );
+              }
 
               // Önce eski sınav verilerini sil, sonra yenisini ekle
               final newExamId = examData['weeklyExamId'] as String;

@@ -748,7 +748,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
             const SizedBox(height: 16),
             TextFormField(
               controller: _ageController,
-              autovalidateMode: AutovalidateMode.onUserInteraction, // Anlık hata gösterimi
+              autovalidateMode:
+                  AutovalidateMode.onUserInteraction, // Anlık hata gösterimi
               keyboardType: TextInputType.number,
               style: GoogleFonts.poppins(
                 color: Colors.white,
@@ -1052,15 +1053,15 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                               : Colors.white.withValues(alpha: 0.2),
                           width: isSelected ? 2 : 1,
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: _softYellow.withValues(alpha: 0.5),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: isSelected
+                                ? _softYellow.withValues(alpha: 0.5)
+                                : Colors.transparent,
+                            blurRadius: isSelected ? 20 : 0,
+                            spreadRadius: isSelected ? 2 : 0,
+                          ),
+                        ],
                       ),
                       child: Center(
                         child: Padding(

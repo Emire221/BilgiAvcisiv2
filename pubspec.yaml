@@ -51,6 +51,9 @@ dependencies:
   wakelock_plus: ^1.4.0
   # Background scheduled alarms
   android_alarm_manager_plus: ^4.0.4
+  # Paylaşım ve Ekran Görüntüsü
+  share_plus: ^7.2.2
+  gal: ^2.3.0
 
 dev_dependencies:
   flutter_test:
