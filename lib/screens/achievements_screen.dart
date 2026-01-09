@@ -1855,26 +1855,14 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     );
 
-    // Önce yukarı çık (0->1), sonra gerçek değere in (custom curve)
-    _animation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 0.0,
-          end: 1.0,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 1.0,
-          end: 0.0,
-        ).chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 60,
-      ),
-    ]).animate(_animationController);
+    // Basit 0->1 animasyonu (barlar yukarı doğru dolar)
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    );
 
     // Animasyonu başlat
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -2016,20 +2004,22 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
     List<Map<String, dynamic>> results,
     double animationValue,
   ) {
-    // Maximum 10 sonuç göster
-    final displayResults = results.length > 10
-        ? results.sublist(results.length - 10)
+    // Son 5 sınav sonucunu göster (daha temiz görünüm)
+    final displayResults = results.length > 5
+        ? results.sublist(results.length - 5)
         : results;
 
-    // Dinamik maxY hesapla
-    final maxPuan = displayResults
+    // Puan listesi ve maxY hesapla
+    final puanlar = displayResults
         .map((r) => (r['puan'] as int?) ?? 0)
-        .fold<int>(0, (max, p) => p > max ? p : max);
-    final dynamicMaxY = ((maxPuan / 100).ceil() * 100 + 50).toDouble().clamp(
-      100.0,
-      500.0,
-    );
-    final horizontalInterval = (dynamicMaxY / 5).roundToDouble();
+        .toList();
+    final maxPuan = puanlar.fold<int>(0, (max, p) => p > max ? p : max);
+
+    // MaxY: En yüksek puanın 50 üstü (en az 100)
+    final dynamicMaxY = (maxPuan + 50).toDouble().clamp(100.0, 550.0);
+
+    // Bar genişliği - 5 bar için sabit geniş
+    const barWidth = 32.0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -2044,32 +2034,91 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
-              child: LineChart(
-                LineChartData(
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: dynamicMaxY,
+                  minY: 0,
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    horizontalInterval: horizontalInterval,
+                    horizontalInterval: 100,
                     getDrawingHorizontalLine: (v) => FlLine(
                       color: Colors.white.withValues(alpha: 0.1),
                       strokeWidth: 1,
+                      dashArray: [5, 5],
                     ),
                   ),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
+                      axisNameWidget: Text(
+                        'Sınav Tarihi',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 10,
+                        ),
+                      ),
+                      axisNameSize: 20,
                       sideTitles: SideTitles(
                         showTitles: true,
+                        reservedSize: 42,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
                           if (index >= 0 && index < displayResults.length) {
+                            final result = displayResults[index];
+                            // odaIsmi'den tarih çıkar: "Hafta 3 - 2026" -> "H3"
+                            final odaIsmi = result['odaIsmi'] as String? ?? '';
+                            String shortLabel = 'H${index + 1}';
+
+                            // completedAt veya odaBaslangic'tan tarih al
+                            final completedAt =
+                                result['completedAt'] as String?;
+                            final odaBaslangic =
+                                result['odaBaslangic'] as String?;
+                            String dateStr = '';
+
+                            try {
+                              final dateSource = completedAt ?? odaBaslangic;
+                              if (dateSource != null) {
+                                final date = DateTime.parse(dateSource);
+                                dateStr = '${date.day}/${date.month}';
+                              }
+                            } catch (_) {}
+
+                            // Hafta numarasını çıkar
+                            final haftaMatch = RegExp(
+                              r'Hafta\s*(\d+)',
+                            ).firstMatch(odaIsmi);
+                            if (haftaMatch != null) {
+                              shortLabel = 'H${haftaMatch.group(1)}';
+                            }
+
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 11,
-                                ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    shortLabel,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (dateStr.isNotEmpty)
+                                    Text(
+                                      dateStr,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        fontSize: 9,
+                                      ),
+                                    ),
+                                ],
                               ),
                             );
                           }
@@ -2078,15 +2127,31 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
                       ),
                     ),
                     leftTitles: AxisTitles(
+                      axisNameWidget: Text(
+                        'Puan',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 10,
+                        ),
+                      ),
+                      axisNameSize: 16,
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 40,
+                        reservedSize: 45,
+                        // Sadece gerçek puan değerlerini göster
                         getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 11,
+                          // İlk ve son değerleri atla (min/max label'ları)
+                          if (value == meta.min || value == meta.max) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Text(
+                              value.toInt().toString(),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 10,
+                              ),
                             ),
                           );
                         },
@@ -2100,60 +2165,90 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  minY: 0,
-                  maxY: dynamicMaxY,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: displayResults.asMap().entries.map((entry) {
-                        final puan = (entry.value['puan'] as int?) ?? 0;
-                        final realY = puan.toDouble();
-                        // Animasyon: 0'dan başla -> maxY'e çık -> gerçek değere in
-                        final animatedY =
-                            realY + (dynamicMaxY - realY) * animationValue;
-                        return FlSpot(entry.key.toDouble(), animatedY);
-                      }).toList(),
-                      isCurved: true,
-                      gradient: const LinearGradient(
-                        colors: [_primaryGreen, _secondaryGreen],
-                      ),
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) {
-                          return FlDotCirclePainter(
-                            radius: 5,
-                            color: _secondaryGreen,
-                            strokeWidth: 2,
-                            strokeColor: Colors.white,
-                          );
-                        },
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            _primaryGreen.withValues(alpha: 0.3),
-                            _primaryGreen.withValues(alpha: 0.0),
-                          ],
+                  barGroups: displayResults.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final puan = (entry.value['puan'] as int?) ?? 0;
+
+                    // Animasyon: 0'dan gerçek değere yüksel
+                    // Her bar için küçük bir gecikme ekle (cascade effect)
+                    final delayFactor = index * 0.08;
+                    final adjustedProgress =
+                        ((animationValue - delayFactor) / (1 - delayFactor))
+                            .clamp(0.0, 1.0);
+                    final animatedPuan = puan * adjustedProgress;
+
+                    // Puana göre renk belirle
+                    Color barColor;
+                    if (puan >= 400) {
+                      barColor = const Color(0xFF4CAF50); // Yeşil - Çok iyi
+                    } else if (puan >= 300) {
+                      barColor = const Color(0xFF8BC34A); // Açık yeşil - İyi
+                    } else if (puan >= 200) {
+                      barColor = const Color(0xFFFFC107); // Sarı - Orta
+                    } else {
+                      barColor = const Color(
+                        0xFFFF9800,
+                      ); // Turuncu - Geliştirilmeli
+                    }
+
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: animatedPuan,
+                          width: barWidth,
+                          color: barColor,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(6),
+                          ),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: dynamicMaxY,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          final result = displayResults[spot.spotIndex];
-                          final odaIsmi = result['odaIsmi'] as String? ?? '';
-                          final actualPuan = (result['puan'] as int?) ?? 0;
-                          return LineTooltipItem(
-                            '$odaIsmi\n$actualPuan puan',
-                            const TextStyle(color: Colors.white, fontSize: 12),
-                          );
-                        }).toList();
+                      ],
+                      showingTooltipIndicators: [],
+                    );
+                  }).toList(),
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipRoundedRadius: 8,
+                      tooltipPadding: const EdgeInsets.all(8),
+                      getTooltipColor: (_) => const Color(0xFF2D2D44),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final result = displayResults[groupIndex];
+                        final odaIsmi = result['odaIsmi'] as String? ?? '';
+                        final actualPuan = (result['puan'] as int?) ?? 0;
+                        final dogru = result['dogru'] as int? ?? 0;
+                        final yanlis = result['yanlis'] as int? ?? 0;
+
+                        return BarTooltipItem(
+                          '$odaIsmi\n',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '$actualPuan puan\n',
+                              style: TextStyle(
+                                color: _secondaryGreen,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '✓$dogru  ✗$yanlis',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        );
                       },
                     ),
                   ),

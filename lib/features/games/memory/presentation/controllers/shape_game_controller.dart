@@ -19,22 +19,14 @@ class ShapeGameController extends StateNotifier<ShapeGameState> {
   void startGame() {
     _flipBackTimer?.cancel();
 
-    // 5 farklı şekil, her birinden 2 adet = 10 kart
+    // 10 farklı şekil, her birinden 2 adet = 20 kart
     final shapes = ShapeType.schoolShapes;
     final cardPairs = <ShapeCard>[];
 
     // Her şekilden 2 kart oluştur
     for (int i = 0; i < shapes.length; i++) {
-      cardPairs.add(ShapeCard(
-        id: i * 2,
-        shape: shapes[i],
-        pairId: i,
-      ));
-      cardPairs.add(ShapeCard(
-        id: i * 2 + 1,
-        shape: shapes[i],
-        pairId: i,
-      ));
+      cardPairs.add(ShapeCard(id: i * 2, shape: shapes[i], pairId: i));
+      cardPairs.add(ShapeCard(id: i * 2 + 1, shape: shapes[i], pairId: i));
     }
 
     // Kartları karıştır
@@ -96,10 +88,16 @@ class ShapeGameController extends StateNotifier<ShapeGameState> {
 
   /// Eşleşme kontrolü
   void _checkMatch() {
-    if (state.firstFlippedCardId == null || state.secondFlippedCardId == null) return;
+    if (state.firstFlippedCardId == null || state.secondFlippedCardId == null) {
+      return;
+    }
 
-    final firstCard = state.cards.firstWhere((c) => c.id == state.firstFlippedCardId);
-    final secondCard = state.cards.firstWhere((c) => c.id == state.secondFlippedCardId);
+    final firstCard = state.cards.firstWhere(
+      (c) => c.id == state.firstFlippedCardId,
+    );
+    final secondCard = state.cards.firstWhere(
+      (c) => c.id == state.secondFlippedCardId,
+    );
 
     if (firstCard.pairId == secondCard.pairId) {
       // DOĞRU EŞLEŞMEǃ
@@ -121,8 +119,8 @@ class ShapeGameController extends StateNotifier<ShapeGameState> {
 
     final newMatches = state.matches + 1;
 
-    // Oyun bitti mi?
-    if (newMatches >= 5) {
+    // Oyun bitti mi? (10 eşleşme = tamamlandı)
+    if (newMatches >= 10) {
       state = state.copyWith(
         cards: newCards,
         matches: newMatches,
@@ -144,9 +142,7 @@ class ShapeGameController extends StateNotifier<ShapeGameState> {
 
   /// Yanlış eşleşme
   void _handleWrongMatch() {
-    state = state.copyWith(
-      mistakes: state.mistakes + 1,
-    );
+    state = state.copyWith(mistakes: state.mistakes + 1);
 
     // 1 saniye bekle, sonra kartları kapat
     _flipBackTimer?.cancel();
@@ -154,7 +150,8 @@ class ShapeGameController extends StateNotifier<ShapeGameState> {
       if (!mounted) return;
 
       final newCards = state.cards.map((c) {
-        if (c.id == state.firstFlippedCardId || c.id == state.secondFlippedCardId) {
+        if (c.id == state.firstFlippedCardId ||
+            c.id == state.secondFlippedCardId) {
           return c.copyWith(isFlipped: false);
         }
         return c;

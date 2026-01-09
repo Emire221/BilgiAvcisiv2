@@ -503,8 +503,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
   Widget _buildCounterOrScore() {
     // Sonuç varsa ve sonuçlar açıklandıysa puan göster
     // NOT: tamampiSonucBekliyor durumunda puan GÖSTERİLMEZ - kullanıcı tıklayarak içeri girmeli
-    if (_currentResult != null &&
-        _status == ExamCardStatus.sonuclarAciklandi) {
+    if (_currentResult != null && _status == ExamCardStatus.sonuclarAciklandi) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(

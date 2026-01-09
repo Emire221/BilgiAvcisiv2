@@ -37,7 +37,7 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 15,
+      version: 18,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -195,6 +195,8 @@ class DatabaseHelper implements IDatabaseHelper {
         description TEXT,
         totalUser INTEGER,
         turkeyAverages TEXT,
+        city INTEGER,
+        district INTEGER,
         questions TEXT
       )
     ''');
@@ -218,6 +220,12 @@ class DatabaseHelper implements IDatabaseHelper {
         puan INTEGER,
         siralama INTEGER,
         toplamKatilimci INTEGER,
+        ilSiralama INTEGER,
+        ilToplamKatilimci INTEGER,
+        ilceSiralama INTEGER,
+        ilceToplamKatilimci INTEGER,
+        userCity TEXT,
+        userDistrict TEXT,
         completedAt TEXT,
         resultViewed INTEGER DEFAULT 0
       )
@@ -494,6 +502,55 @@ class DatabaseHelper implements IDatabaseHelper {
       try {
         await db.execute(
           'ALTER TABLE WeeklyExams ADD COLUMN turkeyAverages TEXT',
+        );
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
+    }
+
+    if (oldVersion < 16) {
+      // WeeklyExamResults tablosuna il/ilçe sıralama kolonları ekle
+      final columns = [
+        'ilSiralama INTEGER',
+        'ilToplamKatilimci INTEGER',
+        'ilceSiralama INTEGER',
+        'ilceToplamKatilimci INTEGER',
+      ];
+      for (final column in columns) {
+        try {
+          await db.execute('ALTER TABLE WeeklyExamResults ADD COLUMN $column');
+        } catch (e) {
+          // Kolon zaten mevcutsa hata alınır, görmezden gel
+        }
+      }
+    }
+
+    if (oldVersion < 17) {
+      // WeeklyExams tablosuna city ve district kolonları ekle
+      try {
+        await db.execute('ALTER TABLE WeeklyExams ADD COLUMN city INTEGER');
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
+      try {
+        await db.execute('ALTER TABLE WeeklyExams ADD COLUMN district INTEGER');
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
+    }
+
+    if (oldVersion < 18) {
+      // WeeklyExamResults tablosuna userCity ve userDistrict kolonları ekle
+      try {
+        await db.execute(
+          'ALTER TABLE WeeklyExamResults ADD COLUMN userCity TEXT',
+        );
+      } catch (e) {
+        // Kolon zaten mevcutsa hata alınır, görmezden gel
+      }
+      try {
+        await db.execute(
+          'ALTER TABLE WeeklyExamResults ADD COLUMN userDistrict TEXT',
         );
       } catch (e) {
         // Kolon zaten mevcutsa hata alınır, görmezden gel

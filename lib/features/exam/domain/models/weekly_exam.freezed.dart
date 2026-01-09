@@ -26,7 +26,11 @@ mixin _$WeeklyExam {
   List<WeeklyExamQuestion> get questions => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   int? get totalUser =>
-      throw _privateConstructorUsedError; // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+      throw _privateConstructorUsedError; // Sınava giren toplam kullanıcı sayısı (Türkiye geneli)
+  int? get cityUser =>
+      throw _privateConstructorUsedError; // Kullanıcının ilindeki katılımcı sayısı
+  int? get districtUser =>
+      throw _privateConstructorUsedError; // Kullanıcının ilçesindeki katılımcı sayısı
   Map<String, double>? get turkeyAverages => throw _privateConstructorUsedError;
 
   /// Create a copy of WeeklyExam
@@ -51,6 +55,8 @@ abstract class $WeeklyExamCopyWith<$Res> {
     List<WeeklyExamQuestion> questions,
     String? description,
     int? totalUser,
+    int? cityUser,
+    int? districtUser,
     Map<String, double>? turkeyAverages,
   });
 }
@@ -77,6 +83,8 @@ class _$WeeklyExamCopyWithImpl<$Res, $Val extends WeeklyExam>
     Object? questions = null,
     Object? description = freezed,
     Object? totalUser = freezed,
+    Object? cityUser = freezed,
+    Object? districtUser = freezed,
     Object? turkeyAverages = freezed,
   }) {
     return _then(
@@ -109,6 +117,14 @@ class _$WeeklyExamCopyWithImpl<$Res, $Val extends WeeklyExam>
                 ? _value.totalUser
                 : totalUser // ignore: cast_nullable_to_non_nullable
                       as int?,
+            cityUser: freezed == cityUser
+                ? _value.cityUser
+                : cityUser // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            districtUser: freezed == districtUser
+                ? _value.districtUser
+                : districtUser // ignore: cast_nullable_to_non_nullable
+                      as int?,
             turkeyAverages: freezed == turkeyAverages
                 ? _value.turkeyAverages
                 : turkeyAverages // ignore: cast_nullable_to_non_nullable
@@ -136,6 +152,8 @@ abstract class _$$WeeklyExamImplCopyWith<$Res>
     List<WeeklyExamQuestion> questions,
     String? description,
     int? totalUser,
+    int? cityUser,
+    int? districtUser,
     Map<String, double>? turkeyAverages,
   });
 }
@@ -161,6 +179,8 @@ class __$$WeeklyExamImplCopyWithImpl<$Res>
     Object? questions = null,
     Object? description = freezed,
     Object? totalUser = freezed,
+    Object? cityUser = freezed,
+    Object? districtUser = freezed,
     Object? turkeyAverages = freezed,
   }) {
     return _then(
@@ -193,6 +213,14 @@ class __$$WeeklyExamImplCopyWithImpl<$Res>
             ? _value.totalUser
             : totalUser // ignore: cast_nullable_to_non_nullable
                   as int?,
+        cityUser: freezed == cityUser
+            ? _value.cityUser
+            : cityUser // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        districtUser: freezed == districtUser
+            ? _value.districtUser
+            : districtUser // ignore: cast_nullable_to_non_nullable
+                  as int?,
         turkeyAverages: freezed == turkeyAverages
             ? _value._turkeyAverages
             : turkeyAverages // ignore: cast_nullable_to_non_nullable
@@ -213,6 +241,8 @@ class _$WeeklyExamImpl implements _WeeklyExam {
     required final List<WeeklyExamQuestion> questions,
     this.description,
     this.totalUser,
+    this.cityUser,
+    this.districtUser,
     final Map<String, double>? turkeyAverages,
   }) : _questions = questions,
        _turkeyAverages = turkeyAverages;
@@ -241,9 +271,15 @@ class _$WeeklyExamImpl implements _WeeklyExam {
   final String? description;
   @override
   final int? totalUser;
-  // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  // Sınava giren toplam kullanıcı sayısı (Türkiye geneli)
+  @override
+  final int? cityUser;
+  // Kullanıcının ilindeki katılımcı sayısı
+  @override
+  final int? districtUser;
+  // Kullanıcının ilçesindeki katılımcı sayısı
   final Map<String, double>? _turkeyAverages;
-  // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  // Kullanıcının ilçesindeki katılımcı sayısı
   @override
   Map<String, double>? get turkeyAverages {
     final value = _turkeyAverages;
@@ -255,7 +291,7 @@ class _$WeeklyExamImpl implements _WeeklyExam {
 
   @override
   String toString() {
-    return 'WeeklyExam(examId: $examId, title: $title, weekStart: $weekStart, duration: $duration, questions: $questions, description: $description, totalUser: $totalUser, turkeyAverages: $turkeyAverages)';
+    return 'WeeklyExam(examId: $examId, title: $title, weekStart: $weekStart, duration: $duration, questions: $questions, description: $description, totalUser: $totalUser, cityUser: $cityUser, districtUser: $districtUser, turkeyAverages: $turkeyAverages)';
   }
 
   @override
@@ -277,6 +313,10 @@ class _$WeeklyExamImpl implements _WeeklyExam {
                 other.description == description) &&
             (identical(other.totalUser, totalUser) ||
                 other.totalUser == totalUser) &&
+            (identical(other.cityUser, cityUser) ||
+                other.cityUser == cityUser) &&
+            (identical(other.districtUser, districtUser) ||
+                other.districtUser == districtUser) &&
             const DeepCollectionEquality().equals(
               other._turkeyAverages,
               _turkeyAverages,
@@ -293,6 +333,8 @@ class _$WeeklyExamImpl implements _WeeklyExam {
     const DeepCollectionEquality().hash(_questions),
     description,
     totalUser,
+    cityUser,
+    districtUser,
     const DeepCollectionEquality().hash(_turkeyAverages),
   );
 
@@ -314,6 +356,8 @@ abstract class _WeeklyExam implements WeeklyExam {
     required final List<WeeklyExamQuestion> questions,
     final String? description,
     final int? totalUser,
+    final int? cityUser,
+    final int? districtUser,
     final Map<String, double>? turkeyAverages,
   }) = _$WeeklyExamImpl;
 
@@ -331,7 +375,11 @@ abstract class _WeeklyExam implements WeeklyExam {
   @override
   String? get description;
   @override
-  int? get totalUser; // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+  int? get totalUser; // Sınava giren toplam kullanıcı sayısı (Türkiye geneli)
+  @override
+  int? get cityUser; // Kullanıcının ilindeki katılımcı sayısı
+  @override
+  int? get districtUser; // Kullanıcının ilçesindeki katılımcı sayısı
   @override
   Map<String, double>? get turkeyAverages;
 
@@ -712,7 +760,19 @@ mixin _$WeeklyExamResult {
   int? get bos => throw _privateConstructorUsedError;
   int? get puan => throw _privateConstructorUsedError;
   int? get siralama => throw _privateConstructorUsedError; // Türkiye sıralaması
-  int? get toplamKatilimci => throw _privateConstructorUsedError;
+  int? get toplamKatilimci =>
+      throw _privateConstructorUsedError; // İl/İlçe sıralamaları
+  int? get ilSiralama => throw _privateConstructorUsedError; // İl içi sıralama
+  int? get ilToplamKatilimci =>
+      throw _privateConstructorUsedError; // İldeki toplam katılımcı
+  int? get ilceSiralama =>
+      throw _privateConstructorUsedError; // İlçe içi sıralama
+  int? get ilceToplamKatilimci =>
+      throw _privateConstructorUsedError; // İlçedeki toplam katılımcı
+  String? get userCity =>
+      throw _privateConstructorUsedError; // Kullanıcının ili
+  String? get userDistrict =>
+      throw _privateConstructorUsedError; // Kullanıcının ilçesi
   DateTime? get completedAt => throw _privateConstructorUsedError;
   bool get resultViewed => throw _privateConstructorUsedError;
 
@@ -750,6 +810,12 @@ abstract class $WeeklyExamResultCopyWith<$Res> {
     int? puan,
     int? siralama,
     int? toplamKatilimci,
+    int? ilSiralama,
+    int? ilToplamKatilimci,
+    int? ilceSiralama,
+    int? ilceToplamKatilimci,
+    String? userCity,
+    String? userDistrict,
     DateTime? completedAt,
     bool resultViewed,
   });
@@ -786,6 +852,12 @@ class _$WeeklyExamResultCopyWithImpl<$Res, $Val extends WeeklyExamResult>
     Object? puan = freezed,
     Object? siralama = freezed,
     Object? toplamKatilimci = freezed,
+    Object? ilSiralama = freezed,
+    Object? ilToplamKatilimci = freezed,
+    Object? ilceSiralama = freezed,
+    Object? ilceToplamKatilimci = freezed,
+    Object? userCity = freezed,
+    Object? userDistrict = freezed,
     Object? completedAt = freezed,
     Object? resultViewed = null,
   }) {
@@ -855,6 +927,30 @@ class _$WeeklyExamResultCopyWithImpl<$Res, $Val extends WeeklyExamResult>
                 ? _value.toplamKatilimci
                 : toplamKatilimci // ignore: cast_nullable_to_non_nullable
                       as int?,
+            ilSiralama: freezed == ilSiralama
+                ? _value.ilSiralama
+                : ilSiralama // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            ilToplamKatilimci: freezed == ilToplamKatilimci
+                ? _value.ilToplamKatilimci
+                : ilToplamKatilimci // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            ilceSiralama: freezed == ilceSiralama
+                ? _value.ilceSiralama
+                : ilceSiralama // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            ilceToplamKatilimci: freezed == ilceToplamKatilimci
+                ? _value.ilceToplamKatilimci
+                : ilceToplamKatilimci // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            userCity: freezed == userCity
+                ? _value.userCity
+                : userCity // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            userDistrict: freezed == userDistrict
+                ? _value.userDistrict
+                : userDistrict // ignore: cast_nullable_to_non_nullable
+                      as String?,
             completedAt: freezed == completedAt
                 ? _value.completedAt
                 : completedAt // ignore: cast_nullable_to_non_nullable
@@ -895,6 +991,12 @@ abstract class _$$WeeklyExamResultImplCopyWith<$Res>
     int? puan,
     int? siralama,
     int? toplamKatilimci,
+    int? ilSiralama,
+    int? ilToplamKatilimci,
+    int? ilceSiralama,
+    int? ilceToplamKatilimci,
+    String? userCity,
+    String? userDistrict,
     DateTime? completedAt,
     bool resultViewed,
   });
@@ -930,6 +1032,12 @@ class __$$WeeklyExamResultImplCopyWithImpl<$Res>
     Object? puan = freezed,
     Object? siralama = freezed,
     Object? toplamKatilimci = freezed,
+    Object? ilSiralama = freezed,
+    Object? ilToplamKatilimci = freezed,
+    Object? ilceSiralama = freezed,
+    Object? ilceToplamKatilimci = freezed,
+    Object? userCity = freezed,
+    Object? userDistrict = freezed,
     Object? completedAt = freezed,
     Object? resultViewed = null,
   }) {
@@ -999,6 +1107,30 @@ class __$$WeeklyExamResultImplCopyWithImpl<$Res>
             ? _value.toplamKatilimci
             : toplamKatilimci // ignore: cast_nullable_to_non_nullable
                   as int?,
+        ilSiralama: freezed == ilSiralama
+            ? _value.ilSiralama
+            : ilSiralama // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        ilToplamKatilimci: freezed == ilToplamKatilimci
+            ? _value.ilToplamKatilimci
+            : ilToplamKatilimci // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        ilceSiralama: freezed == ilceSiralama
+            ? _value.ilceSiralama
+            : ilceSiralama // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        ilceToplamKatilimci: freezed == ilceToplamKatilimci
+            ? _value.ilceToplamKatilimci
+            : ilceToplamKatilimci // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        userCity: freezed == userCity
+            ? _value.userCity
+            : userCity // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        userDistrict: freezed == userDistrict
+            ? _value.userDistrict
+            : userDistrict // ignore: cast_nullable_to_non_nullable
+                  as String?,
         completedAt: freezed == completedAt
             ? _value.completedAt
             : completedAt // ignore: cast_nullable_to_non_nullable
@@ -1032,6 +1164,12 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
     this.puan,
     this.siralama,
     this.toplamKatilimci,
+    this.ilSiralama,
+    this.ilToplamKatilimci,
+    this.ilceSiralama,
+    this.ilceToplamKatilimci,
+    this.userCity,
+    this.userDistrict,
     this.completedAt,
     this.resultViewed = false,
   }) : _cevaplar = cevaplar;
@@ -1085,6 +1223,25 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
   // Türkiye sıralaması
   @override
   final int? toplamKatilimci;
+  // İl/İlçe sıralamaları
+  @override
+  final int? ilSiralama;
+  // İl içi sıralama
+  @override
+  final int? ilToplamKatilimci;
+  // İldeki toplam katılımcı
+  @override
+  final int? ilceSiralama;
+  // İlçe içi sıralama
+  @override
+  final int? ilceToplamKatilimci;
+  // İlçedeki toplam katılımcı
+  @override
+  final String? userCity;
+  // Kullanıcının ili
+  @override
+  final String? userDistrict;
+  // Kullanıcının ilçesi
   @override
   final DateTime? completedAt;
   @override
@@ -1093,7 +1250,7 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
 
   @override
   String toString() {
-    return 'WeeklyExamResult(id: $id, examId: $examId, odaId: $odaId, odaIsmi: $odaIsmi, odaBaslangic: $odaBaslangic, odaBitis: $odaBitis, sonucTarihi: $sonucTarihi, odaDurumu: $odaDurumu, kullaniciId: $kullaniciId, cevaplar: $cevaplar, dogru: $dogru, yanlis: $yanlis, bos: $bos, puan: $puan, siralama: $siralama, toplamKatilimci: $toplamKatilimci, completedAt: $completedAt, resultViewed: $resultViewed)';
+    return 'WeeklyExamResult(id: $id, examId: $examId, odaId: $odaId, odaIsmi: $odaIsmi, odaBaslangic: $odaBaslangic, odaBitis: $odaBitis, sonucTarihi: $sonucTarihi, odaDurumu: $odaDurumu, kullaniciId: $kullaniciId, cevaplar: $cevaplar, dogru: $dogru, yanlis: $yanlis, bos: $bos, puan: $puan, siralama: $siralama, toplamKatilimci: $toplamKatilimci, ilSiralama: $ilSiralama, ilToplamKatilimci: $ilToplamKatilimci, ilceSiralama: $ilceSiralama, ilceToplamKatilimci: $ilceToplamKatilimci, userCity: $userCity, userDistrict: $userDistrict, completedAt: $completedAt, resultViewed: $resultViewed)';
   }
 
   @override
@@ -1124,6 +1281,18 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
                 other.siralama == siralama) &&
             (identical(other.toplamKatilimci, toplamKatilimci) ||
                 other.toplamKatilimci == toplamKatilimci) &&
+            (identical(other.ilSiralama, ilSiralama) ||
+                other.ilSiralama == ilSiralama) &&
+            (identical(other.ilToplamKatilimci, ilToplamKatilimci) ||
+                other.ilToplamKatilimci == ilToplamKatilimci) &&
+            (identical(other.ilceSiralama, ilceSiralama) ||
+                other.ilceSiralama == ilceSiralama) &&
+            (identical(other.ilceToplamKatilimci, ilceToplamKatilimci) ||
+                other.ilceToplamKatilimci == ilceToplamKatilimci) &&
+            (identical(other.userCity, userCity) ||
+                other.userCity == userCity) &&
+            (identical(other.userDistrict, userDistrict) ||
+                other.userDistrict == userDistrict) &&
             (identical(other.completedAt, completedAt) ||
                 other.completedAt == completedAt) &&
             (identical(other.resultViewed, resultViewed) ||
@@ -1132,7 +1301,7 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     examId,
@@ -1150,9 +1319,15 @@ class _$WeeklyExamResultImpl implements _WeeklyExamResult {
     puan,
     siralama,
     toplamKatilimci,
+    ilSiralama,
+    ilToplamKatilimci,
+    ilceSiralama,
+    ilceToplamKatilimci,
+    userCity,
+    userDistrict,
     completedAt,
     resultViewed,
-  );
+  ]);
 
   /// Create a copy of WeeklyExamResult
   /// with the given fields replaced by the non-null parameter values.
@@ -1189,6 +1364,12 @@ abstract class _WeeklyExamResult implements WeeklyExamResult {
     final int? puan,
     final int? siralama,
     final int? toplamKatilimci,
+    final int? ilSiralama,
+    final int? ilToplamKatilimci,
+    final int? ilceSiralama,
+    final int? ilceToplamKatilimci,
+    final String? userCity,
+    final String? userDistrict,
     final DateTime? completedAt,
     final bool resultViewed,
   }) = _$WeeklyExamResultImpl;
@@ -1227,7 +1408,19 @@ abstract class _WeeklyExamResult implements WeeklyExamResult {
   @override
   int? get siralama; // Türkiye sıralaması
   @override
-  int? get toplamKatilimci;
+  int? get toplamKatilimci; // İl/İlçe sıralamaları
+  @override
+  int? get ilSiralama; // İl içi sıralama
+  @override
+  int? get ilToplamKatilimci; // İldeki toplam katılımcı
+  @override
+  int? get ilceSiralama; // İlçe içi sıralama
+  @override
+  int? get ilceToplamKatilimci; // İlçedeki toplam katılımcı
+  @override
+  String? get userCity; // Kullanıcının ili
+  @override
+  String? get userDistrict; // Kullanıcının ilçesi
   @override
   DateTime? get completedAt;
   @override

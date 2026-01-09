@@ -28,9 +28,11 @@ class WeeklyExam with _$WeeklyExam {
     required int duration, // Dakika cinsinden
     required List<WeeklyExamQuestion> questions,
     String? description,
-    int? totalUser, // Sınava giren toplam kullanıcı sayısı (ör: 5000)
+    int? totalUser, // Sınava giren toplam kullanıcı sayısı (Türkiye geneli)
+    int? cityUser, // Kullanıcının ilindeki katılımcı sayısı
+    int? districtUser, // Kullanıcının ilçesindeki katılımcı sayısı
     Map<String, double>?
-    turkeyAverages, // Türkiye geneli ders bazlı ortalama netler (ders adı -> net)
+    turkeyAverages, // Türkiye geneli ders bazlı ortalama doğru sayıları
   }) = _WeeklyExam;
 
   /// Özel fromJson - weeklyExamId -> examId dönüşümü yapar
@@ -48,6 +50,8 @@ class WeeklyExam with _$WeeklyExam {
           .toList(),
       description: json['description'] as String?,
       totalUser: json['totalUser'] as int?,
+      cityUser: json['city'] as int?,
+      districtUser: json['district'] as int?,
       turkeyAverages: json['turkeyAverages'] != null
           ? (json['turkeyAverages'] as Map<String, dynamic>).map(
               (key, value) => MapEntry(key, (value as num).toDouble()),
@@ -96,6 +100,13 @@ class WeeklyExamResult with _$WeeklyExamResult {
     int? puan,
     int? siralama, // Türkiye sıralaması
     int? toplamKatilimci,
+    // İl/İlçe sıralamaları
+    int? ilSiralama, // İl içi sıralama
+    int? ilToplamKatilimci, // İldeki toplam katılımcı
+    int? ilceSiralama, // İlçe içi sıralama
+    int? ilceToplamKatilimci, // İlçedeki toplam katılımcı
+    String? userCity, // Kullanıcının ili
+    String? userDistrict, // Kullanıcının ilçesi
     DateTime? completedAt,
     @Default(false) bool resultViewed, // Sonuç görüntülendi mi?
   }) = _WeeklyExamResult;

@@ -15,7 +15,7 @@ class ShapeType {
     required this.color,
   });
 
-  /// Okul figürleri - 5 farklı şekil
+  /// Okul figürleri - 10 farklı şekil
   static const List<ShapeType> schoolShapes = [
     ShapeType(
       id: 'ruler',
@@ -47,6 +47,36 @@ class ShapeType {
       icon: FontAwesomeIcons.palette,
       color: Color(0xFFE91E63),
     ),
+    ShapeType(
+      id: 'globe',
+      name: 'Dünya',
+      icon: FontAwesomeIcons.earthAmericas,
+      color: Color(0xFF00BCD4),
+    ),
+    ShapeType(
+      id: 'microscope',
+      name: 'Mikroskop',
+      icon: FontAwesomeIcons.microscope,
+      color: Color(0xFF795548),
+    ),
+    ShapeType(
+      id: 'flask',
+      name: 'Deney Tüpü',
+      icon: FontAwesomeIcons.flask,
+      color: Color(0xFF607D8B),
+    ),
+    ShapeType(
+      id: 'music',
+      name: 'Müzik',
+      icon: FontAwesomeIcons.music,
+      color: Color(0xFFFF5722),
+    ),
+    ShapeType(
+      id: 'graduation',
+      name: 'Mezuniyet',
+      icon: FontAwesomeIcons.graduationCap,
+      color: Color(0xFF3F51B5),
+    ),
   ];
 
   @override
@@ -59,11 +89,11 @@ class ShapeType {
 
 /// Şekil kartı modeli
 class ShapeCard {
-  final int id;              // Kartın pozisyon ID'si (0-9)
-  final ShapeType shape;     // Kartın şekli
-  final int pairId;          // Eş ID'si (0-4 arası, her şekilden 2 adet)
-  final bool isFlipped;      // Kart açık mı?
-  final bool isMatched;      // Doğru eşleşti mi?
+  final int id; // Kartın pozisyon ID'si (0-19)
+  final ShapeType shape; // Kartın şekli
+  final int pairId; // Eş ID'si (0-9 arası, her şekilden 2 adet)
+  final bool isFlipped; // Kart açık mı?
+  final bool isMatched; // Doğru eşleşti mi?
 
   const ShapeCard({
     required this.id,

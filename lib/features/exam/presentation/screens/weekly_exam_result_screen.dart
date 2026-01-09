@@ -15,7 +15,9 @@ import 'package:path_provider/path_provider.dart';
 import '../../domain/models/weekly_exam.dart';
 import '../../data/weekly_exam_service.dart';
 import '../../../../services/database_helper.dart';
-import '../../../../screens/flashcard_set_selection_screen.dart';
+import '../../../../services/local_preferences_service.dart';
+import '../../../../screens/test_list_screen.dart';
+import '../../../duel/presentation/screens/duel_game_selection_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// 🎯 BİLGİ AVCISI - EXAM RESULT REPORT SCREEN
@@ -41,10 +43,15 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   // ─────────────────────────────────────────────────────────────────────────
   final WeeklyExamService _examService = WeeklyExamService();
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final LocalPreferencesService _prefsService = LocalPreferencesService();
   final GlobalKey _reportKey = GlobalKey(); // Export için
 
   // Dinamik konu isimleri - SQLite'dan yüklenecek
   Map<String, String> _topicNames = {};
+
+  // Kullanıcı il/ilçe bilgileri - profil kurulumundan
+  String _userCity = '';
+  String _userDistrict = '';
 
   // ─────────────────────────────────────────────────────────────────────────
   // ANİMASYON KONTROLCÜLERİ
@@ -91,6 +98,29 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   static const Color _darkBg = Color(0xFF1A1A2E);
   static const Color _darkCard = Color(0xFF16213E);
   static const Color _darkText = Color(0xFFE8E8E8);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // YARDIMCI FONKSİYONLAR
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Sayıyı küsüratlı veya tam sayı olarak formatlar
+  /// Eğer küsürat varsa 2 basamak gösterir, yoksa tam sayı gösterir
+  static String _formatDecimal(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    } else {
+      // Küsüratı 2 basamakla göster, sondaki sıfırları temizle
+      final formatted = value.toStringAsFixed(2);
+      // Sondaki gereksiz sıfırları temizle (örn: 3.50 → 3.5, 3.00 → 3)
+      if (formatted.endsWith('0')) {
+        final trimmed = formatted.replaceAll(RegExp(r'0+$'), '');
+        return trimmed.endsWith('.')
+            ? trimmed.substring(0, trimmed.length - 1)
+            : trimmed;
+      }
+      return formatted;
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // DERS VERİLERİ (Simüle - Gerçek veriler modelden gelecek)
@@ -187,6 +217,9 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     // Konu isimlerini veritabanından yükle
     _loadTopicNames();
 
+    // Kullanıcı il/ilçe bilgilerini profil kurulumundan yükle
+    _loadUserLocation();
+
     // Sonuç görüntülendi olarak işaretle
     if (widget.result != null) {
       _examService.markResultAsViewed(widget.result!.examId);
@@ -246,6 +279,24 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
           _topicNames = {};
         });
       }
+    }
+  }
+
+  /// Kullanıcı il/ilçe bilgilerini profil kurulumundan yükle
+  Future<void> _loadUserLocation() async {
+    try {
+      final city = await _prefsService.getUserCity();
+      final district = await _prefsService.getUserDistrict();
+
+      if (mounted) {
+        setState(() {
+          _userCity = city ?? '';
+          _userDistrict = district ?? '';
+        });
+      }
+    } catch (e) {
+      // Hata durumunda boş bırak
+      debugPrint('❌ Kullanıcı konum bilgisi yüklenemedi: $e');
     }
   }
 
@@ -940,6 +991,13 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
         key: _reportKey,
         child: Column(
           children: [
+            // ═══ BİLGİLENDİRİCİ KART ═══
+            _buildInfoCard(
+              isDarkMode,
+            ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2),
+
+            const SizedBox(height: 16),
+
             // ═══ HERO AREA - Skor ve Sıralama ═══
             _buildHeroSection(
               isDarkMode,
@@ -1038,6 +1096,73 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // 📢 BİLGİLENDİRİCİ KART - Sıralama Tıklama İpucu
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildInfoCard(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _primaryBlue.withOpacity(0.15),
+            _secondaryOrange.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _primaryBlue.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _primaryBlue.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.touch_app, color: _primaryBlue, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '💡 Sıralama detaylarını görmek için',
+                  style: TextStyle(
+                    color: isDarkMode ? _darkText : Colors.grey[800],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Sıralama kartına dokun ve il, ilçe, Türkiye geneli sıralamalarını karşılaştır!',
+                  style: TextStyle(
+                    color: isDarkMode
+                        ? _darkText.withOpacity(0.7)
+                        : Colors.grey[600],
+                    fontSize: 12,
+                    height: 1.3,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            color: isDarkMode ? _darkText.withOpacity(0.4) : Colors.grey[400],
+            size: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // 1️⃣ HERO SECTION - Circular Progress + Sıralama Badge
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildHeroSection(bool isDarkMode) {
@@ -1046,10 +1171,11 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     final siralama = widget.result?.siralama;
     final toplamKatilimci = widget.result?.toplamKatilimci;
 
-    // Yüzdelik dilim hesapla
-    double percentile = 0;
+    // Top % hesapla (yüksek puan = düşük top %)
+    // Top %7 demek ilk %7'desin (iyi), Top %93 demek ilk %93'tesin (kötü)
+    double topPercent = 100;
     if (siralama != null && toplamKatilimci != null && toplamKatilimci > 0) {
-      percentile = ((toplamKatilimci - siralama) / toplamKatilimci * 100);
+      topPercent = (siralama / toplamKatilimci * 100);
     }
 
     return Row(
@@ -1061,13 +1187,439 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
 
         const SizedBox(width: 16),
 
-        // Sağ: Sıralama Kartı
+        // Sağ: Sıralama Kartı (tıklanabilir)
         Expanded(
-          child: _buildRankingCardCompact(
-            siralama,
-            toplamKatilimci,
-            percentile,
-            isDarkMode,
+          child: GestureDetector(
+            onTap: () => _showRankingDetailModal(isDarkMode),
+            child: _buildRankingCardCompact(
+              siralama,
+              toplamKatilimci,
+              topPercent,
+              isDarkMode,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 🏆 SIRALAMA DETAY MODAL - İl, İlçe, Türkiye Karşılaştırması
+  // ─────────────────────────────────────────────────────────────────────────
+  void _showRankingDetailModal(bool isDarkMode) {
+    final result = widget.result;
+    if (result == null) return;
+
+    final turkiyeSiralama = result.siralama ?? 0;
+    final turkiyeKatilimci = result.toplamKatilimci ?? 0;
+    final ilSiralama = result.ilSiralama ?? 0;
+    final ilKatilimci = result.ilToplamKatilimci ?? 0;
+    final ilceSiralama = result.ilceSiralama ?? 0;
+    final ilceKatilimci = result.ilceToplamKatilimci ?? 0;
+
+    // Kullanıcı il/ilçe bilgisi - profil kurulumundan (dinamik)
+    final userCity = _userCity.isNotEmpty
+        ? _userCity
+        : (result.userCity ?? 'Bilinmiyor');
+    final userDistrict = _userDistrict.isNotEmpty
+        ? _userDistrict
+        : (result.userDistrict ?? 'Bilinmiyor');
+
+    HapticFeedback.mediumImpact();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: BoxDecoration(
+          color: isDarkMode ? _darkBg : const Color(0xFF1A237E),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Başlık
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  const Icon(Icons.leaderboard, color: _goldBadge, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Sıralama Detayları',
+                    style: TextStyle(
+                      color: isDarkMode ? _darkText : Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Montserrat',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Scrollable içerik
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // İlçe Sıralaması
+                    _buildRankingDetailCard(
+                      icon: Icons.location_city,
+                      title: userDistrict,
+                      subtitle: 'İlçe Sıralaması',
+                      rank: ilceSiralama,
+                      total: ilceKatilimci,
+                      color: _successGreen,
+                      isDarkMode: isDarkMode,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // İl Sıralaması
+                    _buildRankingDetailCard(
+                      icon: Icons.map,
+                      title: userCity,
+                      subtitle: 'İl Sıralaması',
+                      rank: ilSiralama,
+                      total: ilKatilimci,
+                      color: _primaryBlue,
+                      isDarkMode: isDarkMode,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Türkiye Sıralaması
+                    _buildRankingDetailCard(
+                      icon: Icons.public,
+                      title: 'Türkiye Geneli',
+                      subtitle: 'Ulusal Sıralama',
+                      rank: turkiyeSiralama,
+                      total: turkiyeKatilimci,
+                      color: _goldBadge,
+                      isDarkMode: isDarkMode,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Karşılaştırma Grafiği
+                    _buildRankingComparisonChart(
+                      ilceSiralama: ilceSiralama,
+                      ilceKatilimci: ilceKatilimci,
+                      ilSiralama: ilSiralama,
+                      ilKatilimci: ilKatilimci,
+                      turkiyeSiralama: turkiyeSiralama,
+                      turkiyeKatilimci: turkiyeKatilimci,
+                      isDarkMode: isDarkMode,
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRankingDetailCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required int rank,
+    required int total,
+    required Color color,
+    required bool isDarkMode,
+  }) {
+    // Top % hesapla (yüksek puan = düşük top %)
+    // Top %7 demek ilk %7'desin (iyi), Top %93 demek ilk %93'tesin (kötü)
+    final topPercent = total > 0 ? (rank / total * 100) : 100.0;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$title: $rank / $total (Top ${_formatDecimal(topPercent)}%)',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: color,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDarkMode ? _darkCard : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            // İkon
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Bilgiler
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: isDarkMode ? _darkText : Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: isDarkMode
+                          ? _darkText.withOpacity(0.6)
+                          : Colors.white.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Sıralama
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$rank',
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Montserrat',
+                        ),
+                      ),
+                      TextSpan(
+                        text: '/$total',
+                        style: TextStyle(
+                          color: isDarkMode
+                              ? _darkText.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.6),
+                          fontSize: 14,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Top ${_formatDecimal(topPercent)}%',
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRankingComparisonChart({
+    required int ilceSiralama,
+    required int ilceKatilimci,
+    required int ilSiralama,
+    required int ilKatilimci,
+    required int turkiyeSiralama,
+    required int turkiyeKatilimci,
+    required bool isDarkMode,
+  }) {
+    // Grafik doluluk yüzdesi hesapla (Yüksek = daha iyi = daha dolu grafik)
+    // Top %7 demek 100 - 7 = %93 başarılı demek → grafik %93 dolu olmalı
+    final ilceFillPercent = ilceKatilimci > 0
+        ? ((ilceKatilimci - ilceSiralama) / ilceKatilimci * 100)
+        : 0.0;
+    final ilFillPercent = ilKatilimci > 0
+        ? ((ilKatilimci - ilSiralama) / ilKatilimci * 100)
+        : 0.0;
+    final turkiyeFillPercent = turkiyeKatilimci > 0
+        ? ((turkiyeKatilimci - turkiyeSiralama) / turkiyeKatilimci * 100)
+        : 0.0;
+
+    // Display yüzdesi (Top %X olarak gösterilecek gerçek yüzde)
+    final ilceDisplayPercent = ilceKatilimci > 0
+        ? (ilceSiralama / ilceKatilimci * 100)
+        : 0.0;
+    final ilDisplayPercent = ilKatilimci > 0
+        ? (ilSiralama / ilKatilimci * 100)
+        : 0.0;
+    final turkiyeDisplayPercent = turkiyeKatilimci > 0
+        ? (turkiyeSiralama / turkiyeKatilimci * 100)
+        : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? _darkCard : Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📊 Sıralama Karşılaştırması',
+            style: TextStyle(
+              color: isDarkMode ? _darkText : Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // İlçe bar
+          _buildComparisonBar(
+            label: 'İlçe',
+            fillPercentage: ilceFillPercent,
+            displayPercentage: ilceDisplayPercent,
+            color: _successGreen,
+            isDarkMode: isDarkMode,
+          ),
+          const SizedBox(height: 12),
+
+          // İl bar
+          _buildComparisonBar(
+            label: 'İl',
+            fillPercentage: ilFillPercent,
+            displayPercentage: ilDisplayPercent,
+            color: _primaryBlue,
+            isDarkMode: isDarkMode,
+          ),
+          const SizedBox(height: 12),
+
+          // Türkiye bar
+          _buildComparisonBar(
+            label: 'Türkiye',
+            fillPercentage: turkiyeFillPercent,
+            displayPercentage: turkiyeDisplayPercent,
+            color: _goldBadge,
+            isDarkMode: isDarkMode,
+          ),
+
+          const SizedBox(height: 8),
+          Text(
+            '* Dolu grafik = Daha iyi sıralama',
+            style: TextStyle(
+              color: isDarkMode
+                  ? _darkText.withOpacity(0.4)
+                  : Colors.white.withOpacity(0.5),
+              fontSize: 10,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonBar({
+    required String label,
+    required double fillPercentage,
+    required double displayPercentage,
+    required Color color,
+    required bool isDarkMode,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 60,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isDarkMode ? _darkText : Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Stack(
+            children: [
+              // Arka plan
+              Container(
+                height: 20,
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              // Dolgu (yüksek başarı = daha dolu = daha iyi)
+              FractionallySizedBox(
+                widthFactor: (fillPercentage / 100).clamp(0.05, 1.0),
+                child: Container(
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 65,
+          child: Text(
+            'Top ${_formatDecimal(displayPercentage)}%',
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -1134,7 +1686,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
             animation: _scoreAnimation,
             builder: (context, child) {
               return Text(
-                _scoreAnimation.value.toStringAsFixed(0),
+                _formatDecimal(_scoreAnimation.value),
                 style: TextStyle(
                   color: isDarkMode ? _darkText : Colors.white,
                   fontSize: 48,
@@ -1350,7 +1902,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Top ${percentile.toStringAsFixed(0)}%',
+              'Top ${_formatDecimal(percentile)}%',
               style: TextStyle(
                 color: _successGreen,
                 fontSize: 13,
@@ -1578,13 +2130,14 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     final performances = _subjectPerformances;
 
     // Türkiye ortalamasını JSON'dan al (ders adına göre), yoksa varsayılan
+    // Not: turkeyAverages artık doğru sayısını temsil ediyor
     final turkeyAverages = performances.map((p) {
       if (widget.exam.turkeyAverages != null &&
           widget.exam.turkeyAverages!.containsKey(p.name)) {
         return widget.exam.turkeyAverages![p.name]!;
       }
-      final net = p.correct - (p.wrong * 0.25);
-      return net * 0.7; // Varsayılan: kullanıcının %70'i kadar
+      // Varsayılan: kullanıcının doğru sayısının %70'i
+      return p.correct * 0.7;
     }).toList();
 
     return Container(
@@ -1650,13 +2203,13 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                     tooltipRoundedRadius: 8,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final perf = performances[groupIndex];
-                      final userNet = perf.correct - (perf.wrong * 0.25);
-                      final turkeyNet = turkeyAverages[groupIndex];
+                      final userCorrect = perf.correct;
+                      final turkeyCorrect = turkeyAverages[groupIndex];
 
                       // rodIndex 0 = kullanıcı, rodIndex 1 = Türkiye ortalaması
                       if (rodIndex == 0) {
                         return BarTooltipItem(
-                          '${perf.name}\nSenin Netin: ${userNet.toStringAsFixed(2)}',
+                          '${perf.name}\nSenin Doğrun: $userCorrect',
                           TextStyle(
                             color: isDarkMode ? _darkText : Colors.black87,
                             fontWeight: FontWeight.w500,
@@ -1665,7 +2218,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                         );
                       } else {
                         return BarTooltipItem(
-                          '${perf.name}\nTürkiye Ort: ${turkeyNet.toStringAsFixed(2)}',
+                          '${perf.name}\nTürkiye Ort: ${turkeyCorrect.toStringAsFixed(1)}',
                           TextStyle(
                             color: isDarkMode ? _darkText : Colors.black87,
                             fontWeight: FontWeight.w500,
@@ -1686,18 +2239,48 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                           return const SizedBox();
                         }
                         final perf = performances[value.toInt()];
+                        // Ders adını kısalt
+                        String shortName = _getShortLessonName(perf.name);
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: Icon(perf.icon, color: perf.color, size: 18),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(perf.icon, color: perf.color, size: 14),
+                              const SizedBox(height: 2),
+                              Text(
+                                shortName,
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? _darkText.withOpacity(0.7)
+                                      : Colors.white.withOpacity(0.7),
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         );
                       },
-                      reservedSize: 32,
+                      reservedSize: 48,
                     ),
                   ),
                   leftTitles: AxisTitles(
+                    axisNameWidget: Text(
+                      'Doğru Sayısı',
+                      style: TextStyle(
+                        color: isDarkMode
+                            ? _darkText.withOpacity(0.7)
+                            : Colors.white.withOpacity(0.7),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    axisNameSize: 16,
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 32,
+                      reservedSize: 28,
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
@@ -1733,24 +2316,27 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                 ),
                 barGroups: List.generate(performances.length, (index) {
                   final perf = performances[index];
-                  final userNet = perf.correct - (perf.wrong * 0.25);
-                  final turkeyNet = turkeyAverages[index];
+                  final userCorrect = perf.correct.toDouble();
+                  final turkeyCorrect = turkeyAverages[index];
+
+                  // Responsive bar genişliği
+                  final barWidth = performances.length > 4 ? 12.0 : 16.0;
 
                   return BarChartGroupData(
                     x: index,
                     barRods: [
                       BarChartRodData(
-                        toY: userNet,
+                        toY: userCorrect,
                         color: _primaryBlue,
-                        width: 16,
+                        width: barWidth,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(6),
                         ),
                       ),
                       BarChartRodData(
-                        toY: turkeyNet,
+                        toY: turkeyCorrect,
                         color: _neutralGray.withOpacity(0.4),
-                        width: 16,
+                        width: barWidth,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(6),
                         ),
@@ -1770,16 +2356,32 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     List<SubjectPerformance> performances,
     List<double> turkeyAverages,
   ) {
-    double maxNet = 0;
+    double maxCorrect = 0;
     for (int i = 0; i < performances.length; i++) {
       final p = performances[i];
-      final userNet = p.correct - (p.wrong * 0.25);
-      final turkeyNet = i < turkeyAverages.length ? turkeyAverages[i] : 0.0;
-      if (userNet > maxNet) maxNet = userNet;
-      if (turkeyNet > maxNet) maxNet = turkeyNet;
+      final userCorrect = p.correct.toDouble();
+      final turkeyCorrect = i < turkeyAverages.length ? turkeyAverages[i] : 0.0;
+      if (userCorrect > maxCorrect) maxCorrect = userCorrect;
+      if (turkeyCorrect > maxCorrect) maxCorrect = turkeyCorrect;
     }
     // Minimum 10, maksimum değer + 2 (grafik daha iyi görünsün)
-    return math.max(10.0, (maxNet + 2).ceilToDouble());
+    return math.max(10.0, (maxCorrect + 2).ceilToDouble());
+  }
+
+  /// Ders adını kısalt (grafik için)
+  String _getShortLessonName(String name) {
+    final shortNames = {
+      'Matematik': 'Mat',
+      'Türkçe': 'Tür',
+      'Fen Bilgisi': 'Fen',
+      'Fen Bilimleri': 'Fen',
+      'Sosyal Bilgiler': 'Sos',
+      'Hayat Bilgisi': 'Hayat',
+      'İngilizce': 'İng',
+      'T.C İnkılap Tarihi': 'İnk',
+      'Din Kültürü': 'Din',
+    };
+    return shortNames[name] ?? name.substring(0, math.min(3, name.length));
   }
 
   Widget _buildLegendItem(String label, Color color) {
@@ -2034,16 +2636,21 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      topic.name,
-                      style: TextStyle(
-                        color: isDarkMode ? _darkText : Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                    Tooltip(
+                      message: topic.name,
+                      child: Text(
+                        topic.name,
+                        style: TextStyle(
+                          color: isDarkMode ? _darkText : Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
-                      '${topic.correct}/${topic.total} doğru (${topic.successRate.toStringAsFixed(0)}%)',
+                      '${topic.correct}/${topic.total} doğru (${_formatDecimal(topic.successRate)}%)',
                       style: TextStyle(
                         color: isDarkMode
                             ? _darkText.withOpacity(0.6)
@@ -2058,14 +2665,15 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                 TextButton(
                       onPressed: () {
                         HapticFeedback.mediumImpact();
-                        // Bilgi kartları set seçme ekranına yönlendir
+                        // Test listesi ekranına yönlendir
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => FlashcardSetSelectionScreen(
+                            builder: (context) => TestListScreen(
                               topicId: topic.topicId,
                               topicName: topic.name,
                               lessonName: topic.lessonName,
+                              color: _warningOrange,
                             ),
                           ),
                         );
@@ -2263,7 +2871,12 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
         GestureDetector(
               onTap: () {
                 HapticFeedback.heavyImpact();
-                Navigator.pushNamed(context, '/duel-game-selection');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DuelGameSelectionScreen(),
+                  ),
+                );
               },
               child: Container(
                 width: double.infinity,
@@ -2604,8 +3217,8 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   // ─────────────────────────────────────────────────────────────────────────
   // ignore: unused_element - Gelecekte kullanılacak
   Color _getScoreColor(int score) {
-    final maxPuan = widget.exam.questions.length * 25;
-    final percentage = score / maxPuan * 100;
+    // Toplam max puan 500
+    final percentage = score / 500 * 100;
 
     if (percentage >= 80) return _successGreen;
     if (percentage >= 60) return _primaryBlue;
@@ -2614,16 +3227,27 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   }
 
   String _getScoreMessage(int score) {
-    final maxPuan = widget.exam.questions.length * 25;
-    final percentage = score / maxPuan * 100;
+    // Toplam max puan 500
+    final percentage = score / 500 * 100;
 
-    if (percentage >= 90) return 'Mükemmel! 🌟';
-    if (percentage >= 80) return 'Harika! 🎉';
-    if (percentage >= 70) return 'Çok iyi! 👏';
-    if (percentage >= 60) return 'İyi! 👍';
-    if (percentage >= 50) return 'Fena değil 😊';
-    if (percentage >= 40) return 'Geliştirebilirsin 💪';
-    return 'Daha çok çalışmalısın 📚';
+    // Her yüzdelik aralığa özel samimi, komik ve içten mesajlar
+    if (percentage >= 95) return 'Efsane oldun! Sen bir dahisin! 🏆✨';
+    if (percentage >= 90) return 'Yıldız gibi parlıyorsun! 🌟💫';
+    if (percentage >= 85) return 'Süpersin! Annene göster bunu! 🦸‍♂️';
+    if (percentage >= 80) return 'Harikasın! Böyle devam et! 🎉';
+    if (percentage >= 75) return 'Çok iyisin! Gurur duyuyoruz! 🎊';
+    if (percentage >= 70) return 'Helal sana! Muhteşemsin! 👏';
+    if (percentage >= 65) return 'Aferin! Bu tempo sürsün! 💪';
+    if (percentage >= 60) return 'İyi gidiyorsun! Yükselişteyiz! 🚀';
+    if (percentage >= 55) return 'Fena değil! Potansiyelin var! 😊';
+    if (percentage >= 50) return 'Ortalama üstü! Biraz daha gayret! 🎯';
+    if (percentage >= 45) return 'Az kaldı! Hedefe yaklaşıyorsun! 🏃';
+    if (percentage >= 40) return 'Gelişiyorsun! Pes etme! 💪';
+    if (percentage >= 35) return 'Yolun başındasın! Çalışırsan olur! 📚';
+    if (percentage >= 30) return 'Daha çok çalışman lazım! 📖';
+    if (percentage >= 25) return 'Biraz daha emek ver! Sen yaparsın! 💡';
+    if (percentage >= 20) return 'Konuları tekrar et! Olacak! 🔄';
+    return 'Hiç sorun değil! Yeniden dene! 🌱';
   }
 
   // ignore: unused_element - Gelecekte kullanılacak

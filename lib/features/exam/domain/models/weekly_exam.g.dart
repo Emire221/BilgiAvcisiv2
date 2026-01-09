@@ -53,6 +53,12 @@ _$WeeklyExamResultImpl _$$WeeklyExamResultImplFromJson(
   puan: (json['puan'] as num?)?.toInt(),
   siralama: (json['siralama'] as num?)?.toInt(),
   toplamKatilimci: (json['toplamKatilimci'] as num?)?.toInt(),
+  ilSiralama: (json['ilSiralama'] as num?)?.toInt(),
+  ilToplamKatilimci: (json['ilToplamKatilimci'] as num?)?.toInt(),
+  ilceSiralama: (json['ilceSiralama'] as num?)?.toInt(),
+  ilceToplamKatilimci: (json['ilceToplamKatilimci'] as num?)?.toInt(),
+  userCity: json['userCity'] as String?,
+  userDistrict: json['userDistrict'] as String?,
   completedAt: json['completedAt'] == null
       ? null
       : DateTime.parse(json['completedAt'] as String),
@@ -78,6 +84,12 @@ Map<String, dynamic> _$$WeeklyExamResultImplToJson(
   'puan': instance.puan,
   'siralama': instance.siralama,
   'toplamKatilimci': instance.toplamKatilimci,
+  'ilSiralama': instance.ilSiralama,
+  'ilToplamKatilimci': instance.ilToplamKatilimci,
+  'ilceSiralama': instance.ilceSiralama,
+  'ilceToplamKatilimci': instance.ilceToplamKatilimci,
+  'userCity': instance.userCity,
+  'userDistrict': instance.userDistrict,
   'completedAt': instance.completedAt?.toIso8601String(),
   'resultViewed': instance.resultViewed,
 };

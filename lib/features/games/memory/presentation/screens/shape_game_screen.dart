@@ -15,8 +15,8 @@ import 'memory_result_screen.dart';
 /// 🎨 SHAPE MATCH - Şekil Eşleştirme Oyunu
 /// ═══════════════════════════════════════════════════════════════════════════
 /// Design: Cyberpunk temalı şekil eşleştirme deneyimi
-/// - 5 farklı okul figürü (cetvel, kalem, kitap, hesap makinesi, palet)
-/// - Her şekilden 2 adet = 10 kart
+/// - 10 farklı okul figürü (cetvel, kalem, kitap, hesap makinesi, palet, vb.)
+/// - Her şekilden 2 adet = 20 kart
 /// - Ardışık aynı şekilleri eşleştir
 /// ═══════════════════════════════════════════════════════════════════════════
 
@@ -158,7 +158,7 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
           children: [
             // Animated Background
             _buildAnimatedBackground(size),
-            
+
             // Floating Particles
             ..._buildFloatingParticles(size),
 
@@ -167,15 +167,14 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
               child: Column(
                 children: [
                   // Üst bar
-                  _buildTopBar(state)
-                      .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: -0.3),
+                  _buildTopBar(
+                    state,
+                  ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.3),
 
                   // Durum göstergesi
-                  _buildStatusIndicator(state)
-                      .animate()
-                      .fadeIn(duration: 400.ms, delay: 100.ms),
+                  _buildStatusIndicator(
+                    state,
+                  ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
 
                   // Kart grid'i
                   Expanded(
@@ -236,29 +235,30 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
       return Positioned(
         left: startX,
         top: startY,
-        child: Container(
-          width: particleSize,
-          height: particleSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withValues(alpha: 0.5),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 8,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-        )
-            .animate(onPlay: (c) => c.repeat())
-            .moveY(
-              begin: 0,
-              end: -80,
-              duration: Duration(seconds: duration),
-              curve: Curves.easeInOut,
-            )
-            .fadeOut(begin: 1, duration: Duration(seconds: duration)),
+        child:
+            Container(
+                  width: particleSize,
+                  height: particleSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color.withValues(alpha: 0.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                )
+                .animate(onPlay: (c) => c.repeat())
+                .moveY(
+                  begin: 0,
+                  end: -80,
+                  duration: Duration(seconds: duration),
+                  curve: Curves.easeInOut,
+                )
+                .fadeOut(begin: 1, duration: Duration(seconds: duration)),
       );
     });
   }
@@ -295,7 +295,10 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
     );
   }
 
-  Widget _buildIconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
@@ -310,9 +313,7 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
-            child: Center(
-              child: FaIcon(icon, color: Colors.white, size: 18),
-            ),
+            child: Center(child: FaIcon(icon, color: Colors.white, size: 18)),
           ),
         ),
       ),
@@ -466,12 +467,12 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              crossAxisCount: 5,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
               childAspectRatio: 0.85,
             ),
-            itemCount: 10,
+            itemCount: 20,
             itemBuilder: (context, index) {
               if (index >= state.cards.length) {
                 return const SizedBox();
@@ -504,7 +505,7 @@ class _ShapeGameScreenState extends ConsumerState<ShapeGameScreen>
       messageColor = _neonYellow;
       icon = Icons.hourglass_bottom_rounded;
     } else if (state.matches > 0) {
-      message = '${state.matches}/5 eşleşme bulundu';
+      message = '${state.matches}/10 eşleşme bulundu';
       messageColor = _neonGreen;
       icon = Icons.check_circle_rounded;
     } else {
