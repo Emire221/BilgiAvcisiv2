@@ -13,7 +13,6 @@ import '../../domain/entities/temperature.dart';
 import '../../domain/entities/guess_level.dart';
 import '../widgets/thermometer_widget.dart';
 import 'guess_result_screen.dart';
-import '../../../../../services/shake_service.dart';
 
 /// Salla Bakalım Oyun Ekranı - Shake Wave Teması
 class GuessGameScreen extends ConsumerStatefulWidget {
@@ -47,9 +46,6 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
   @override
   void initState() {
     super.initState();
-
-    // Ana sayfa ShakeService'i duraklat (çakışmayı önlemek için)
-    ShakeService.pause();
 
     // Konfeti controller
     _confettiController = ConfettiController(
@@ -134,8 +130,6 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
     _shakeController.dispose();
     _pulseController.dispose();
     _waveController.dispose();
-    // Ana sayfa ShakeService'i tekrar aktif et
-    ShakeService.resume();
     super.dispose();
   }
 
@@ -503,8 +497,9 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: const Icon(
                     FontAwesomeIcons.arrowLeft,
@@ -592,8 +587,6 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
       ),
     );
   }
-
-
 
   Widget _buildQuestionCard(GuessState state) {
     final question = state.currentQuestion;
@@ -1389,8 +1382,6 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
         break;
     }
   }
-
-
 
   void _navigateToResult(GuessState state) {
     Navigator.pushReplacement(

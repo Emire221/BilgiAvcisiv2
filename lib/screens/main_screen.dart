@@ -6,7 +6,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui';
 import '../main.dart'; // themeManager'a erişim için
 import '../core/providers/user_provider.dart';
-import '../services/shake_service.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/lessons_tab.dart';
 import 'tabs/games_tab.dart';
@@ -27,7 +26,6 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen>
     with TickerProviderStateMixin {
   late int _currentIndex;
-  ShakeService? _shakeService;
   bool _isNotificationSheetOpen = false;
 
   // Animasyon controller'ları
@@ -80,12 +78,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
       duration: const Duration(milliseconds: 300),
     );
 
-    // Shake servisi başlatma (build sonrası)
+    // Bildirim servisini başlat (izin kontrolü + zamanlanmış bildirimler)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _shakeService = ShakeService(context);
-      _shakeService?.start();
-
-      // Bildirim servisini başlat (izin kontrolü + zamanlanmış bildirimler)
       NotificationService().ensureInitialized();
     });
   }
@@ -104,7 +98,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void dispose() {
-    _shakeService?.dispose();
     _glowController.dispose();
     _bounceController.dispose();
     super.dispose();

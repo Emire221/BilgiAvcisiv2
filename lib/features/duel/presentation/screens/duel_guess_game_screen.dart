@@ -12,7 +12,6 @@ import '../../logic/duel_controller.dart';
 import '../../domain/entities/duel_entities.dart';
 import '../widgets/duel_result_dialog.dart';
 import '../widgets/duel_score_header.dart';
-import '../../../../../services/shake_service.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// 📱 DUEL SALLA BAKALIM - 1v1 Sayı Tahmin Oyunu
@@ -54,9 +53,6 @@ class _DuelGuessGameScreenState extends ConsumerState<DuelGuessGameScreen>
   @override
   void initState() {
     super.initState();
-
-    // Ana sayfa ShakeService'i duraklat
-    ShakeService.pause();
 
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 2),
@@ -119,7 +115,6 @@ class _DuelGuessGameScreenState extends ConsumerState<DuelGuessGameScreen>
     _shakeController.dispose();
     _pulseController.dispose();
     _waveController.dispose();
-    ShakeService.resume();
     super.dispose();
   }
 

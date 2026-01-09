@@ -1880,8 +1880,10 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+
     return Container(
-      height: MediaQuery.of(context).size.height * 0.5,
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -1890,80 +1892,83 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
         ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [_primaryGreen, _secondaryGreen],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const FaIcon(
-                    FontAwesomeIcons.chartColumn,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  'Deneme Geçmişin',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Chart
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: widget.dbHelper.getWeeklyExamResults(
-                onlyAnnounced: false,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
               ),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: _primaryGreen),
-                  );
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                final results = snapshot.data!.reversed
-                    .toList(); // Eski -> Yeni
-                return AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, child) {
-                    return _buildTrendChart(results, _animation.value);
-                  },
-                );
-              },
             ),
-          ),
-        ],
+
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [_primaryGreen, _secondaryGreen],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const FaIcon(
+                      FontAwesomeIcons.chartColumn,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Deneme Geçmişin',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Chart
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: widget.dbHelper.getWeeklyExamResults(
+                  onlyAnnounced: false,
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: _primaryGreen),
+                    );
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  final results = snapshot.data!.reversed
+                      .toList(); // Eski -> Yeni
+                  return AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
+                      return _buildTrendChart(results, _animation.value);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -14,6 +14,22 @@ import '../models/models.dart';
 import '../services/firebase_storage_service.dart';
 import '../widgets/glass_container.dart';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔧 Isolate için Top-Level Fonksiyonlar (Ana thread'i bloke etmez)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// JSON string'i parse eder - Isolate içinde çalışır
+dynamic _parseJson(String jsonString) {
+  return json.decode(jsonString);
+}
+
+/// Sınıf verilerini işler - Isolate içinde çalışır
+List<Map<String, String>> _parseClasses(dynamic data) {
+  return (data['siniflar'] as List)
+      .map((e) => {'id': e['id'].toString(), 'name': e['name'].toString()})
+      .toList();
+}
+
 /// 🎮 Oyunlaştırılmış Profil Kurulum Ekranı
 /// "Kahramanını Oluştur" Temalı Kimlik Oyunu
 ///
@@ -110,14 +126,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
   Future<void> _loadClasses() async {
     try {
       final response = await rootBundle.loadString('assets/json/siniflar.json');
-      final data = json.decode(response);
-      setState(() {
-        _classes = (data['siniflar'] as List)
-            .map(
-              (e) => {'id': e['id'].toString(), 'name': e['name'].toString()},
-            )
-            .toList();
-      });
+      // JSON decode işlemini Isolate'e taşı - ana thread serbest kalır
+      final data = await compute(_parseJson, response);
+      final classes = await compute(_parseClasses, data);
+      if (mounted) {
+        setState(() => _classes = classes);
+      }
     } catch (e) {
       if (kDebugMode) debugPrint('Sınıf listesi yüklenemedi: $e');
     }
@@ -126,8 +140,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
   Future<void> _loadCities() async {
     try {
       final response = await rootBundle.loadString('assets/json/cities.json');
-      final data = json.decode(response);
-      setState(() => _cities = List<String>.from(data['cities']));
+      // JSON decode işlemini Isolate'e taşı - ana thread serbest kalır
+      final data = await compute(_parseJson, response);
+      final cities = List<String>.from(data['cities']);
+      if (mounted) {
+        setState(() => _cities = cities);
+      }
     } catch (e) {
       if (kDebugMode) debugPrint('Şehir listesi yüklenemedi: $e');
     }
@@ -1390,7 +1408,11 @@ class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+                    ),
                     itemCount: _filteredItems.length,
                     itemBuilder: (_, i) {
                       final item = _filteredItems[i];

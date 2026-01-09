@@ -2975,9 +2975,11 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // DETAYLI CEVAPLAR
+  // DETAYLI CEVAPLAR - ListView.builder ile Lazy Loading
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildDetailedAnswers(bool isDarkMode) {
+    final questions = widget.exam.questions;
+
     return _buildGlassContainer(
       padding: const EdgeInsets.all(20),
       isDarkMode: isDarkMode,
@@ -3001,23 +3003,29 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
 
           const SizedBox(height: 16),
 
-          ...widget.exam.questions.asMap().entries.map((entry) {
-            final index = entry.key;
-            final question = entry.value;
-            final questionId = (index + 1).toString();
-            final userAnswer = widget.result?.cevaplar[questionId];
-            final isCorrect = userAnswer == question.correctAnswer;
-            final isEmpty = userAnswer == null || userAnswer == 'EMPTY';
+          // ListView.builder ile sadece görünen öğeler render edilir
+          // Bu sayede 100 soruluk sınavlarda bile bellek şişmez
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: questions.length,
+            itemBuilder: (context, index) {
+              final question = questions[index];
+              final questionId = (index + 1).toString();
+              final userAnswer = widget.result?.cevaplar[questionId];
+              final isCorrect = userAnswer == question.correctAnswer;
+              final isEmpty = userAnswer == null || userAnswer == 'EMPTY';
 
-            return _buildAnswerRow(
-              questionId: questionId,
-              userAnswer: isEmpty ? '-' : userAnswer,
-              correctAnswer: question.correctAnswer,
-              isCorrect: isCorrect,
-              isEmpty: isEmpty,
-              isDarkMode: isDarkMode,
-            );
-          }),
+              return _buildAnswerRow(
+                questionId: questionId,
+                userAnswer: isEmpty ? '-' : userAnswer,
+                correctAnswer: question.correctAnswer,
+                isCorrect: isCorrect,
+                isEmpty: isEmpty,
+                isDarkMode: isDarkMode,
+              );
+            },
+          ),
         ],
       ),
     );

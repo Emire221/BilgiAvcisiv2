@@ -34,7 +34,6 @@ dependencies:
   http: ^1.2.0
   # Games & Sensors
   shake: ^3.0.0
-  sensors_plus: ^6.1.1
   confetti: ^0.8.0
   # Sinematik Animasyonlar
   flutter_animate: ^4.5.2

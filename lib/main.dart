@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -49,24 +50,66 @@ void main() async {
 
   // Bildirim servisini başlat
   await NotificationService().initialize();
-  
+
   // Android Alarm Manager'i başlat (zamanlanmış bildirimler için)
   await ScheduledNotificationHelper.initialize();
-  
+
   // Süre takibi servisini başlat
   await TimeTrackingService().start();
-  
+
   // Tema tercihini yükle (Varsayılan: Dark Mode)
   final isDarkMode = await LocalPreferencesService().isDarkMode();
   themeManager = ThemeManager(isDarkMode ? ThemeMode.dark : ThemeMode.light);
 
-  // Global hata handler - Kırmızı hata ekranını önle
+  // Global hata handler - Release/Debug moda göre farklı davranış
   ErrorWidget.builder = (FlutterErrorDetails details) {
     // Debug modunda hata detaylarını yazdır
     debugPrint('❌ ErrorWidget Hatası: ${details.exception}');
     debugPrint('📍 Stack: ${details.stack}');
-    // Boş bir widget döndür (kırmızı hata ekranı yerine)
-    return const SizedBox.shrink();
+
+    // Release modda kullanıcı dostu hata ekranı göster
+    if (kReleaseMode) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        color: const Color(0xFF1A1A2E),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, color: Colors.orange[300], size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Bir şeyler yanlış gitti',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Lütfen sayfayı yenileyin veya uygulamayı yeniden başlatın.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  decoration: TextDecoration.none,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Debug modda Flutter'ın kendi hata ekranını göster (detaylı bilgi için)
+    return ErrorWidget.withDetails(
+      message: details.exception.toString(),
+      error: details.exception is FlutterError
+          ? details.exception as FlutterError
+          : null,
+    );
   };
 
   // Flutter framework hatalarını yakala

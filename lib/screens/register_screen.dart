@@ -481,57 +481,74 @@ class _RegisterScreenState extends State<RegisterScreen>
 
             // Main content
             SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: isSmallScreen ? 16 : 24,
-                  ),
-                  child: Column(
-                    children: [
-                      // Back button
-                      _buildBackButton()
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .slideX(begin: -0.3),
-
-                      SizedBox(height: isSmallScreen ? 16 : 32),
-
-                      // Mascot
-                      _buildMascot(isSmallScreen)
-                          .animate()
-                          .fadeIn(delay: 200.ms, duration: 600.ms)
-                          .scale(begin: const Offset(0.8, 0.8)),
-
-                      SizedBox(height: isSmallScreen ? 16 : 24),
-
-                      // Title
-                      _buildTitle()
-                          .animate()
-                          .fadeIn(delay: 300.ms, duration: 500.ms)
-                          .slideY(begin: 0.3),
-
-                      SizedBox(height: isSmallScreen ? 24 : 32),
-
-                      // Form Card
-                      _buildFormCard(isSmallScreen)
-                          .animate()
-                          .fadeIn(delay: 400.ms, duration: 600.ms)
-                          .slideY(begin: 0.2),
-
-                      SizedBox(height: isSmallScreen ? 16 : 24),
-
-                      // Login link
-                      _buildLoginLink().animate().fadeIn(
-                        delay: 600.ms,
-                        duration: 400.ms,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: isSmallScreen ? 16 : 24,
+                          ),
+                          child: Column(
+                            children: [
+                              // Back button
+                              _buildBackButton()
+                                  .animate()
+                                  .fadeIn(duration: 400.ms)
+                                  .slideX(begin: -0.3),
 
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+                              SizedBox(height: isSmallScreen ? 16 : 32),
+
+                              // Spacer - İçeriği ortalar (klavye kapalıyken)
+                              const Spacer(),
+
+                              // Mascot
+                              _buildMascot(isSmallScreen)
+                                  .animate()
+                                  .fadeIn(delay: 200.ms, duration: 600.ms)
+                                  .scale(begin: const Offset(0.8, 0.8)),
+
+                              SizedBox(height: isSmallScreen ? 16 : 24),
+
+                              // Title
+                              _buildTitle()
+                                  .animate()
+                                  .fadeIn(delay: 300.ms, duration: 500.ms)
+                                  .slideY(begin: 0.3),
+
+                              SizedBox(height: isSmallScreen ? 24 : 32),
+
+                              // Form Card
+                              _buildFormCard(isSmallScreen)
+                                  .animate()
+                                  .fadeIn(delay: 400.ms, duration: 600.ms)
+                                  .slideY(begin: 0.2),
+
+                              SizedBox(height: isSmallScreen ? 16 : 24),
+
+                              // Login link
+                              _buildLoginLink().animate().fadeIn(
+                                delay: 600.ms,
+                                duration: 400.ms,
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Spacer - İçeriği ortalar (klavye kapalıyken)
+                              const Spacer(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
