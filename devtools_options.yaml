@@ -1,3 +1,93 @@
-description: This file stores settings for Dart & Flutter DevTools.
+# =========================================================
+# Bilgi Avcısı - DevTools Yapılandırması
+# =========================================================
+# Tarih: 10 Ocak 2026
+# Versiyon: 1.0.0
+# Proje: bilgici (Bilgi Avcısı)
+
+description: Bilgi Avcısı - Eğitim uygulaması için DevTools ayarları
 documentation: https://docs.flutter.dev/tools/devtools/extensions#configure-extension-enablement-states
+
+# =========================================================
+# DevTools Extension Ayarları
+# =========================================================
 extensions:
+  # Riverpod DevTools Extension
+  # State management debug için
+  # - riverpod_devtools: true
+  
+  # Provider DevTools Extension  
+  # - provider_devtools: true
+
+# =========================================================
+# Proje Bilgileri
+# =========================================================
+# 
+# Proje: Bilgi Avcısı (bilgici)
+# Açıklama: Türk öğrenciler için eğitim uygulaması
+# Flutter SDK: ^3.9.2
+# Dart SDK: ^3.9.2
+#
+# Ana Özellikler:
+# - Test çözme ve flashcard sistemi
+# - Oyunlaştırılmış öğrenme (Düello, Hafıza, Cümle Tamamla, Salla Bakalım)
+# - Etkileşimli maskot sistemi
+# - Firebase entegrasyonu (Auth, Firestore, Storage)
+# - SQLite yerel veritabanı
+# - Bildirim sistemi
+#
+# Mimari: Clean Architecture + Feature-First
+# State Management: Riverpod + Provider
+# 
+# =========================================================
+# Debugging İpuçları
+# =========================================================
+#
+# 1. Widget Inspector (Ctrl+Shift+I):
+#    - Widget tree'yi görüntüle
+#    - Layout sorunlarını tespit et
+#    - Rebuild'leri izle
+#
+# 2. Performance View:
+#    - Frame render süreleri
+#    - Jank tespiti
+#    - Memory kullanımı
+#
+# 3. Network View:
+#    - Firebase istekleri
+#    - HTTP trafiği
+#
+# 4. Logging View:
+#    - debugPrint() çıktıları
+#    - Error logları
+#    - Riverpod state değişimleri
+#
+# =========================================================
+# Önerilen Debug Stratejileri
+# =========================================================
+#
+# Riverpod State Debug:
+# ```dart
+# ref.listen(myProvider, (prev, next) {
+#   debugPrint('State changed: $prev -> $next');
+# });
+# ```
+#
+# Widget Rebuild Tracking:
+# ```dart
+# @override
+# Widget build(BuildContext context) {
+#   debugPrint('MyWidget rebuild');
+#   return ...
+# }
+# ```
+#
+# Database Query Debug:
+# ```dart
+# final results = await db.query('Testler');
+# debugPrint('Query results: ${results.length} rows');
+# ```
+#
+# =========================================================
+
+# Son güncelleme: 10 Ocak 2026

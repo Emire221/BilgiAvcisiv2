@@ -1,163 +1,354 @@
-# Manifest ve Arşiv Yönetim Araçları
+# 🛠️ Bilgi Avcısı - Tools Klasörü
 
-**Son Güncelleme:** 5 Aralık 2025  
-**Versiyon:** v1.4.0
+<p align="center">
+  <strong>Geliştirici Araçları ve Yardımcı Scriptler</strong>
+</p>
 
-Bu klasörde, Firebase Storage'daki dosyalarınızı yönetmek için yardımcı araçlar bulunur.
+---
 
-## 1. Arşiv İçeriği Analiz Aracı
+## 📋 İçindekiler
 
-**Amaç:** Bir tar.bz2 arşivinin içeriğini analiz eder ve manifest için gerekli bilgileri gösterir.
+- [Genel Bakış](#-genel-bakış)
+- [Araçlar](#-araçlar)
+- [Kullanım](#-kullanım)
+- [Yapılandırma](#-yapılandırma)
 
-**Kullanım:**
+---
+
+## 🎯 Genel Bakış
+
+Bu klasör, Bilgi Avcısı projesinin geliştirme sürecinde kullanılan yardımcı araçları ve scriptleri içerir.
+
+### Klasör Yapısı
+
+```
+tools/
+├── README.md                    # Bu dosya
+├── analysis_options.yaml        # Araçlar için analiz kuralları
+├── generate_manifest.dart       # İçerik manifest üretici
+├── list_archive_contents.dart   # Arşiv içerik listeci
+└── example_manifest.json        # Örnek manifest formatı
+```
+
+---
+
+## 🔧 Araçlar
+
+### 1. generate_manifest.dart
+
+Firebase Storage'dan indirilen içerik paketleri için manifest dosyası üreten araç.
+
+#### Özellikler
+
+- ZIP arşivlerini okur
+- Dosya hash'lerini hesaplar (MD5/SHA256)
+- JSON formatında manifest üretir
+- İçerik versiyonlama desteği
+
+#### Çalıştırma
+
 ```bash
-dart tools/list_archive_contents.dart <arsiv_yolu>
+cd tools
+dart run generate_manifest.dart <archive_path> [output_path]
 ```
 
-**Örnek:**
+#### Örnek Kullanım
+
 ```bash
-dart tools/list_archive_contents.dart storage/3_Sinif/3_Sinif_v1.tar.bz2
+# Tek arşiv için manifest oluştur
+dart run generate_manifest.dart ../assets/content.zip manifest.json
+
+# Varsayılan çıktı ile
+dart run generate_manifest.dart ../assets/content.zip
+# Çıktı: ../assets/content_manifest.json
 ```
 
-**Çıktı:**
-- Arşiv içindeki tüm JSON dosyalarının listesi
-- Her dosyanın türü (Test, Bilgi Kartı, vb.)
-- Dosya boyutları ve hash değerleri
-- Manifest için hazır JSON çıktısı
-
-## 2. Manifest Oluşturma Aracı
-
-**Amaç:** Bir klasördeki tüm dosyalar için otomatik olarak manifest.json dosyası oluşturur.
-
-**Kullanım:**
-```bash
-dart tools/generate_manifest.dart <klasor_yolu>
-```
-
-**Örnek:**
-```bash
-dart tools/generate_manifest.dart storage/3_Sinif
-```
-
-**Çıktı:**
-- Klasördeki tüm .json ve .tar.bz2 dosyaları için manifest.json oluşturulur
-- Her dosya için hash değerleri otomatik hesaplanır
-
-## 3. Örnek Manifest Dosyası
-
-`example_manifest.json` dosyası, manifest.json formatının bir örneğidir. Kendi dosyalarınız için şablon olarak kullanabilirsiniz.
-
-## Önemli Notlar
-
-### Arşiv Yapısı
-
-3_Sinif_v1.tar.bz2 arşivi şu yapıda olmalıdır:
-
-```
-3_Sinif_v1.tar.bz2/
-├── derslistesi.json
-├── konulistesi.json
-├── konuvideo.json
-├── test_1.json          # testID alanı içermeli
-├── test_2.json          # testID alanı içermeli
-├── test_matematik_1.json
-├── bilgikart_1.json     # kartSetID alanı içermeli
-├── bilgikart_2.json     # kartSetID alanı içermeli
-├── level_001.json       # levelID alanı içermeli (Cümle Tamamlama)
-├── guess_001.json       # guessID alanı içermeli (Salla Bakalım)
-└── ... (diğer test ve bilgi kartı dosyaları)
-```
-
-**Desteklenen ID Tipleri:**
-| ID Alanı | Oyun/İçerik | Tablo |
-|----------|-------------|-------|
-| testID | Test | Testler |
-| kartSetID | Bilgi Kartı | BilgiKartlari |
-| levelID | Cümle Tamamlama | FillBlanksLevels |
-| guessID | Salla Bakalım | GuessLevels |
-
-> **Not (v1.4.0):** `arenaSetID` artık desteklenmiyor. Arena sistemi kaldırıldı ve yerine 1v1 Düello sistemi geldi.
-
-**ÖNEMLİ:** Tüm JSON dosyaları doğrudan arşivin kök dizininde olmalıdır. Alt klasör kullanmayın!
-
-### Manifest Güncelleme
-
-Manifest.json dosyanızda, **sadece** tar.bz2 arşiv dosyasını ve temel JSON dosyalarını (derslistesi, konulistesi, konuvideo) listelemeniz yeterlidir. Arşiv içindeki test ve bilgi kartı dosyaları otomatik olarak algılanacaktır.
-
-Ancak eğer isterseniz, arşiv içindeki her dosyayı ayrı ayrı da listeleyebilirsiniz:
+#### Çıktı Formatı
 
 ```json
 {
   "version": "1.0.0",
-  "updatedAt": "2025-12-05T10:00:00.000Z",
+  "generated": "2026-01-10T12:00:00Z",
   "files": [
     {
-      "path": "3_Sinif/3_Sinif_v1.tar.bz2",
-      "type": "tar.bz2",
-      "version": "v1",
-      "hash": "gerçek_hash_değeri",
-      "addedAt": "2025-12-05T10:00:00.000Z"
-    },
-    {
-      "path": "3_Sinif/derslistesi.json",
-      "type": "json",
-      "version": "v1",
-      "hash": "gerçek_hash_değeri",
-      "addedAt": "2025-12-05T10:00:00.000Z"
+      "path": "data/tests.json",
+      "size": 12345,
+      "hash": "abc123...",
+      "hashAlgorithm": "sha256"
     }
-  ]
+  ],
+  "totalFiles": 10,
+  "totalSize": 123456
 }
 ```
 
-### Hash Hesaplama
+---
 
-Hash değerleri, dosya bütünlüğünü kontrol etmek için kullanılır. MD5 hash kullanılır.
+### 2. list_archive_contents.dart
 
-Bir dosyanın hash'ini hesaplamak için:
+ZIP arşivlerinin içeriğini listeleyen yardımcı araç.
 
-**Windows PowerShell:**
-```powershell
-Get-FileHash -Algorithm MD5 dosya.json | Select-Object Hash
-```
+#### Özellikler
 
-**Linux/Mac:**
+- Arşiv içeriğini hiyerarşik gösterir
+- Dosya boyutlarını formatlar
+- Toplam dosya/klasör sayısı
+- Sıkıştırma oranı hesaplama
+
+#### Çalıştırma
+
 ```bash
-md5sum dosya.json
+cd tools
+dart run list_archive_contents.dart <archive_path>
 ```
 
-Ya da yukarıdaki Dart araçlarını kullanın - otomatik hesaplarlar.
+#### Örnek Kullanım
 
-## Sorun Giderme
+```bash
+dart run list_archive_contents.dart ../assets/content.zip
+```
 
-### "Dosyalar veritabanına eklenmiyor"
+#### Örnek Çıktı
 
-1. `list_archive_contents.dart` ile arşiv içeriğini kontrol edin
-2. Tüm test dosyalarının `testID` alanı içerdiğinden emin olun
-3. Tüm bilgi kartı dosyalarının `kartSetID` alanı içerdiğinden emin olun
-4. Cümle tamamlama için `levelID` alanı olmalı
-5. Salla Bakalım için `guessID` alanı olmalı
+```
+📦 content.zip
+├── 📁 data/
+│   ├── 📄 tests.json (12.3 KB)
+│   ├── 📄 flashcards.json (8.5 KB)
+│   └── 📄 topics.json (3.2 KB)
+├── 📁 images/
+│   ├── 🖼️ logo.png (45.6 KB)
+│   └── 🖼️ background.jpg (120.0 KB)
+└── 📄 manifest.json (1.2 KB)
 
-### "Arşiv açılmıyor"
-
-1. Dosyanın gerçekten tar.bz2 formatında olduğundan emin olun
-2. Dosyanın bozuk olmadığını kontrol edin
-3. Arşiv adının `.tar.bz2` uzantısıyla bittiğinden emin olun
-
-### "Manifest hatası"
-
-1. JSON formatının doğru olduğundan emin olun
-2. Tüm gerekli alanların (`version`, `updatedAt`, `files`) bulunduğundan emin olun
-3. Tarih formatlarının ISO 8601 standardında olduğundan emin olun
-
----
-
-## v1.4.0 Değişiklikleri
-
-- ❌ `arenaSetID` desteği kaldırıldı (Arena sistemi kaldırıldı)
-- ✅ 1v1 Düello sistemi eklendi (ayrı JSON dosyası gerektirmez)
-- ✅ Mevcut `testID` ve `levelID` içerikleri düello için de kullanılır
+📊 Özet:
+   Toplam Dosya: 6
+   Toplam Klasör: 2
+   Toplam Boyut: 191.8 KB
+   Sıkıştırma Oranı: %65
+```
 
 ---
 
-**Son Güncelleme:** 5 Aralık 2025  
-**Versiyon:** v1.4.0
+### 3. example_manifest.json
+
+İçerik manifest dosyasının şemasını gösteren örnek dosya.
+
+#### Şema
+
+```json
+{
+  "$schema": "https://bilgiavcisi.com/schemas/manifest-v1.json",
+  "version": "1.0.0",
+  "name": "Bilgi Avcısı İçerik Paketi",
+  "description": "Ders, test ve flashcard içerikleri",
+  "generated": "2026-01-10T12:00:00.000Z",
+  "generator": {
+    "name": "generate_manifest.dart",
+    "version": "1.0.0"
+  },
+  "content": {
+    "lessons": {
+      "count": 8,
+      "path": "data/lessons/"
+    },
+    "topics": {
+      "count": 45,
+      "path": "data/topics/"
+    },
+    "tests": {
+      "count": 120,
+      "path": "data/tests/"
+    },
+    "flashcards": {
+      "count": 80,
+      "path": "data/flashcards/"
+    }
+  },
+  "files": [
+    {
+      "path": "data/lessons.json",
+      "size": 5432,
+      "hash": "sha256:abc123...",
+      "modified": "2026-01-10T10:00:00.000Z"
+    }
+  ],
+  "metadata": {
+    "totalFiles": 15,
+    "totalSize": 256000,
+    "compressedSize": 98000,
+    "compressionRatio": 0.62
+  }
+}
+```
+
+---
+
+### 4. analysis_options.yaml
+
+Tools klasörü için özel lint kuralları.
+
+```yaml
+# Tools için analiz seçenekleri
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+  
+  language:
+    strict-casts: true
+    strict-inference: true
+
+linter:
+  rules:
+    - avoid_print: false  # CLI araçlarında print kullanılabilir
+    - prefer_single_quotes
+    - prefer_final_locals
+    - sort_constructors_first
+```
+
+---
+
+## 📖 Kullanım
+
+### Ön Gereksinimler
+
+```bash
+# Dart SDK yüklü olmalı
+dart --version
+
+# Gerekli paketler (pubspec.yaml'da tanımlı)
+# - crypto: Hash hesaplama
+# - archive: ZIP işlemleri
+```
+
+### Temel Komutlar
+
+```bash
+# Tools klasörüne git
+cd tools
+
+# Manifest oluştur
+dart run generate_manifest.dart <input.zip> [output.json]
+
+# Arşiv içeriğini listele
+dart run list_archive_contents.dart <archive.zip>
+
+# Analiz çalıştır (tools klasörü için)
+dart analyze .
+```
+
+---
+
+## ⚙️ Yapılandırma
+
+### Ortam Değişkenleri
+
+| Değişken | Açıklama | Varsayılan |
+|----------|----------|------------|
+| `MANIFEST_VERSION` | Manifest versiyonu | "1.0.0" |
+| `HASH_ALGORITHM` | Hash algoritması | "sha256" |
+| `OUTPUT_DIR` | Çıktı klasörü | "." |
+
+### Örnek .env
+
+```env
+MANIFEST_VERSION=1.0.0
+HASH_ALGORITHM=sha256
+OUTPUT_DIR=./output
+```
+
+---
+
+## 🔄 Geliştirme
+
+### Yeni Araç Ekleme
+
+1. `tools/` klasörüne yeni `.dart` dosyası oluşturun
+2. Gerekli importları ekleyin
+3. `main()` fonksiyonunu tanımlayın
+4. Bu README'ye dokümantasyon ekleyin
+
+### Araç Şablonu
+
+```dart
+// tools/my_new_tool.dart
+
+import 'dart:io';
+
+/// Araç açıklaması
+void main(List<String> args) async {
+  if (args.isEmpty) {
+    print('Kullanım: dart run my_new_tool.dart <arg>');
+    exit(1);
+  }
+
+  try {
+    // İşlemler
+    print('✅ Başarılı!');
+  } catch (e) {
+    print('❌ Hata: $e');
+    exit(1);
+  }
+}
+```
+
+---
+
+## 📊 Araç Kullanım İstatistikleri
+
+| Araç | Son Çalıştırma | Başarı Oranı |
+|------|----------------|--------------|
+| generate_manifest | - | - |
+| list_archive_contents | - | - |
+
+---
+
+## 🐛 Sorun Giderme
+
+### Yaygın Hatalar
+
+#### "Archive paketi bulunamadı"
+
+```bash
+# Çözüm: pubspec.yaml'da archive paketini kontrol edin
+flutter pub get
+```
+
+#### "Dosya bulunamadı"
+
+```bash
+# Çözüm: Doğru yol kullandığınızdan emin olun
+# Mutlak veya göreceli yol kullanın
+dart run generate_manifest.dart /full/path/to/archive.zip
+```
+
+#### "İzin hatası"
+
+```bash
+# Çözüm: Dosya izinlerini kontrol edin
+chmod +r archive.zip
+chmod +w output/
+```
+
+---
+
+## 📝 Changelog
+
+### v1.0.0 (10 Ocak 2026)
+
+- İlk sürüm
+- generate_manifest.dart eklendi
+- list_archive_contents.dart eklendi
+- Örnek manifest dosyası eklendi
+
+---
+
+## 📄 Lisans
+
+Bu araçlar Bilgi Avcısı projesinin bir parçasıdır. Tüm hakları saklıdır.
+
+---
+
+**Son Güncelleme:** 10 Ocak 2026
