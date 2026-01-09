@@ -5,7 +5,7 @@ import 'package:lottie/lottie.dart';
 import '../providers/repository_providers.dart';
 
 /// 🚀 Motivasyonel Yatay Progress Bar - Modern & Şık Tasarım
-/// 
+///
 /// Header ile WeeklyExam kartı arasında yer alır.
 /// Her açılışta soldan sağa animasyonlu dolum efekti.
 class MotivationProgressBar extends ConsumerStatefulWidget {
@@ -25,7 +25,7 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
   late Animation<double> _fillAnimation;
   late Animation<double> _returnAnimation;
   late Animation<double> _shimmerAnimation;
-  
+
   double _targetProgress = 0.0;
   int _displayedCompleted = 0;
   int _targetCompleted = 0;
@@ -34,50 +34,50 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
   @override
   void initState() {
     super.initState();
-    
+
     // Fill animasyonu (0 -> 100%)
     _fillController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     // Return animasyonu (100% -> gerçek değer)
     _returnController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    
+
     // Shimmer efekti
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat();
-    
+
     // Bounce efekti
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    
+
     _fillAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fillController, curve: Curves.easeOutCubic),
     );
-    
+
     _returnAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _returnController, curve: Curves.easeInOutCubic),
     );
-    
+
     _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
       CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
     );
-    
+
     // Fill bittikten sonra return başlasın
     _fillController.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
         _returnController.forward(from: 0.0);
       }
     });
-    
+
     // Return bittikten sonra bounce
     _returnController.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
@@ -116,11 +116,11 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
   void _startFillAndReturnAnimation(double progress, int completed) {
     _targetProgress = progress;
     _targetCompleted = completed;
-    
+
     // Sayı animasyonu listener
     void updateDisplayedCount() {
       if (!mounted) return;
-      
+
       double animProgress;
       if (_fillController.isAnimating) {
         // Fill aşamasında: 0 -> completed
@@ -135,12 +135,12 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
         });
       }
     }
-    
+
     _fillController.addListener(updateDisplayedCount);
     _returnController.addListener(() {
       if (mounted) setState(() {});
     });
-    
+
     _fillController.forward(from: 0.0);
     _hasAnimated = true;
   }
@@ -172,12 +172,13 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
     // İlk açılışta veya değer değiştiğinde animasyonu başlat
     if (total > 0 && (!_hasAnimated || _targetCompleted != completed)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_fillController.isAnimating && !_returnController.isAnimating) {
+        if (mounted &&
+            !_fillController.isAnimating &&
+            !_returnController.isAnimating) {
           _startFillAndReturnAnimation(progress, completed);
         }
       });
     }
-
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -214,14 +215,14 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
         children: [
           // Başlık satırı
           _buildHeader(total, completed),
-          
+
           const SizedBox(height: 10),
-          
+
           // Progress bar
           _buildProgressBar(progress, completed),
-          
+
           const SizedBox(height: 8),
-          
+
           // Alt satır - Toplam içerik sayısı
           _buildFooter(total),
         ],
@@ -237,20 +238,24 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
         SizedBox(
           width: 50,
           height: 50,
+          // ✅ Lottie optimize edildi
           child: Lottie.asset(
             'assets/animation/card_thoropy.json',
             fit: BoxFit.contain,
             repeat: true,
             animate: true,
+            frameRate: FrameRate.max,
+            options: LottieOptions(enableMergePaths: true),
           ),
         ),
-        
+
         const SizedBox(width: 10),
-        
+
         // Motivasyon metni
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Metinler sola hizalı kalsın (ikonun yanında)
+            crossAxisAlignment: CrossAxisAlignment
+                .start, // Metinler sola hizalı kalsın (ikonun yanında)
             children: [
               const Text(
                 'Harika Gidiyorsun! 💪',
@@ -319,10 +324,14 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
               );
             },
           ),
-          
+
           // Shimmer efekti
           AnimatedBuilder(
-            animation: Listenable.merge([_shimmerAnimation, _fillController, _returnController]),
+            animation: Listenable.merge([
+              _shimmerAnimation,
+              _fillController,
+              _returnController,
+            ]),
             builder: (context, child) {
               final currentProgress = _getCurrentProgress();
               return ClipRRect(
@@ -348,15 +357,13 @@ class _MotivationProgressBarState extends ConsumerState<MotivationProgressBar>
                       ).createShader(bounds);
                     },
                     blendMode: BlendMode.srcATop,
-                    child: Container(
-                      color: Colors.white,
-                    ),
+                    child: Container(color: Colors.white),
                   ),
                 ),
               );
             },
           ),
-          
+
           // Çözülen sayı göstergesi (ortada)
           Center(
             child: Text(

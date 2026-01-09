@@ -1,4 +1,4 @@
-import 'dart:io';
+// dart:io kaldırıldı - Platform.isAndroid artık kullanılmıyor
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -12,7 +12,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'register_screen.dart';
 import 'main_screen.dart';
 import 'profile_setup_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
+// permission_handler kaldırıldı - izinler lazy isteniyor
+import '../widgets/auth/auth_widgets.dart'; // ✅ Ortak Auth Widget'ları
 
 /// 🎮 Oyunlaştırılmış Login Ekranı
 /// Glassmorphism + Living UI + Haptic Feedback
@@ -59,29 +60,18 @@ class _LoginScreenState extends State<LoginScreen>
     _initAnimations();
     _setupFocusListeners();
     _checkAuthState();
-    _requestAllPermissions(); // Tüm izinleri baştan iste
+    // ✅ PERFORMANS: İzinler artık lazy isteniyor
+    // Bildirim izni: NotificationService.initialize() içinde
+    // Mikrofon izni: Sesli özellik kullanılırken
+    // Alarm izni: Hatırlatıcı kurulurken
+    // Bu UX ve Google Play policy için daha uygun
   }
-  
-  /// Tüm izinleri arka arkaya iste (bildirim, mikrofon, exact alarm)
-  Future<void> _requestAllPermissions() async {
-    // 1. Bildirim izni (Android 13+ ve iOS)
-    if (await Permission.notification.isDenied) {
-      await Permission.notification.request();
-    }
-    
-    // 2. Mikrofon izni (Android ve iOS)
-    if (await Permission.microphone.isDenied) {
-      await Permission.microphone.request();
-    }
-    
-    // 3. Exact alarm izni (SADECE Android 12+ için)
-    // iOS'ta bu izin gerekli değil - yerel bildirimler sistem tarafından yönetiliyor
-    if (Platform.isAndroid) {
-      if (await Permission.scheduleExactAlarm.isDenied) {
-        await Permission.scheduleExactAlarm.request();
-      }
-    }
-  }
+
+  // ❌ _requestAllPermissions KALDIRILDI
+  // İzinler artık ilgili özellik kullanılacağı zaman isteniyor:
+  // - Bildirim: lib/services/notification_service.dart
+  // - Mikrofon: Sesli maskot özelliği eklendiğinde
+  // - Exact Alarm: lib/services/scheduled_notification_helper.dart
 
   void _initAnimations() {
     // Blob animasyonu
@@ -142,7 +132,13 @@ class _LoginScreenState extends State<LoginScreen>
         }
         return;
       } catch (e) {
-        // Hata durumunda login ekranında kal
+        // ✅ Hata loglanıyor ve kullanıcıya bildirim gösteriliyor
+        debugPrint('❌ Auth kontrol hatası: $e');
+        if (mounted) {
+          _showErrorSnackbar(
+            'Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.',
+          );
+        }
       }
     }
     if (mounted) {
@@ -281,10 +277,13 @@ class _LoginScreenState extends State<LoginScreen>
       return Scaffold(
         backgroundColor: _backgroundBase,
         body: Center(
+          // ✅ Lottie optimize edildi
           child: Lottie.asset(
             'assets/animation/loading-kum.json',
             width: 120,
             height: 120,
+            frameRate: FrameRate.max, // Performans
+            options: LottieOptions(enableMergePaths: true), // GPU optimizasyonu
             errorBuilder: (_, __, ___) =>
                 CircularProgressIndicator(color: _primaryPurple),
           ),
@@ -294,6 +293,8 @@ class _LoginScreenState extends State<LoginScreen>
 
     return Scaffold(
       backgroundColor: _backgroundBase,
+      // ✅ Klavye açıldığında içeriği otomatik kaydır
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -301,6 +302,10 @@ class _LoginScreenState extends State<LoginScreen>
             final screenHeight = constraints.maxHeight;
             final isSmallScreen = screenHeight < 700;
             final isNarrowScreen = screenWidth < 380;
+
+            // ✅ Klavye açık olup olmadığını kontrol et
+            final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+            final isKeyboardOpen = keyboardHeight > 0;
 
             // Responsive boyutlar
             final cardWidth = (screenWidth * 0.9).clamp(300.0, 420.0);
@@ -318,7 +323,10 @@ class _LoginScreenState extends State<LoginScreen>
                 SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: screenHeight),
+                    // ✅ Klavye açıkken minHeight'ı ayarla, overflow önle
+                    constraints: BoxConstraints(
+                      minHeight: isKeyboardOpen ? 0 : screenHeight,
+                    ),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: horizontalPadding,
@@ -326,7 +334,12 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(height: isSmallScreen ? 40 : 60),
+                          // ✅ Klavye açıkken daha az boşluk
+                          SizedBox(
+                            height: isKeyboardOpen
+                                ? 20
+                                : (isSmallScreen ? 40 : 60),
+                          ),
 
                           // 3. Mascot + Glass Card Stack
                           if (_showCard)
@@ -338,7 +351,11 @@ class _LoginScreenState extends State<LoginScreen>
                               isNarrowScreen: isNarrowScreen,
                             ),
 
-                          SizedBox(height: isSmallScreen ? 20 : 40),
+                          SizedBox(
+                            height: isKeyboardOpen
+                                ? 20
+                                : (isSmallScreen ? 20 : 40),
+                          ),
                         ],
                       ),
                     ),
@@ -493,9 +510,14 @@ class _LoginScreenState extends State<LoginScreen>
                 child: SizedBox(
                   width: size,
                   height: size,
+                  // ✅ Lottie optimize edildi
                   child: Lottie.asset(
                     'assets/animation/kedi_mascot.json',
                     fit: BoxFit.contain,
+                    frameRate: FrameRate.max, // Performans
+                    options: LottieOptions(
+                      enableMergePaths: true,
+                    ), // GPU optimizasyonu
                     errorBuilder: (context, error, stackTrace) {
                       return _buildFallbackMascot(size);
                     },
@@ -585,27 +607,38 @@ class _LoginScreenState extends State<LoginScreen>
               _buildTitle(titleSize),
               SizedBox(height: isSmallScreen ? 24 : 32),
 
-              // E-posta Input
-              _buildAnimatedInput(
+              // ✅ E-posta Input - Ortak AuthTextField widget'ı
+              AuthTextField(
                 controller: _emailController,
                 focusNode: _emailFocusNode,
                 isFocused: _isEmailFocused,
                 hintText: 'E-posta',
                 icon: Icons.email_rounded,
                 keyboardType: TextInputType.emailAddress,
-                delay: 100,
+                animationDelay: 100,
+                primaryColor: _primaryPurple,
+                backgroundColor: _backgroundBase,
+                textColor: _darkText,
               ),
               SizedBox(height: isSmallScreen ? 14 : 18),
 
-              // Şifre Input
-              _buildAnimatedInput(
+              // ✅ Şifre Input - Ortak AuthTextField widget'ı
+              AuthTextField(
                 controller: _passwordController,
                 focusNode: _passwordFocusNode,
                 isFocused: _isPasswordFocused,
                 hintText: 'Şifre',
                 icon: Icons.lock_rounded,
                 isPassword: true,
-                delay: 200,
+                obscureText: _obscurePassword,
+                onToggleObscure: () {
+                  _hapticLight();
+                  setState(() => _obscurePassword = !_obscurePassword);
+                },
+                animationDelay: 200,
+                primaryColor: _primaryPurple,
+                backgroundColor: _backgroundBase,
+                textColor: _darkText,
               ),
               SizedBox(height: isSmallScreen ? 8 : 12),
 
@@ -621,9 +654,9 @@ class _LoginScreenState extends State<LoginScreen>
               _buildDivider(),
               SizedBox(height: isSmallScreen ? 20 : 28),
 
-              // Sosyal Giriş
-              _buildSocialButtons(isSmallScreen),
-              SizedBox(height: isSmallScreen ? 16 : 24),
+              // ❌ Sosyal giriş butonları kaldırıldı (Dead Code)
+              // Google/Apple giriş entegrasyonu yapılmadı
+              // Kullanıcıda "bozuk buton" algısı yaratıyordu
 
               // Kayıt Ol
               _buildRegisterLink(),
@@ -662,107 +695,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildAnimatedInput({
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required bool isFocused,
-    required String hintText,
-    required IconData icon,
-    bool isPassword = false,
-    TextInputType keyboardType = TextInputType.text,
-    int delay = 0,
-  }) {
-    final borderColor = isFocused ? _primaryPurple : Colors.transparent;
-    final glowColor = isFocused
-        ? _primaryPurple.withValues(alpha: 0.3)
-        : Colors.transparent;
-
-    return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: glowColor,
-                blurRadius: isFocused ? 15 : 0,
-                spreadRadius: isFocused ? 2 : 0,
-              ),
-            ],
-          ),
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 150),
-            scale: isFocused ? 1.02 : 1.0,
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              obscureText: isPassword && _obscurePassword,
-              keyboardType: keyboardType,
-              style: GoogleFonts.nunito(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _darkText,
-              ),
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: GoogleFonts.nunito(
-                  color: _darkText.withValues(alpha: 0.4),
-                  fontWeight: FontWeight.w500,
-                ),
-                prefixIcon:
-                    Icon(
-                          icon,
-                          color: isFocused
-                              ? _primaryPurple
-                              : _darkText.withValues(alpha: 0.5),
-                        )
-                        .animate(target: isFocused ? 1 : 0)
-                        .scale(
-                          begin: const Offset(1, 1),
-                          end: const Offset(1.1, 1.1),
-                        ),
-                suffixIcon: isPassword
-                    ? IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
-                          color: _darkText.withValues(alpha: 0.5),
-                        ),
-                        onPressed: () {
-                          _hapticLight();
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: _backgroundBase.withValues(alpha: 0.8),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 18,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: _darkText.withValues(alpha: 0.1),
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: borderColor, width: 2),
-                ),
-              ),
-            ),
-          ),
-        )
-        .animate(delay: Duration(milliseconds: delay))
-        .fadeIn(duration: 400.ms)
-        .slideX(begin: 0.1, end: 0);
-  }
+  // ✅ _buildAnimatedInput kaldırıldı - AuthTextField kullanılıyor
 
   Widget _buildForgotPassword() {
     return Align(
@@ -1067,90 +1000,8 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate(delay: 450.ms).fadeIn(duration: 400.ms);
   }
 
-  Widget _buildSocialButtons(bool isSmallScreen) {
-    return Row(
-          children: [
-            // Google Button
-            Expanded(
-              child: _buildSocialButton(
-                icon: 'G',
-                label: 'Google',
-                color: const Color(0xFFDB4437),
-                onTap: () {
-                  _hapticLight();
-                  // context.read<AuthProvider>().signInWithGoogle();
-                },
-              ),
-            ),
-            const SizedBox(width: 14),
-            // Apple Button
-            Expanded(
-              child: _buildSocialButton(
-                icon: '',
-                label: 'Apple',
-                color: _darkText,
-                onTap: () {
-                  _hapticLight();
-                  // context.read<AuthProvider>().signInWithApple();
-                },
-              ),
-            ),
-          ],
-        )
-        .animate(delay: 500.ms)
-        .fadeIn(duration: 400.ms)
-        .slideY(begin: 0.2, end: 0);
-  }
-
-  Widget _buildSocialButton({
-    required String icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (icon == 'G')
-                  Text(
-                    'G',
-                    style: GoogleFonts.roboto(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  )
-                else
-                  Icon(Icons.apple, color: color, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // ❌ _buildSocialButtons ve _buildSocialButton kaldırıldı
+  // Google/Apple giriş entegrasyonu yapılmadığı için dead code idi
 
   Widget _buildRegisterLink() {
     return Row(

@@ -227,11 +227,14 @@ class _MascotWidgetState extends ConsumerState<MascotWidget>
         clipBehavior: Clip.none, // Overflow/pop-out efekti için
         child: Transform.scale(
           scale: 1.3, // Maskotun biraz taşması için
+          // ✅ Lottie optimize edildi
           child: Lottie.asset(
             mascot.petType.getLottiePath(),
             width: 85,
             height: 85,
             fit: BoxFit.contain,
+            frameRate: FrameRate.max,
+            options: LottieOptions(enableMergePaths: true),
           ),
         ),
       ),

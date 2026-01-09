@@ -199,9 +199,12 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                 color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
+              // ✅ Lottie optimize edildi
               child: Lottie.asset(
                 _selectedPetType?.getLottiePath() ?? '',
                 fit: BoxFit.contain,
+                frameRate: FrameRate.max,
+                options: LottieOptions(enableMergePaths: true),
               ),
             ),
             TextField(
@@ -800,10 +803,13 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                                       )
                                     : null,
                               ),
+                              // ✅ Lottie optimize edildi
                               child: Lottie.asset(
                                 petType.getLottiePath(),
                                 fit: BoxFit.contain,
                                 animate: isActive,
+                                frameRate: FrameRate.max,
+                                options: LottieOptions(enableMergePaths: true),
                               ),
                             ),
                           ),
@@ -1090,9 +1096,12 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                               ),
                             ],
                           ),
+                          // ✅ Lottie optimize edildi
                           child: Lottie.asset(
                             _selectedPetType?.getLottiePath() ?? '',
                             fit: BoxFit.contain,
+                            frameRate: FrameRate.max,
+                            options: LottieOptions(enableMergePaths: true),
                           ),
                         ),
                       );

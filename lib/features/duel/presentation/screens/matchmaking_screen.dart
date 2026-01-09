@@ -482,10 +482,13 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                 ),
               ],
             ),
+            // ✅ Lottie optimize edildi
             child: Lottie.asset(
               'assets/animation/match_macking.json',
               fit: BoxFit.contain,
               repeat: !_isFound,
+              frameRate: FrameRate.max,
+              options: LottieOptions(enableMergePaths: true),
             ),
           ),
         );
@@ -778,7 +781,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
     // Konu adını al
     final controller = ref.read(duelControllerProvider.notifier);
     final topicName = controller.currentTopicName ?? 'Genel Konu';
-    
+
     return Container(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

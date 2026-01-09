@@ -16,11 +16,18 @@ import 'core/navigator_key.dart';
 import 'services/notification_service.dart';
 import 'services/time_tracking_service.dart';
 
-import 'package:wakelock_plus/wakelock_plus.dart';
+// ⚡ Wakelock import kaldırıldı - artık sadece gerekli ekranlarda kullanılacak
 import 'services/local_preferences_service.dart';
 import 'services/scheduled_notification_helper.dart';
+import 'providers/theme_provider.dart';
 
-// Basit bir tema yöneticisi
+// ═══════════════════════════════════════════════════════════════════════════
+// ⚠️ LEGACY ThemeManager - Backward Compatibility İçin Korunuyor
+// ═══════════════════════════════════════════════════════════════════════════
+// YENİ KODLARDA ref.watch(themeProvider) KULLANIN!
+// Bu sınıf kademeli geçiş için tutuluyor, gelecekte kaldırılacak.
+// ═══════════════════════════════════════════════════════════════════════════
+@Deprecated('Use themeProvider from providers/theme_provider.dart instead')
 class ThemeManager extends ValueNotifier<ThemeMode> {
   ThemeManager(ThemeMode initialMode) : super(initialMode);
 
@@ -32,6 +39,7 @@ class ThemeManager extends ValueNotifier<ThemeMode> {
 }
 
 // Global tema yöneticisi - main() içinde başlatılacak
+// ignore: deprecated_member_use_from_same_package
 late final ThemeManager themeManager;
 
 /// Global RouteObserver - ekranlar arası geçişleri takip etmek için
@@ -42,8 +50,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Ekranın kapanmasını engelle
-  WakelockPlus.enable();
+  // ⚡ Global Wakelock KALDIRILDI - Pil tasarrufu için
+  // Artık sadece Test/Sınav ekranlarında etkinleştirilecek
 
   // Türkçe tarih formatını başlat
   await initializeDateFormatting('tr_TR', null);
@@ -59,7 +67,11 @@ void main() async {
 
   // Tema tercihini yükle (Varsayılan: Dark Mode)
   final isDarkMode = await LocalPreferencesService().isDarkMode();
-  themeManager = ThemeManager(isDarkMode ? ThemeMode.dark : ThemeMode.light);
+  final initialThemeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+  // Legacy ThemeManager (backward compatibility - kademeli olarak kaldırılacak)
+  // ignore: deprecated_member_use_from_same_package
+  themeManager = ThemeManager(initialThemeMode);
 
   // Global hata handler - Release/Debug moda göre farklı davranış
   ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -121,57 +133,67 @@ void main() async {
     // FlutterError.presentError(details);
   };
 
-  runApp(const ProviderScope(child: MyApp()));
+  // ✅ Riverpod ProviderScope ile başlat
+  // themeProvider override ile başlangıç tema modunu ayarla
+  runApp(
+    ProviderScope(
+      overrides: [
+        themeProvider.overrideWith((ref) => ThemeNotifier(initialThemeMode)),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+/// 🎯 Ana Uygulama Widget'ı - Artık ConsumerWidget
+/// Riverpod themeProvider'ı dinliyor
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeManager,
-      builder: (context, currentMode, child) {
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          title: 'Bilgi Avcısı',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            brightness: Brightness.light,
-            scaffoldBackgroundColor: AppColors.backgroundLight,
-            primaryColor: AppColors.primary,
-            textTheme: GoogleFonts.nunitoTextTheme(textTheme).apply(
-              bodyColor: AppColors.textLight,
-              displayColor: AppColors.textLight,
-            ),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.primary,
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: AppColors.backgroundDark,
-            primaryColor: AppColors.primary,
-            textTheme: GoogleFonts.nunitoTextTheme(textTheme).apply(
-              bodyColor: AppColors.textDark,
-              displayColor: AppColors.textDark,
-            ),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.primary,
-              brightness: Brightness.dark,
-              surface: AppColors.backgroundDark,
-            ),
-            useMaterial3: true,
-          ),
-          themeMode: currentMode,
-          navigatorObservers: [routeObserver],
-          home: const SplashScreen(),
-        );
-      },
+    // ✅ Yeni yöntem: Riverpod themeProvider kullan
+    // ValueListenableBuilder artık gerekli değil!
+    final currentMode = ref.watch(themeProvider);
+
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      title: 'Bilgi Avcısı',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: AppColors.backgroundLight,
+        primaryColor: AppColors.primary,
+        textTheme: GoogleFonts.nunitoTextTheme(textTheme).apply(
+          bodyColor: AppColors.textLight,
+          displayColor: AppColors.textLight,
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: AppColors.backgroundDark,
+        primaryColor: AppColors.primary,
+        textTheme: GoogleFonts.nunitoTextTheme(textTheme).apply(
+          bodyColor: AppColors.textDark,
+          displayColor: AppColors.textDark,
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.dark,
+          surface: AppColors.backgroundDark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: currentMode,
+      navigatorObservers: [routeObserver],
+      home: const SplashScreen(),
     );
   }
 }

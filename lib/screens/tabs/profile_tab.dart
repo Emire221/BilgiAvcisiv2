@@ -40,15 +40,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       _hasAnimatedXp = false;
       // Mevcut datayı kullanarak animasyonu tekrar tetikle
       if (_userData != null) {
-          // Force re-build or re-trigger logic will happen in build
-          setState(() {}); 
+        // Force re-build or re-trigger logic will happen in build
+        setState(() {});
       }
     }
   }
 
   bool _isLoading = true;
   late AnimationController _floatController;
-  
+
   // XP Bar Animasyonları
   late AnimationController _fillController;
   late AnimationController _returnController;
@@ -90,14 +90,14 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     _returnController.dispose();
     super.dispose();
   }
-    
+
   void _initXpAnimations() {
     // Fill animasyonu (0 -> 100%) - Hızlandırıldı
     _fillController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), 
+      duration: const Duration(milliseconds: 1000),
     );
-    
+
     // Return animasyonu (100% -> gerçek değer) - Hızlandırıldı
     _returnController = AnimationController(
       vsync: this,
@@ -107,7 +107,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     _fillAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fillController, curve: Curves.easeOutCubic),
     );
-    
+
     _returnAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _returnController, curve: Curves.easeInOutCubic),
     );
@@ -127,9 +127,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     // Eğer animasyon zaten yapıldıysa ve hedef değişmediyse işlem yapma.
     // Ancak _hasAnimatedXp false ise (örn: tab değişimi sonrası) animasyonu tekrar başlat.
     if (_hasAnimatedXp && _targetXpProgress == progress) return;
-    
+
     _targetXpProgress = progress;
-    
+
     // Eğer zaten animasyon oynuyorsa, sadece hedefi güncellemiş olduk.
     // Animasyon (return kısmı) yeni hedefe göre devam edecek.
     // Eğer animasyon oynamıyorsa (veya bitmişse), baştan başlat.
@@ -155,7 +155,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     // Safety net: Eğer animasyon başlamadıysa bile 0 yerine hedeflenen değeri göster.
     return _targetXpProgress;
   }
-
 
   Future<void> _loadUserData() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -730,13 +729,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
             ],
           ),
         ),
-        // Lottie Maskot
+        // ✅ Lottie Maskot - Optimize edildi
         SizedBox(
           height: 220,
           child: Lottie.asset(
             mascot.petType.getLottiePath(),
             fit: BoxFit.contain,
             animate: true,
+            frameRate: FrameRate.max,
+            options: LottieOptions(enableMergePaths: true),
           ),
         ),
         // Seviye Badge
@@ -888,19 +889,22 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
             data: (mascot) {
               if (mascot == null) return const SizedBox.shrink();
               // Level bilgisini XP'den hesapla (veri tutarlılığı için)
-              final calculatedLevel = MascotLogic.calculateLevel(mascot.currentXp);
-              
+              final calculatedLevel = MascotLogic.calculateLevel(
+                mascot.currentXp,
+              );
+
               final progress = MascotLogic.getLevelProgress(
                 mascot.currentXp,
                 calculatedLevel,
               );
-              
-              
+
               // Animasyonu başlat
 
               // Animasyonu başlat
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && !_fillController.isAnimating && !_returnController.isAnimating) {
+                if (mounted &&
+                    !_fillController.isAnimating &&
+                    !_returnController.isAnimating) {
                   _startXpAnimation(progress);
                 }
               });
@@ -951,16 +955,24 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                         child: Stack(
                           children: [
                             AnimatedBuilder(
-                              animation: Listenable.merge([_fillController, _returnController]),
+                              animation: Listenable.merge([
+                                _fillController,
+                                _returnController,
+                              ]),
                               builder: (context, child) {
-                                final animatedProgress = _getCurrentXpProgress();
+                                final animatedProgress =
+                                    _getCurrentXpProgress();
                                 return Container(
-                                  width: (constraints.maxWidth * animatedProgress).clamp(0.0, constraints.maxWidth),
+                                  width:
+                                      (constraints.maxWidth * animatedProgress)
+                                          .clamp(0.0, constraints.maxWidth),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
                                         mascot.petType.color,
-                                        mascot.petType.color.withValues(alpha: 0.7),
+                                        mascot.petType.color.withValues(
+                                          alpha: 0.7,
+                                        ),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(6),
@@ -1014,7 +1026,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       _StatItem(
         icon: FontAwesomeIcons.clock,
         label: 'Bugün',
-        value: '__LIVE_TIME__', // Özel işaret - StreamBuilder ile değiştirilecek
+        value:
+            '__LIVE_TIME__', // Özel işaret - StreamBuilder ile değiştirilecek
         color: const Color(0xFF6C5CE7),
         delay: 300,
       ),
@@ -1038,7 +1051,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       itemCount: stats.length,
       itemBuilder: (context, index) {
         final stat = stats[index];
-        
+
         // Bugün kartı için özel StreamBuilder kullan
         if (stat.value == '__LIVE_TIME__') {
           return StreamBuilder<int>(
@@ -1059,7 +1072,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                   HapticFeedback.lightImpact();
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TimeAnalyticsScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const TimeAnalyticsScreen(),
+                    ),
                   );
                 },
                 child: _buildStatCard(liveStat, isDarkMode)
@@ -1079,7 +1094,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
             },
           );
         }
-        
+
         return _buildStatCard(stat, isDarkMode)
             .animate()
             .fadeIn(

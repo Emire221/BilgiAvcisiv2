@@ -1,93 +1,78 @@
-# =========================================================
-# Bilgi Avcısı - DevTools Yapılandırması
-# =========================================================
-# Tarih: 10 Ocak 2026
-# Versiyon: 1.0.0
-# Proje: bilgici (Bilgi Avcısı)
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔧 Bilgi Avcısı - DevTools Yapılandırması
+# ═══════════════════════════════════════════════════════════════════════════
+# Bu dosya Flutter DevTools için özel ayarları içerir.
+# Daha fazla bilgi: https://docs.flutter.dev/tools/devtools
+# ═══════════════════════════════════════════════════════════════════════════
 
-description: Bilgi Avcısı - Eğitim uygulaması için DevTools ayarları
-documentation: https://docs.flutter.dev/tools/devtools/extensions#configure-extension-enablement-states
+description: Bilgi Avcısı DevTools yapılandırması.
 
-# =========================================================
-# DevTools Extension Ayarları
-# =========================================================
 extensions:
-  # Riverpod DevTools Extension
-  # State management debug için
-  # - riverpod_devtools: true
+  # ─────────────────────────────────────────────────────────────────────────
+  # Provider DevTools Extension
+  # ─────────────────────────────────────────────────────────────────────────
+  # Riverpod state'lerini izlemek için
+  # Not: flutter_riverpod paketi otomatik olarak DevTools'a entegre olur
   
-  # Provider DevTools Extension  
-  # - provider_devtools: true
+  # ─────────────────────────────────────────────────────────────────────────
+  # Performance Overlay
+  # ─────────────────────────────────────────────────────────────────────────
+  # Debug modda performans overlay'ini etkinleştirmek için:
+  # MaterialApp'te showPerformanceOverlay: true kullanın
 
-# =========================================================
-# Proje Bilgileri
-# =========================================================
-# 
-# Proje: Bilgi Avcısı (bilgici)
-# Açıklama: Türk öğrenciler için eğitim uygulaması
-# Flutter SDK: ^3.9.2
-# Dart SDK: ^3.9.2
-#
-# Ana Özellikler:
-# - Test çözme ve flashcard sistemi
-# - Oyunlaştırılmış öğrenme (Düello, Hafıza, Cümle Tamamla, Salla Bakalım)
-# - Etkileşimli maskot sistemi
-# - Firebase entegrasyonu (Auth, Firestore, Storage)
-# - SQLite yerel veritabanı
-# - Bildirim sistemi
-#
-# Mimari: Clean Architecture + Feature-First
-# State Management: Riverpod + Provider
-# 
-# =========================================================
-# Debugging İpuçları
-# =========================================================
-#
-# 1. Widget Inspector (Ctrl+Shift+I):
-#    - Widget tree'yi görüntüle
-#    - Layout sorunlarını tespit et
-#    - Rebuild'leri izle
-#
-# 2. Performance View:
-#    - Frame render süreleri
-#    - Jank tespiti
-#    - Memory kullanımı
-#
-# 3. Network View:
-#    - Firebase istekleri
-#    - HTTP trafiği
-#
-# 4. Logging View:
-#    - debugPrint() çıktıları
-#    - Error logları
-#    - Riverpod state değişimleri
-#
-# =========================================================
-# Önerilen Debug Stratejileri
-# =========================================================
-#
-# Riverpod State Debug:
-# ```dart
-# ref.listen(myProvider, (prev, next) {
-#   debugPrint('State changed: $prev -> $next');
-# });
-# ```
-#
-# Widget Rebuild Tracking:
-# ```dart
-# @override
-# Widget build(BuildContext context) {
-#   debugPrint('MyWidget rebuild');
-#   return ...
-# }
-# ```
-#
-# Database Query Debug:
-# ```dart
-# final results = await db.query('Testler');
-# debugPrint('Query results: ${results.length} rows');
-# ```
-#
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════════
+# Inspector Ayarları
+# ═══════════════════════════════════════════════════════════════════════════
+inspector:
+  # Widget Inspector varsayılan ayarları
+  defaultWidgetInspectorOptions:
+    # Seçili widget'ın render object bilgisini göster
+    showRenderObjectInfo: true
+    # Widget sınırlarını göster
+    showWidgetBounds: true
 
-# Son güncelleme: 10 Ocak 2026
+# ═══════════════════════════════════════════════════════════════════════════
+# Logging Ayarları
+# ═══════════════════════════════════════════════════════════════════════════
+logging:
+  # Log seviyesi (verbose, debug, info, warning, error)
+  level: info
+  
+  # Filtrelenecek log kategorileri
+  excludeCategories:
+    - flutter.frame # Frame timing loglarını gizle
+    - flutter.imageCache # Image cache loglarını gizle
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Memory Profiler Ayarları
+# ═══════════════════════════════════════════════════════════════════════════
+memory:
+  # GC olaylarını izle
+  trackGC: true
+  
+  # Allocation tracking (performansı etkileyebilir)
+  trackAllocations: false
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Network Profiler Ayarları
+# ═══════════════════════════════════════════════════════════════════════════
+network:
+  # HTTP isteklerini kaydet
+  recordHttpRequests: true
+  
+  # WebSocket bağlantılarını izle
+  trackWebSockets: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CPU Profiler Ayarları
+# ═══════════════════════════════════════════════════════════════════════════
+cpuProfiler:
+  # Profil örnekleme aralığı (mikrosaniye)
+  samplePeriod: 250
+
+# ═══════════════════════════════════════════════════════════════════════════
+# App Size Analyzer
+# ═══════════════════════════════════════════════════════════════════════════
+# APK/IPA boyut analizi için:
+# flutter build apk --analyze-size
+# flutter build ipa --analyze-size

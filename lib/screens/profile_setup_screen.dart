@@ -30,6 +30,27 @@ List<Map<String, String>> _parseClasses(dynamic data) {
       .toList();
 }
 
+/// ✅ Okul filtreleme parametreleri
+class _FilterParams {
+  final List<School> schools;
+  final String district;
+
+  _FilterParams({required this.schools, required this.district});
+}
+
+/// ✅ Okulları ilçeye göre filtreler - Isolate içinde çalışır
+List<School> _filterSchoolsByDistrict(_FilterParams params) {
+  return params.schools
+      .where(
+        (s) =>
+            s.ilce.toLowerCase().trim() == params.district.toLowerCase().trim(),
+      )
+      .toList()
+    ..sort(
+      (a, b) => a.okulAdi.toLowerCase().compareTo(b.okulAdi.toLowerCase()),
+    );
+}
+
 /// 🎮 Oyunlaştırılmış Profil Kurulum Ekranı
 /// "Kahramanını Oluştur" Temalı Kimlik Oyunu
 ///
@@ -197,12 +218,27 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
     }
   }
 
-  void _onDistrictChanged(String district) {
+  /// ✅ Okul filtreleme işlemi - Isolate için top-level fonksiyon desteği
+  Future<void> _onDistrictChanged(String district) async {
     _triggerHaptic();
     setState(() {
       _selectedDistrict = district;
       _selectedSchoolID = null;
-      _filteredSchools =
+      _filteredSchools = []; // Önce boşalt
+    });
+
+    // Büyük listeler için isolate kullan (>100 okul)
+    if (_schools.length > 100) {
+      final filtered = await compute(
+        _filterSchoolsByDistrict,
+        _FilterParams(schools: _schools, district: district),
+      );
+      if (mounted) {
+        setState(() => _filteredSchools = filtered);
+      }
+    } else {
+      // Küçük listeler için ana thread yeterli
+      final filtered =
           _schools
               .where(
                 (s) =>
@@ -214,7 +250,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
               (a, b) =>
                   a.okulAdi.toLowerCase().compareTo(b.okulAdi.toLowerCase()),
             );
-    });
+      if (mounted) {
+        setState(() => _filteredSchools = filtered);
+      }
+    }
   }
 
   void _onSchoolChanged(String schoolID) {
@@ -418,9 +457,14 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
           SizedBox(
             width: 200,
             height: 200,
+            // ✅ Lottie optimize edildi
             child: Lottie.asset(
               'assets/animation/loading-kum.json',
               fit: BoxFit.contain,
+              frameRate: FrameRate.max, // Performans
+              options: LottieOptions(
+                enableMergePaths: true,
+              ), // GPU optimizasyonu
             ),
           ),
           const SizedBox(height: 24),

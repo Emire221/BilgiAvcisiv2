@@ -190,34 +190,32 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen>
   Widget _buildProgressBar(int current, int total) {
     final progress = current / total;
 
+    // ✅ Optimize edildi: Gereksiz Stack kaldırıldı
     return Container(
       height: 6,
-      width: double.infinity, // Hata düzeltme: Infinite width hatası için
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(3),
       ),
-      child: Stack(
-        children: [
-          AnimatedFractionallySizedBox(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
-            widthFactor: progress,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [_neonCyan, _neonPurple]),
-                borderRadius: BorderRadius.circular(3),
-                boxShadow: [
-                  BoxShadow(
-                    color: _neonCyan.withValues(alpha: 0.5),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ],
+      child: AnimatedFractionallySizedBox(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.centerLeft,
+        widthFactor: progress,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [_neonCyan, _neonPurple]),
+            borderRadius: BorderRadius.circular(3),
+            boxShadow: [
+              BoxShadow(
+                color: _neonCyan.withValues(alpha: 0.5),
+                blurRadius: 8,
+                spreadRadius: 1,
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -284,6 +284,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                         opacity: _status == ExamCardStatus.yukleniyor
                             ? 0.3
                             : 0.85,
+                        // ✅ Lottie optimize edildi
                         child: SizedBox(
                           width: lottieSize,
                           height: lottieSize,
@@ -292,6 +293,8 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard>
                             fit: BoxFit.contain,
                             repeat: true,
                             animate: _status != ExamCardStatus.yukleniyor,
+                            frameRate: FrameRate.max,
+                            options: LottieOptions(enableMergePaths: true),
                           ),
                         ),
                       ),

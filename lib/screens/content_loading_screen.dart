@@ -474,13 +474,15 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
 
           const SizedBox(height: 40),
 
-          // Lottie animasyonu
+          // ✅ Lottie animasyonu - optimize edildi
           SizedBox(
                 width: 180,
                 height: 120,
                 child: Lottie.asset(
                   'assets/animation/loading-kum.json',
                   fit: BoxFit.contain,
+                  frameRate: FrameRate.max,
+                  options: LottieOptions(enableMergePaths: true),
                   errorBuilder: (context, error, stackTrace) {
                     return CircularProgressIndicator(
                       color: _primaryPurple,

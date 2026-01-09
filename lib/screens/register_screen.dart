@@ -10,6 +10,7 @@ import 'package:lottie/lottie.dart';
 
 import 'profile_setup_screen.dart';
 import 'login_screen.dart';
+import '../widgets/auth/auth_widgets.dart'; // ✅ Ortak Auth Widget'ları
 
 /// 🚀 KAYIT OL EKRANI - Kozmik Tema
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -473,8 +474,8 @@ class _RegisterScreenState extends State<RegisterScreen>
         ),
         child: Stack(
           children: [
-            // Star particles
-            ..._buildStars(),
+            // ✅ Star particles - Optimize edildi (tek CustomPainter)
+            _buildStarsOptimized(),
 
             // Grid pattern
             _buildGridPattern(),
@@ -557,45 +558,22 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  List<Widget> _buildStars() {
-    return _stars.map((star) {
-      return Positioned(
-        left: star.x * MediaQuery.of(context).size.width,
-        top: star.y * MediaQuery.of(context).size.height,
-        child: AnimatedBuilder(
-          animation: _shimmerController,
-          builder: (context, child) {
-            final twinkle =
-                (math.sin(
-                      _shimmerController.value *
-                          math.pi *
-                          2 *
-                          star.twinkleSpeed,
-                    ) +
-                    1) /
-                2;
-            return Opacity(
-              opacity: star.opacity * twinkle,
-              child: Container(
-                width: star.size * 2,
-                height: star.size * 2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _primaryCyan.withOpacity(0.5),
-                      blurRadius: star.size * 3,
-                      spreadRadius: star.size / 2,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    }).toList();
+  // ✅ PERFORMANS: 40 ayrı AnimatedBuilder yerine tek CustomPainter
+  // Bu sayede animasyonun her karesinde 40 değil 1 widget rebuild oluyor
+  Widget _buildStarsOptimized() {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        return CustomPaint(
+          size: MediaQuery.of(context).size,
+          painter: _StarsPainter(
+            stars: _stars,
+            animationValue: _shimmerController.value,
+            glowColor: _primaryCyan,
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildGridPattern() {
@@ -665,9 +643,14 @@ class _RegisterScreenState extends State<RegisterScreen>
               ],
             ),
             child: ClipOval(
+              // ✅ Lottie optimize edildi
               child: Lottie.asset(
                 'assets/animation/kedi_mascot.json',
                 fit: BoxFit.contain,
+                frameRate: FrameRate.max, // Performans
+                options: LottieOptions(
+                  enableMergePaths: true,
+                ), // GPU optimizasyonu
               ),
             ),
           ),
@@ -739,20 +722,21 @@ class _RegisterScreenState extends State<RegisterScreen>
       ),
       child: Column(
         children: [
-          // Email input
-          _buildInputField(
+          // ✅ Email input - Ortak AuthTextFieldDark widget'ı
+          AuthTextFieldDark(
             controller: _emailController,
             focusNode: _emailFocusNode,
             isFocused: _isEmailFocused,
             hintText: 'E-posta',
             icon: Icons.email_rounded,
             keyboardType: TextInputType.emailAddress,
+            accentColor: _primaryCyan,
           ),
 
           SizedBox(height: isSmallScreen ? 14 : 18),
 
-          // Password input
-          _buildInputField(
+          // ✅ Password input - Ortak AuthTextFieldDark widget'ı
+          AuthTextFieldDark(
             controller: _passwordController,
             focusNode: _passwordFocusNode,
             isFocused: _isPasswordFocused,
@@ -764,6 +748,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               setState(() => _obscurePassword = !_obscurePassword);
             },
             onChanged: _checkPasswordStrength,
+            accentColor: _primaryCyan,
           ),
 
           // Password strength indicator
@@ -774,8 +759,8 @@ class _RegisterScreenState extends State<RegisterScreen>
 
           SizedBox(height: isSmallScreen ? 14 : 18),
 
-          // Confirm password input
-          _buildInputField(
+          // ✅ Confirm password input - Ortak AuthTextFieldDark widget'ı
+          AuthTextFieldDark(
             controller: _confirmPasswordController,
             focusNode: _confirmPasswordFocusNode,
             isFocused: _isConfirmPasswordFocused,
@@ -788,6 +773,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 () => _obscureConfirmPassword = !_obscureConfirmPassword,
               );
             },
+            accentColor: _primaryCyan,
           ),
 
           SizedBox(height: isSmallScreen ? 10 : 14),
@@ -804,81 +790,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required bool isFocused,
-    required String hintText,
-    required IconData icon,
-    bool isPassword = false,
-    bool obscureText = false,
-    VoidCallback? onToggleObscure,
-    TextInputType keyboardType = TextInputType.text,
-    ValueChanged<String>? onChanged,
-  }) {
-    final borderColor = isFocused
-        ? _primaryCyan
-        : Colors.white.withOpacity(0.1);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(isFocused ? 0.08 : 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: isFocused ? 2 : 1),
-        boxShadow: isFocused
-            ? [
-                BoxShadow(
-                  color: _primaryCyan.withOpacity(0.2),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ]
-            : [],
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        obscureText: isPassword ? obscureText : false,
-        keyboardType: keyboardType,
-        onChanged: onChanged,
-        style: GoogleFonts.nunito(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: GoogleFonts.nunito(
-            color: Colors.white.withOpacity(0.4),
-            fontSize: 15,
-          ),
-          prefixIcon: Icon(
-            icon,
-            color: isFocused ? _primaryCyan : Colors.white.withOpacity(0.5),
-            size: 22,
-          ),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                    obscureText
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
-                    color: Colors.white.withOpacity(0.5),
-                    size: 22,
-                  ),
-                  onPressed: onToggleObscure,
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 18,
-          ),
-        ),
-      ),
-    );
-  }
+  // ✅ _buildInputField kaldırıldı - AuthTextFieldDark kullanılıyor
 
   Widget _buildPasswordStrengthIndicator() {
     return Column(
@@ -1084,4 +996,53 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ✅ Optimize edilmiş yıldız çizici - Tek bir CustomPainter ile tüm yıldızlar
+class _StarsPainter extends CustomPainter {
+  final List<_StarParticle> stars;
+  final double animationValue;
+  final Color glowColor;
+
+  _StarsPainter({
+    required this.stars,
+    required this.animationValue,
+    required this.glowColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final star in stars) {
+      // Twinkle efekti hesaplama
+      final twinkle =
+          0.3 +
+          0.7 * math.sin(animationValue * math.pi * 2 * star.twinkleSpeed);
+      final currentOpacity = star.opacity * twinkle;
+
+      // Yıldız için gradient efekti
+      final paint = Paint()
+        ..color = glowColor.withOpacity(currentOpacity * 0.8)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+      // Yıldız çizimi
+      canvas.drawCircle(
+        Offset(star.x * size.width, star.y * size.height),
+        star.size,
+        paint,
+      );
+
+      // İç kısım daha parlak
+      final innerPaint = Paint()
+        ..color = Colors.white.withOpacity(currentOpacity);
+      canvas.drawCircle(
+        Offset(star.x * size.width, star.y * size.height),
+        star.size * 0.5,
+        innerPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StarsPainter oldDelegate) =>
+      animationValue != oldDelegate.animationValue;
 }

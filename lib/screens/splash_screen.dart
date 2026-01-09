@@ -77,12 +77,15 @@ class _SplashScreenState extends State<SplashScreen> {
         // ❌ İçerik indirilmemiş veya yarım kalmış
         // Maskot seçilmiş mi kontrol et - eğer seçilmişse ContentLoadingScreen'e git
         final userData = userDoc.data();
-        final hasMascot = userData != null && 
+        final hasMascot =
+            userData != null &&
             (userData.containsKey('petType') || userData.containsKey('mascot'));
-        
+
         if (hasMascot) {
           // Maskot var ama sync yarım kalmış → ContentLoadingScreen (sync devam edecek)
-          debugPrint('SplashScreen: Maskot var ama sync yarım kalmış - ContentLoadingScreen\'e yönlendiriliyor');
+          debugPrint(
+            'SplashScreen: Maskot var ama sync yarım kalmış - ContentLoadingScreen\'e yönlendiriliyor',
+          );
           _navigateToScreen(const ContentLoadingScreen());
         } else {
           // Maskot yok → PetSelectionScreen
@@ -119,12 +122,12 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!hasReceivedWelcome) {
         final user = FirebaseAuth.instance.currentUser;
         final userName = user?.displayName ?? 'Şampiyon';
-        
+
         await NotificationService().scheduleWelcomeNotification(
           userName: userName,
           delaySeconds: 5,
         );
-        
+
         await prefs.setBool('has_received_welcome_notification', true);
       }
     } catch (e) {
@@ -199,11 +202,12 @@ class _SplashScreenState extends State<SplashScreen> {
                   // "sadece Astronot animasyonu"
                   SizedBox(
                         height: screenHeight * 0.2, // Smaller than logo
+                        // ✅ Lottie optimize edildi
                         child: Lottie.asset(
                           'assets/animation/astronot_mascot.json',
                           fit: BoxFit.contain,
-                          // Ensure it doesn't loop infinitely if distraction is a concern,
-                          // but usually mascots loop. Let's keep it looping.
+                          frameRate: FrameRate.max,
+                          options: LottieOptions(enableMergePaths: true),
                         ),
                       )
                       .animate(delay: 500.ms)

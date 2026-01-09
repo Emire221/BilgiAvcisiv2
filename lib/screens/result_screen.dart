@@ -400,11 +400,14 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
             ],
           ),
           child: ClipOval(
+            // ✅ Lottie optimize edildi
             child: Lottie.asset(
               lottiePath,
               fit: BoxFit.contain,
               animate: true,
               repeat: true,
+              frameRate: FrameRate.max,
+              options: LottieOptions(enableMergePaths: true),
             ),
           ),
         );
@@ -428,9 +431,12 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
           color: Colors.white.withOpacity(0.2),
         ),
         child: ClipOval(
+          // ✅ Lottie optimize edildi
           child: Lottie.asset(
             'assets/animation/kedi_mascot.json',
             fit: BoxFit.contain,
+            frameRate: FrameRate.max,
+            options: LottieOptions(enableMergePaths: true),
           ),
         ),
       ),

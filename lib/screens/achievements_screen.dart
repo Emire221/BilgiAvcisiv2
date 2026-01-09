@@ -415,10 +415,13 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                 SizedBox(
                       width: animSize,
                       height: animSize,
+                      // ✅ Lottie optimize edildi
                       child: Lottie.asset(
                         'assets/animation/dedective.json',
                         fit: BoxFit.contain,
                         animate: true,
+                        frameRate: FrameRate.max,
+                        options: LottieOptions(enableMergePaths: true),
                         errorBuilder: (_, __, ___) => Container(
                           width: animSize * 0.6,
                           height: animSize * 0.6,

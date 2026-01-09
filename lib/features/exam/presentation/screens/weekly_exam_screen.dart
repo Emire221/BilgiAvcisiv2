@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../domain/models/weekly_exam.dart';
 import '../../data/weekly_exam_service.dart';
 
@@ -57,6 +58,8 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
   @override
   void initState() {
     super.initState();
+    // ⚡ Sınav sırasında ekranın kapanmasını engelle
+    WakelockPlus.enable();
     _remainingSeconds = widget.exam.duration * 60;
 
     // Timer shake animasyonu
@@ -121,6 +124,8 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
 
   @override
   void dispose() {
+    // ⚡ Ekran kapanmasına izin ver
+    WakelockPlus.disable();
     _timer?.cancel();
     _pageController.dispose();
     _timerShakeController.dispose();

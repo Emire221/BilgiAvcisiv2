@@ -191,7 +191,7 @@ class _InteractiveMascotWidgetState
                 ),
               ),
 
-            // Maskot Lottie animasyonu
+            // ✅ Maskot Lottie animasyonu - optimize edildi
             SizedBox(
               height: height,
               child: Lottie.asset(
@@ -199,6 +199,8 @@ class _InteractiveMascotWidgetState
                 fit: BoxFit.contain,
                 animate: true,
                 repeat: true,
+                frameRate: FrameRate.max,
+                options: LottieOptions(enableMergePaths: true),
               ),
             ),
 

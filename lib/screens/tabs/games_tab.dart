@@ -112,22 +112,19 @@ class _GamesTabState extends ConsumerState<GamesTab>
     final screenHeight = MediaQuery.of(ctx).size.height;
     final screenWidth = MediaQuery.of(ctx).size.width;
     final isTablet = screenWidth > 600;
-    
+
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      constraints: BoxConstraints(
-        maxWidth: screenWidth,
-        minWidth: screenWidth,
-      ),
+      constraints: BoxConstraints(maxWidth: screenWidth, minWidth: screenWidth),
       builder: (context) {
         return LayoutBuilder(
           builder: (context, constraints) {
             final modalHeight = screenHeight * 0.45;
             final isCompact = modalHeight < 300;
             final horizontalPadding = screenWidth * 0.05;
-            
+
             return Container(
               width: isTablet ? 500 : double.infinity,
               height: modalHeight,
@@ -137,11 +134,22 @@ class _GamesTabState extends ConsumerState<GamesTab>
                   end: Alignment.bottomRight,
                   colors: [_deepPurple, _darkBg],
                 ),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 border: Border(
-                  top: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
-                  left: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
-                  right: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
+                  top: BorderSide(
+                    color: _accentCyan.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  left: BorderSide(
+                    color: _accentCyan.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  right: BorderSide(
+                    color: _accentCyan.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -152,7 +160,9 @@ class _GamesTabState extends ConsumerState<GamesTab>
                 ],
               ),
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Column(
@@ -175,7 +185,10 @@ class _GamesTabState extends ConsumerState<GamesTab>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text('🧠', style: TextStyle(fontSize: 26)),
+                                const Text(
+                                  '🧠',
+                                  style: TextStyle(fontSize: 26),
+                                ),
                                 const SizedBox(width: 12),
                                 Text(
                                   'HAFIZA OYUNU',
@@ -200,7 +213,7 @@ class _GamesTabState extends ConsumerState<GamesTab>
                           ],
                         ),
                       ),
-                      
+
                       // Oyun mod butonları
                       Expanded(
                         child: Padding(
@@ -218,20 +231,26 @@ class _GamesTabState extends ConsumerState<GamesTab>
                                     icon: FontAwesomeIcons.sortNumericUp,
                                     title: 'Sıralı Bulma',
                                     subtitle: '1\'den 10\'a kadar sırayla bul',
-                                    gradient: [const Color(0xFF667EEA), const Color(0xFF764BA2)],
+                                    gradient: [
+                                      const Color(0xFF667EEA),
+                                      const Color(0xFF764BA2),
+                                    ],
                                     isCompact: isCompact,
                                     onTap: () {
                                       Navigator.pop(context);
                                       Navigator.push(
                                         ctx,
-                                        MaterialPageRoute(builder: (_) => const MemoryGameScreen()),
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const MemoryGameScreen(),
+                                        ),
                                       ).then((_) => _refreshGameProgress());
                                     },
                                   ),
                                 ),
                               ),
                               SizedBox(height: isCompact ? 10 : 14),
-                              
+
                               // Şekil Eşleştirme Modu
                               Expanded(
                                 child: SizedBox(
@@ -240,13 +259,19 @@ class _GamesTabState extends ConsumerState<GamesTab>
                                     icon: FontAwesomeIcons.shapes,
                                     title: 'Şekil Eşleştir',
                                     subtitle: 'Aynı şekilleri eşleştirerek bul',
-                                    gradient: [const Color(0xFFFF6B9D), const Color(0xFFC44FFF)],
+                                    gradient: [
+                                      const Color(0xFFFF6B9D),
+                                      const Color(0xFFC44FFF),
+                                    ],
                                     isCompact: isCompact,
                                     onTap: () {
                                       Navigator.pop(context);
                                       Navigator.push(
                                         ctx,
-                                        MaterialPageRoute(builder: (_) => const ShapeGameScreen()),
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ShapeGameScreen(),
+                                        ),
                                       ).then((_) => _refreshGameProgress());
                                     },
                                   ),
@@ -734,10 +759,13 @@ class _ArcadeGameCardState extends State<_ArcadeGameCard>
                         bottom: 0,
                         left: -3,
                         right: 0,
+                        // ✅ Lottie optimize edildi
                         child: Lottie.asset(
                           widget.game.lottiePath!,
                           fit: BoxFit.cover,
                           animate: true,
+                          frameRate: FrameRate.max,
+                          options: LottieOptions(enableMergePaths: true),
                           errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                         ),
                       ),
@@ -767,7 +795,7 @@ class _ArcadeGameCardState extends State<_ArcadeGameCard>
                         right: widget.game.isHero ? -10 : 5,
                         bottom: widget.game.isHero ? -10 : 15,
                         child: widget.game.lottiePath != null
-                            // Lottie animasyonu varsa kullan
+                            // ✅ Lottie animasyonu - optimize edildi
                             ? SizedBox(
                                 width: 100,
                                 height: 100,
@@ -775,6 +803,10 @@ class _ArcadeGameCardState extends State<_ArcadeGameCard>
                                   widget.game.lottiePath!,
                                   fit: BoxFit.contain,
                                   animate: true,
+                                  frameRate: FrameRate.max,
+                                  options: LottieOptions(
+                                    enableMergePaths: true,
+                                  ),
                                   errorBuilder: (_, __, ___) =>
                                       _buildIconFallback(),
                                 ),

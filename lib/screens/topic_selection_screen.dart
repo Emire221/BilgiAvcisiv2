@@ -437,12 +437,15 @@ class _TopicSelectionScreenState extends ConsumerState<TopicSelectionScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Lottie animasyon (varsa) veya CircularProgressIndicator
+          // ✅ Lottie optimize edildi
           SizedBox(
             width: 120,
             height: 120,
             child: Lottie.asset(
               'assets/animation/loading-kum.json',
               fit: BoxFit.contain,
+              frameRate: FrameRate.max,
+              options: LottieOptions(enableMergePaths: true),
               errorBuilder: (_, __, ___) => CircularProgressIndicator(
                 color: Colors.white,
                 strokeWidth: 3,

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../features/test/providers/test_provider.dart';
 import '../features/test/models/test_state.dart';
 import '../models/question_model.dart';
@@ -45,6 +46,9 @@ class _TestScreenState extends ConsumerState<TestScreen>
   void initState() {
     super.initState();
 
+    // ⚡ Test sırasında ekranın kapanmasını engelle
+    WakelockPlus.enable();
+
     // Pulse animasyonu (timer için)
     _pulseController = AnimationController(
       vsync: this,
@@ -77,6 +81,8 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
   @override
   void dispose() {
+    // ⚡ Ekran kapanmasına izin ver
+    WakelockPlus.disable();
     _pulseController.dispose();
     _glowController.dispose();
     super.dispose();
@@ -253,8 +259,8 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
               const Spacer(),
 
-              // Timer
-              _buildTimer(testState.timeLeft),
+              // ✅ PERFORMANS: Timer ayrı Consumer ile - sadece timeLeft değişince rebuild
+              _TimerWidget(pulseController: _pulseController),
 
               const Spacer(),
 
@@ -267,61 +273,8 @@ class _TestScreenState extends ConsumerState<TestScreen>
     ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.3, end: 0);
   }
 
-
-
-
-
-  /// Timer widget'ı
-  Widget _buildTimer(int timeLeft) {
-    final totalTime = 60; // Toplam süre
-    final percent = timeLeft / totalTime;
-    final isLowTime = timeLeft <= 10;
-
-    // Renk geçişi
-    Color timerColor;
-    if (percent > 0.5) {
-      timerColor = Colors.greenAccent;
-    } else if (percent > 0.25) {
-      timerColor = Colors.amber;
-    } else {
-      timerColor = Colors.redAccent;
-    }
-
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, child) {
-        final scale = isLowTime ? 1.0 + (_pulseController.value * 0.1) : 1.0;
-
-        return Transform.scale(
-          scale: scale,
-          child: CircularPercentIndicator(
-            radius: 35,
-            lineWidth: 6,
-            percent: percent.clamp(0.0, 1.0),
-            center: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FaIcon(FontAwesomeIcons.clock, color: timerColor, size: 14),
-                const SizedBox(height: 2),
-                Text(
-                  '$timeLeft',
-                  style: TextStyle(
-                    color: timerColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            progressColor: timerColor,
-            backgroundColor: Colors.white.withValues(alpha: 0.1),
-            circularStrokeCap: CircularStrokeCap.round,
-            animation: false,
-          ),
-        );
-      },
-    );
-  }
+  // ✅ _buildTimer metodu kaldırıldı - _TimerWidget ConsumerWidget kullanılıyor
+  // Dosyanın sonuna bakın: class _TimerWidget extends ConsumerWidget
 
   /// Soru sayacı
   Widget _buildQuestionCounter(int current, int total) {
@@ -454,10 +407,6 @@ class _TestScreenState extends ConsumerState<TestScreen>
       });
     }
   }
-
-
-
-
 
   /// Loading ekranı
   Widget _buildLoadingScreen() {
@@ -1350,6 +1299,76 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
           ),
         ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.3, end: 0),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ✅ PERFORMANS: Timer Widget - Ayrı Consumer
+// ═══════════════════════════════════════════════════════════════════════════
+// Bu widget sadece timeLeft değiştiğinde rebuild olur.
+// Tüm TestScreen rebuild edilmez - diğer state değişikliklerinden izole.
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _TimerWidget extends ConsumerWidget {
+  const _TimerWidget({required this.pulseController});
+
+  final AnimationController pulseController;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ✅ select ile sadece timeLeft'i dinle
+    final timeLeft = ref.watch(
+      testControllerProvider.select((s) => s.timeLeft),
+    );
+
+    const totalTime = 60;
+    final percent = timeLeft / totalTime;
+    final isLowTime = timeLeft <= 10;
+
+    // Renk geçişi
+    Color timerColor;
+    if (percent > 0.5) {
+      timerColor = Colors.greenAccent;
+    } else if (percent > 0.25) {
+      timerColor = Colors.amber;
+    } else {
+      timerColor = Colors.redAccent;
+    }
+
+    return AnimatedBuilder(
+      animation: pulseController,
+      builder: (context, child) {
+        final scale = isLowTime ? 1.0 + (pulseController.value * 0.1) : 1.0;
+
+        return Transform.scale(
+          scale: scale,
+          child: CircularPercentIndicator(
+            radius: 35,
+            lineWidth: 6,
+            percent: percent.clamp(0.0, 1.0),
+            center: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FaIcon(FontAwesomeIcons.clock, color: timerColor, size: 14),
+                const SizedBox(height: 2),
+                Text(
+                  '$timeLeft',
+                  style: TextStyle(
+                    color: timerColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            progressColor: timerColor,
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
+            circularStrokeCap: CircularStrokeCap.round,
+            animation: false,
+          ),
+        );
+      },
     );
   }
 }

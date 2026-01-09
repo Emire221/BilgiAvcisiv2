@@ -123,9 +123,15 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // DERS VERİLERİ (Simüle - Gerçek veriler modelden gelecek)
+  // DERS VERİLERİ (Cache'lenmiş - initState'te hesaplanıyor)
   // ─────────────────────────────────────────────────────────────────────────
-  List<SubjectPerformance> get _subjectPerformances {
+
+  /// ✅ Cache'lenmiş ders performansları - her build'de yeniden hesaplanmaz
+  late final List<SubjectPerformance> _subjectPerformances =
+      _calculateSubjectPerformances();
+
+  /// Ders performanslarını hesaplar - sadece bir kere çağrılır
+  List<SubjectPerformance> _calculateSubjectPerformances() {
     // Sorulardan ders bazlı performans hesapla
     final subjects = <String, SubjectPerformance>{};
 
@@ -325,6 +331,10 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
 
   /// PDF rapor oluştur ve paylaş
   Future<void> _sharePdfReport() async {
+    // ✅ Context-sensitive değerleri async gap'ten önce al
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     try {
       Navigator.pop(context); // Dialog'u kapat
 
@@ -332,13 +342,11 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
+        builder: (ctx) => Center(
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? _darkCard
-                  : Colors.white,
+              color: isDarkMode ? _darkCard : Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -349,9 +357,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                 Text(
                   'PDF Rapor Hazırlanıyor...',
                   style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? _darkText
-                        : Colors.black87,
+                    color: isDarkMode ? _darkText : Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -367,7 +373,11 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
       final boundary =
           _reportKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0);
+
+      // ✅ Dinamik pixelRatio - cihaz DPI'sine göre, max 2.0 (OOM önleme)
+      final safePixelRatio = devicePixelRatio.clamp(1.0, 2.0);
+
+      final image = await boundary.toImage(pixelRatio: safePixelRatio);
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
 
@@ -403,6 +413,10 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
 
   /// Ekran görüntüsü çek ve paylaş
   Future<void> _takeScreenshot() async {
+    // ✅ Context-sensitive değerleri async gap'ten önce al
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     try {
       Navigator.pop(context); // Dialog'u kapat
 
@@ -410,13 +424,11 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
+        builder: (ctx) => Center(
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? _darkCard
-                  : Colors.white,
+              color: isDarkMode ? _darkCard : Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -427,9 +439,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                 Text(
                   'Ekran Görüntüsü Alınıyor...',
                   style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? _darkText
-                        : Colors.black87,
+                    color: isDarkMode ? _darkText : Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -445,7 +455,11 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
       final boundary =
           _reportKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0);
+
+      // ✅ Dinamik pixelRatio - cihaz DPI'sine göre, max 2.0 (OOM önleme)
+      final safePixelRatio = devicePixelRatio.clamp(1.0, 2.0);
+
+      final image = await boundary.toImage(pixelRatio: safePixelRatio);
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
 
@@ -1954,6 +1968,8 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
             ),
           ),
         ),
+        // ⚠️ shrinkWrap burada kabul edilebilir: maksimum 5-6 ders kartı
+        // Performans etkisi minimal (~6 widget), sabit yükseklik hesabı zor
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -2384,23 +2400,31 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     return shortNames[name] ?? name.substring(0, math.min(3, name.length));
   }
 
+  /// ✅ Lejand öğesi - Minimum 44x44 touch target için SizedBox sarmalı
   Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
-          ),
+    return SizedBox(
+      height: 44, // Minimum touch target
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(color: color, fontSize: 12, fontFamily: 'Inter'),
+            ),
+          ],
         ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(color: color, fontSize: 12, fontFamily: 'Inter'),
-        ),
-      ],
+      ),
     );
   }
 
@@ -2975,10 +2999,13 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // DETAYLI CEVAPLAR - ListView.builder ile Lazy Loading
+  // DETAYLI CEVAPLAR - Sabit Yükseklik + Gerçek Lazy Loading
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildDetailedAnswers(bool isDarkMode) {
     final questions = widget.exam.questions;
+    // Sabit yükseklik ile gerçek lazy loading - shrinkWrap KALDIRILDI
+    // Bu sayede sadece görünen satırlar render edilir, bellek şişmez
+    final listHeight = (questions.length * 56.0).clamp(200.0, 400.0);
 
     return _buildGlassContainer(
       padding: const EdgeInsets.all(20),
@@ -2998,33 +3025,47 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const Spacer(),
+              Text(
+                '${questions.length} soru',
+                style: TextStyle(
+                  color: isDarkMode
+                      ? _darkText.withOpacity(0.6)
+                      : Colors.white60,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
 
           const SizedBox(height: 16),
 
-          // ListView.builder ile sadece görünen öğeler render edilir
-          // Bu sayede 100 soruluk sınavlarda bile bellek şişmez
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: questions.length,
-            itemBuilder: (context, index) {
-              final question = questions[index];
-              final questionId = (index + 1).toString();
-              final userAnswer = widget.result?.cevaplar[questionId];
-              final isCorrect = userAnswer == question.correctAnswer;
-              final isEmpty = userAnswer == null || userAnswer == 'EMPTY';
+          // ✅ PERFORMANS: Sabit yükseklik + kendi scroll'u = gerçek lazy loading
+          // shrinkWrap: true KALDIRILDI - artık sadece görünen öğeler render edilir
+          SizedBox(
+            height: listHeight,
+            child: ListView.builder(
+              // shrinkWrap YOK - sabit yükseklik var
+              physics: const BouncingScrollPhysics(),
+              itemCount: questions.length,
+              itemExtent: 56, // Sabit item yüksekliği - daha hızlı scroll
+              itemBuilder: (context, index) {
+                final question = questions[index];
+                final questionId = (index + 1).toString();
+                final userAnswer = widget.result?.cevaplar[questionId];
+                final isCorrect = userAnswer == question.correctAnswer;
+                final isEmpty = userAnswer == null || userAnswer == 'EMPTY';
 
-              return _buildAnswerRow(
-                questionId: questionId,
-                userAnswer: isEmpty ? '-' : userAnswer,
-                correctAnswer: question.correctAnswer,
-                isCorrect: isCorrect,
-                isEmpty: isEmpty,
-                isDarkMode: isDarkMode,
-              );
-            },
+                return _buildAnswerRow(
+                  questionId: questionId,
+                  userAnswer: isEmpty ? '-' : userAnswer,
+                  correctAnswer: question.correctAnswer,
+                  isCorrect: isCorrect,
+                  isEmpty: isEmpty,
+                  isDarkMode: isDarkMode,
+                );
+              },
+            ),
           ),
         ],
       ),
