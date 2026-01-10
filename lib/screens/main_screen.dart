@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui';
-import '../main.dart'; // themeManager'a erişim için
+import '../providers/theme_provider.dart'; // ✅ Riverpod themeProvider
 import '../core/providers/user_provider.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/lessons_tab.dart';
@@ -105,42 +105,37 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Riverpod themeProvider ile tema değişikliğini dinle
+    final currentMode = ref.watch(themeProvider);
     final Brightness platformBrightness = MediaQuery.platformBrightnessOf(
       context,
     );
     final bool isSystemDark = platformBrightness == Brightness.dark;
 
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeManager,
-      builder: (context, currentMode, child) {
-        final bool isDarkMode;
-        if (currentMode == ThemeMode.system) {
-          isDarkMode = isSystemDark;
-        } else {
-          isDarkMode = currentMode == ThemeMode.dark;
-        }
+    final bool isDarkMode;
+    if (currentMode == ThemeMode.system) {
+      isDarkMode = isSystemDark;
+    } else {
+      isDarkMode = currentMode == ThemeMode.dark;
+    }
 
-        return PopScope(
-          canPop: false, // Geri butonunu devre dışı bırak
-          child: Scaffold(
-            extendBody: true, // İçerik navigasyon barın arkasına uzansın
-            extendBodyBehindAppBar: true,
-            appBar: _currentIndex == 0
-                ? _buildAppBar(context, isDarkMode)
-                : null,
-            body: IndexedStack(
-              index: _currentIndex,
-              children: [
-                HomeTab(onNavigateToTab: _navigateToTab),
-                LessonsTab(isActive: _currentIndex == 1),
-                const GamesTab(),
-                ProfileTab(isActive: _currentIndex == 3),
-              ],
-            ),
-            bottomNavigationBar: _buildFloatingGlassDock(isDarkMode),
-          ),
-        );
-      },
+    return PopScope(
+      canPop: false, // Geri butonunu devre dışı bırak
+      child: Scaffold(
+        extendBody: true, // İçerik navigasyon barın arkasına uzansın
+        extendBodyBehindAppBar: true,
+        appBar: _currentIndex == 0 ? _buildAppBar(context, isDarkMode) : null,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            HomeTab(onNavigateToTab: _navigateToTab),
+            LessonsTab(isActive: _currentIndex == 1),
+            const GamesTab(),
+            ProfileTab(isActive: _currentIndex == 3),
+          ],
+        ),
+        bottomNavigationBar: _buildFloatingGlassDock(isDarkMode),
+      ),
     );
   }
 
@@ -314,14 +309,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
             context,
             FontAwesomeIcons.sun,
             !isDarkMode,
-            () => themeManager.toggleTheme(false),
+            () => ref.read(themeProvider.notifier).toggleTheme(false),
             const Color(0xFFFFB347),
           ),
           _themeButton(
             context,
             FontAwesomeIcons.moon,
             isDarkMode,
-            () => themeManager.toggleTheme(true),
+            () => ref.read(themeProvider.notifier).toggleTheme(true),
             const Color(0xFF667EEA),
           ),
         ],

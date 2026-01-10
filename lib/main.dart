@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +9,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+// 🔥 Firebase Analytics & Monitoring
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:firebase_performance/firebase_performance.dart';
+
 import 'firebase_options.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
@@ -46,103 +56,230 @@ late final ThemeManager themeManager;
 final RouteObserver<PageRoute<dynamic>> routeObserver =
     RouteObserver<PageRoute<dynamic>>();
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔥 FIREBASE ANALYTICS - Global Instance
+// ═══════════════════════════════════════════════════════════════════════════
+/// Firebase Analytics instance - sayfa geçişleri ve event takibi için
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+/// Firebase Analytics Observer - NavigatorObserver olarak kullanılır
+/// MaterialApp'e eklenerek otomatik sayfa geçiş takibi sağlar
+final FirebaseAnalyticsObserver analyticsObserver = FirebaseAnalyticsObserver(
+  analytics: analytics,
+);
+
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🛡️ CRASHLYTICS: Global Error Zone
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Tüm asenkron hataları yakalamak için runZonedGuarded kullanıyoruz
+  // Bu sayede try-catch ile yakalanamayan hatalar bile Crashlytics'e gider
+  runZonedGuarded<Future<void>>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-  // ⚡ Global Wakelock KALDIRILDI - Pil tasarrufu için
-  // Artık sadece Test/Sınav ekranlarında etkinleştirilecek
+      // ─────────────────────────────────────────────────────────────────────────
+      // 🔥 CRASHLYTICS KURULUMU
+      // ─────────────────────────────────────────────────────────────────────────
+      // Release modda Crashlytics aktif, Debug modda devre dışı (konsol yeterli)
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+        !kDebugMode,
+      );
 
-  // Türkçe tarih formatını başlat
-  await initializeDateFormatting('tr_TR', null);
+      // Flutter Framework hatalarını Crashlytics'e yönlendir
+      FlutterError.onError = (FlutterErrorDetails details) {
+        debugPrint('❌ Flutter Hatası: ${details.exception}');
+        debugPrint('📍 Library: ${details.library}');
+        debugPrint('📍 Context: ${details.context}');
+        // 🔥 Crashlytics'e gönder (release modda)
+        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      };
 
-  // Bildirim servisini başlat
-  await NotificationService().initialize();
+      // Platform Dispatcher hataları (asenkron hatalar)
+      PlatformDispatcher.instance.onError = (error, stack) {
+        debugPrint('❌ Platform Hatası: $error');
+        debugPrint('📍 Stack: $stack');
+        // 🔥 Crashlytics'e fatal error olarak gönder
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true; // Hatayı işledik
+      };
 
-  // Android Alarm Manager'i başlat (zamanlanmış bildirimler için)
-  await ScheduledNotificationHelper.initialize();
+      // ─────────────────────────────────────────────────────────────────────────
+      // 📊 PERFORMANCE MONITORING KURULUMU
+      // ─────────────────────────────────────────────────────────────────────────
+      // Otomatik ağ izleme ve uygulama performans metrikleri
+      final performance = FirebasePerformance.instance;
+      await performance.setPerformanceCollectionEnabled(!kDebugMode);
 
-  // Süre takibi servisini başlat
-  await TimeTrackingService().start();
+      // ─────────────────────────────────────────────────────────────────────────
+      // ⚙️ REMOTE CONFIG KURULUMU
+      // ─────────────────────────────────────────────────────────────────────────
+      await _initRemoteConfig();
 
-  // Tema tercihini yükle (Varsayılan: Dark Mode)
-  final isDarkMode = await LocalPreferencesService().isDarkMode();
-  final initialThemeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+      // ⚡ Global Wakelock KALDIRILDI - Pil tasarrufu için
+      // Artık sadece Test/Sınav ekranlarında etkinleştirilecek
 
-  // Legacy ThemeManager (backward compatibility - kademeli olarak kaldırılacak)
-  // ignore: deprecated_member_use_from_same_package
-  themeManager = ThemeManager(initialThemeMode);
+      // Türkçe tarih formatını başlat
+      await initializeDateFormatting('tr_TR', null);
 
-  // Global hata handler - Release/Debug moda göre farklı davranış
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    // Debug modunda hata detaylarını yazdır
-    debugPrint('❌ ErrorWidget Hatası: ${details.exception}');
-    debugPrint('📍 Stack: ${details.stack}');
+      // Bildirim servisini başlat
+      await NotificationService().initialize();
 
-    // Release modda kullanıcı dostu hata ekranı göster
-    if (kReleaseMode) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        color: const Color(0xFF1A1A2E),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, color: Colors.orange[300], size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                'Bir şeyler yanlış gitti',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  decoration: TextDecoration.none,
-                ),
+      // Android Alarm Manager'i başlat (zamanlanmış bildirimler için)
+      await ScheduledNotificationHelper.initialize();
+
+      // Süre takibi servisini başlat
+      await TimeTrackingService().start();
+
+      // Tema tercihini yükle (Varsayılan: Dark Mode)
+      final isDarkMode = await LocalPreferencesService().isDarkMode();
+      final initialThemeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+      // Legacy ThemeManager (backward compatibility - kademeli olarak kaldırılacak)
+      // ignore: deprecated_member_use_from_same_package
+      themeManager = ThemeManager(initialThemeMode);
+
+      // Global hata handler - Release/Debug moda göre farklı davranış
+      ErrorWidget.builder = (FlutterErrorDetails details) {
+        // Debug modunda hata detaylarını yazdır
+        debugPrint('❌ ErrorWidget Hatası: ${details.exception}');
+        debugPrint('📍 Stack: ${details.stack}');
+
+        // 🔥 Crashlytics'e gönder (non-fatal)
+        FirebaseCrashlytics.instance.recordError(
+          details.exception,
+          details.stack,
+          reason: 'ErrorWidget triggered',
+        );
+
+        // Release modda kullanıcı dostu hata ekranı göster
+        if (kReleaseMode) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            color: const Color(0xFF1A1A2E),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.orange[300],
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Bir şeyler yanlış gitti',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Lütfen sayfayı yenileyin veya uygulamayı yeniden başlatın.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      decoration: TextDecoration.none,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Lütfen sayfayı yenileyin veya uygulamayı yeniden başlatın.',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  decoration: TextDecoration.none,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+            ),
+          );
+        }
+
+        // Debug modda Flutter'ın kendi hata ekranını göster (detaylı bilgi için)
+        return ErrorWidget.withDetails(
+          message: details.exception.toString(),
+          error: details.exception is FlutterError
+              ? details.exception as FlutterError
+              : null,
+        );
+      };
+
+      // ✅ Riverpod ProviderScope ile başlat
+      // themeProvider override ile başlangıç tema modunu ayarla
+      runApp(
+        ProviderScope(
+          overrides: [
+            themeProvider.overrideWith(
+              (ref) => ThemeNotifier(initialThemeMode),
+            ),
+          ],
+          child: const MyApp(),
         ),
       );
-    }
-
-    // Debug modda Flutter'ın kendi hata ekranını göster (detaylı bilgi için)
-    return ErrorWidget.withDetails(
-      message: details.exception.toString(),
-      error: details.exception is FlutterError
-          ? details.exception as FlutterError
-          : null,
-    );
-  };
-
-  // Flutter framework hatalarını yakala
-  FlutterError.onError = (FlutterErrorDetails details) {
-    debugPrint('❌ Flutter Hatası: ${details.exception}');
-    debugPrint('📍 Library: ${details.library}');
-    debugPrint('📍 Context: ${details.context}');
-    // Varsayılan davranışı devre dışı bırak (kırmızı ekran gösterme)
-    // FlutterError.presentError(details);
-  };
-
-  // ✅ Riverpod ProviderScope ile başlat
-  // themeProvider override ile başlangıç tema modunu ayarla
-  runApp(
-    ProviderScope(
-      overrides: [
-        themeProvider.overrideWith((ref) => ThemeNotifier(initialThemeMode)),
-      ],
-      child: const MyApp(),
-    ),
+    },
+    (error, stack) {
+      // ═══════════════════════════════════════════════════════════════════════
+      // 🔥 CRASHLYTICS: Zone dışı asenkron hataları yakala
+      // ═══════════════════════════════════════════════════════════════════════
+      debugPrint('❌ Yakalanmamış Asenkron Hata: $error');
+      debugPrint('📍 Stack: $stack');
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
   );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⚙️ REMOTE CONFIG: Uzaktan Yapılandırma Başlatma
+// ═══════════════════════════════════════════════════════════════════════════
+/// Firebase Remote Config'i başlatır ve varsayılan değerleri ayarlar
+/// Uygulama ayarlarını sunucudan çekerek, uygulama güncellemesi yapmadan
+/// değişiklik yapmayı mümkün kılar.
+Future<void> _initRemoteConfig() async {
+  try {
+    final remoteConfig = FirebaseRemoteConfig.instance;
+
+    // Geliştirme/Test için kısa cache süresi, Production'da daha uzun
+    await remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(minutes: 1),
+        minimumFetchInterval: kDebugMode
+            ? const Duration(minutes: 5) // Debug: sık güncelleme
+            : const Duration(hours: 12), // Release: 12 saatte bir
+      ),
+    );
+
+    // Varsayılan değerler (internet yoksa bunlar kullanılır)
+    await remoteConfig.setDefaults({
+      // Sınav Ayarları
+      'exam_duration_minutes': 45,
+      'exam_warning_seconds': 300, // Son 5 dakika uyarısı
+      // Bakım Modu
+      'maintenance_mode': false,
+      'maintenance_message':
+          'Uygulama bakımda, lütfen daha sonra tekrar deneyin.',
+
+      // Özellik Bayrakları (Feature Flags)
+      'feature_games_enabled': true,
+      'feature_ai_chat_enabled': true,
+      'feature_weekly_exam_enabled': true,
+
+      // UI Ayarları
+      'daily_fact_enabled': true,
+      'mascot_animations_enabled': true,
+
+      // Rate Limiting
+      'max_daily_tests': 50,
+      'max_flashcard_reviews': 100,
+    });
+
+    // Sunucudan güncel değerleri çek ve aktifleştir
+    await remoteConfig.fetchAndActivate();
+
+    debugPrint('✅ Remote Config başlatıldı');
+  } catch (e) {
+    // Hata olursa varsayılan değerler kullanılır, uygulama çökmez
+    debugPrint('⚠️ Remote Config hatası (varsayılanlar kullanılacak): $e');
+  }
 }
 
 /// 🎯 Ana Uygulama Widget'ı - Artık ConsumerWidget
@@ -192,25 +329,69 @@ class MyApp extends ConsumerWidget {
         useMaterial3: true,
       ),
       themeMode: currentMode,
-      navigatorObservers: [routeObserver],
+      // ═══════════════════════════════════════════════════════════════════════
+      // 📊 ANALYTICS: Sayfa Geçişlerini Otomatik Takip Et
+      // ═══════════════════════════════════════════════════════════════════════
+      // analyticsObserver: Her sayfa değişimini Firebase'e "screen_view" olarak gönderir
+      // routeObserver: Eski observer - mevcut kod uyumluluğu için korunuyor
+      navigatorObservers: [analyticsObserver, routeObserver],
       home: const SplashScreen(),
     );
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+// ═══════════════════════════════════════════════════════════════════════════
+// ✅ PERFORMANS: AuthWrapper StatefulWidget olarak refactor edildi
+// ═══════════════════════════════════════════════════════════════════════════
+// Eski Sorun: FutureBuilder her rebuild'de (klavye açılması, tema değişimi vb.)
+// Firestore'dan veri çekiyordu. Bu hem maliyet hem de UX sorunu yaratıyordu.
+//
+// Yeni Çözüm: initState'te bir kez çek ve cache'le.
+// FutureBuilder artık hafızadaki _userDataFuture'a bakıyor.
+// ═══════════════════════════════════════════════════════════════════════════
+
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  // ✅ Cache: Firestore sorgusu sadece bir kez yapılır
+  Future<DocumentSnapshot>? _userDataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  /// Firestore'dan kullanıcı verisini bir kez çek ve cache'le
+  void _loadUserData() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _userDataFuture = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const LoginScreen();
 
+    // ✅ _userDataFuture null ise (çok nadir durum) tekrar yükle
+    if (_userDataFuture == null) {
+      _loadUserData();
+    }
+
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get(),
+      // ✅ PERFORMANS: Artık her build'de yeni sorgu yapılmıyor
+      // Cache'lenmiş Future kullanılıyor
+      future: _userDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(

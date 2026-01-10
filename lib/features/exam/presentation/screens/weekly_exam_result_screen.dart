@@ -60,7 +60,12 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   late AnimationController _scoreAnimationController;
   late Animation<double> _scoreAnimation;
   Timer? _countdownTimer;
-  Duration _remainingTime = Duration.zero;
+
+  // ✅ PERFORMANS: ValueNotifier ile sayaç izole edildi
+  // Artık her saniye tüm ekran rebuild edilmiyor, sadece Text widget güncelleniyor
+  final ValueNotifier<Duration> _remainingTimeNotifier = ValueNotifier(
+    Duration.zero,
+  );
 
   // ─────────────────────────────────────────────────────────────────────────
   // 🎨 RENK PALETİ - MODERN ED-TECH UI
@@ -168,6 +173,77 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     }
 
     return subjects.values.toList();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // KONU VERİLERİ (Cache'lenmiş - hesaplama bir kez yapılıyor)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// ✅ PERFORMANS: Knowledge Map hesaplamaları cache'lendi
+  /// Artık her scroll'da yeniden hesaplanmıyor
+  Map<String, List<TopicPerformance>>? _knowledgeMapCache;
+
+  /// Knowledge Map için konu performanslarını hesaplar - lazy init
+  Map<String, List<TopicPerformance>> _getKnowledgeMapData() {
+    // Cache varsa döndür
+    if (_knowledgeMapCache != null) return _knowledgeMapCache!;
+
+    // Konu ID'lerini insan okunabilir isimlere çevir
+    String getTopicDisplayName(String topicId) {
+      return _topicNames[topicId] ?? topicId;
+    }
+
+    // Ders bazlı gruplandırma için Map
+    final lessonTopics = <String, List<TopicPerformance>>{};
+
+    for (int i = 0; i < widget.exam.questions.length; i++) {
+      final question = widget.exam.questions[i];
+
+      // Sadece topicId'si olan soruları işle
+      final topicId = question.topicId;
+      if (topicId == null || topicId.isEmpty || topicId == 'GENEL') {
+        continue;
+      }
+
+      final lessonName = question.lessonName ?? 'Genel';
+      final topicDisplayName = getTopicDisplayName(topicId);
+      final questionId = (i + 1).toString();
+      final userAnswer = widget.result?.cevaplar[questionId];
+      final isCorrect = userAnswer == question.correctAnswer;
+
+      // Ders grubunu oluştur
+      if (!lessonTopics.containsKey(lessonName)) {
+        lessonTopics[lessonName] = [];
+      }
+
+      // Bu topic zaten var mı?
+      final existingTopic = lessonTopics[lessonName]!.firstWhere(
+        (t) => t.name == topicDisplayName,
+        orElse: () => TopicPerformance(
+          name: topicDisplayName,
+          topicId: topicId,
+          lessonName: lessonName,
+          correct: 0,
+          total: 0,
+        ),
+      );
+
+      final updatedTopic = TopicPerformance(
+        name: topicDisplayName,
+        topicId: topicId,
+        lessonName: lessonName,
+        correct: existingTopic.correct + (isCorrect ? 1 : 0),
+        total: existingTopic.total + 1,
+      );
+
+      // Eski topic'i sil, yenisini ekle
+      lessonTopics[lessonName]!.removeWhere((t) => t.name == topicDisplayName);
+      lessonTopics[lessonName]!.add(updatedTopic);
+    }
+
+    // Cache'e kaydet
+    _knowledgeMapCache = lessonTopics;
+    return lessonTopics;
   }
 
   IconData _getSubjectIcon(String lessonName) {
@@ -308,19 +384,20 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
 
   void _startCountdownTimer() {
     final weekStart = _examService.getThisWeekMonday();
-    _remainingTime = _examService.getTimeRemainingOld(
+    // ✅ PERFORMANS: ValueNotifier ile güncelleme - setState YOK
+    _remainingTimeNotifier.value = _examService.getTimeRemainingOld(
       weekStart,
       ExamRoomStatus.kapali,
     );
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        setState(() {
-          _remainingTime = _examService.getTimeRemainingOld(
-            weekStart,
-            ExamRoomStatus.kapali,
-          );
-        });
+        // ✅ setState yerine ValueNotifier.value güncelleniyor
+        // Bu sadece dinleyen widget'ı rebuild eder, tüm ekranı değil
+        _remainingTimeNotifier.value = _examService.getTimeRemainingOld(
+          weekStart,
+          ExamRoomStatus.kapali,
+        );
       }
     });
   }
@@ -503,6 +580,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
     _confettiController.dispose();
     _scoreAnimationController.dispose();
     _countdownTimer?.cancel();
+    _remainingTimeNotifier.dispose(); // ✅ ValueNotifier dispose
     super.dispose();
   }
 
@@ -883,15 +961,21 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
             children: [
               Icon(Icons.timer, color: _secondaryOrange, size: 24),
               const SizedBox(width: 12),
-              Text(
-                _formatDuration(_remainingTime),
-                style: TextStyle(
-                  color: isDarkMode ? _darkText : Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
-                  letterSpacing: 3,
-                ),
+              // ✅ PERFORMANS: ValueListenableBuilder ile sadece bu Text rebuild oluyor
+              ValueListenableBuilder<Duration>(
+                valueListenable: _remainingTimeNotifier,
+                builder: (context, remainingTime, child) {
+                  return Text(
+                    _formatDuration(remainingTime),
+                    style: TextStyle(
+                      color: isDarkMode ? _darkText : Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                      letterSpacing: 3,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -2432,63 +2516,9 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   // 4️⃣ KNOWLEDGE MAP - Güçlü ve Zayıf Yönler
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildKnowledgeMap(bool isDarkMode) {
-    // ÖNEMLI: Bu metod sadece sınavda gerçekten var olan soruların konularını gösterir.
-    // _topicNames SQLite veritabanından yüklenir ve tüm sınıfların (3-8) konularını içerir.
-    // Sınavda olmayan konular hiçbir zaman gösterilmez.
-
-    // Konu ID'lerini insan okunabilir isimlere çevir
-    String getTopicDisplayName(String topicId) {
-      // _topicNames state'inden al, yoksa topicId'yi döndür
-      return _topicNames[topicId] ?? topicId;
-    }
-
-    // Ders bazlı gruplandırma için Map
-    final lessonTopics = <String, List<TopicPerformance>>{};
-
-    for (int i = 0; i < widget.exam.questions.length; i++) {
-      final question = widget.exam.questions[i];
-
-      // Sadece topicId'si olan soruları işle (null veya GENEL olanları atla)
-      final topicId = question.topicId;
-      if (topicId == null || topicId.isEmpty || topicId == 'GENEL') {
-        continue;
-      }
-
-      final lessonName = question.lessonName ?? 'Genel';
-      final topicDisplayName = getTopicDisplayName(topicId);
-      final questionId = (i + 1).toString();
-      final userAnswer = widget.result?.cevaplar[questionId];
-      final isCorrect = userAnswer == question.correctAnswer;
-
-      // Ders grubunu oluştur
-      if (!lessonTopics.containsKey(lessonName)) {
-        lessonTopics[lessonName] = [];
-      }
-
-      // Bu topic zaten var mı?
-      final existingTopic = lessonTopics[lessonName]!.firstWhere(
-        (t) => t.name == topicDisplayName,
-        orElse: () => TopicPerformance(
-          name: topicDisplayName,
-          topicId: topicId,
-          lessonName: lessonName,
-          correct: 0,
-          total: 0,
-        ),
-      );
-
-      final updatedTopic = TopicPerformance(
-        name: topicDisplayName,
-        topicId: topicId,
-        lessonName: lessonName,
-        correct: existingTopic.correct + (isCorrect ? 1 : 0),
-        total: existingTopic.total + 1,
-      );
-
-      // Eski topic'i sil, yenisini ekle
-      lessonTopics[lessonName]!.removeWhere((t) => t.name == topicDisplayName);
-      lessonTopics[lessonName]!.add(updatedTopic);
-    }
+    // ✅ PERFORMANS: Hesaplamalar cache'lendi
+    // Artık her scroll'da yeniden hesaplanmıyor, sadece ilk çağrıda hesaplanıyor
+    final lessonTopics = _getKnowledgeMapData();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -2999,13 +3029,14 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // DETAYLI CEVAPLAR - Sabit Yükseklik + Gerçek Lazy Loading
+  // DETAYLI CEVAPLAR - Dinamik Yükseklik + Gerçek Lazy Loading
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildDetailedAnswers(bool isDarkMode) {
     final questions = widget.exam.questions;
-    // Sabit yükseklik ile gerçek lazy loading - shrinkWrap KALDIRILDI
-    // Bu sayede sadece görünen satırlar render edilir, bellek şişmez
-    final listHeight = (questions.length * 56.0).clamp(200.0, 400.0);
+    // ✅ ERİŞİLEBİLİRLİK: itemExtent KALDIRILDI
+    // Kullanıcı telefon ayarlarından metin boyutunu büyütürse yazılar kesilmez
+    // Dinamik yükseklik ile içerik boyutuna göre otomatik ayarlanır
+    final listHeight = (questions.length * 60.0).clamp(200.0, 400.0);
 
     return _buildGlassContainer(
       padding: const EdgeInsets.all(20),
@@ -3040,15 +3071,16 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
 
           const SizedBox(height: 16),
 
-          // ✅ PERFORMANS: Sabit yükseklik + kendi scroll'u = gerçek lazy loading
-          // shrinkWrap: true KALDIRILDI - artık sadece görünen öğeler render edilir
+          // ✅ PERFORMANS + ERİŞİLEBİLİRLİK: Dinamik yükseklik + lazy loading
+          // itemExtent kaldırıldı - metin boyutu büyütülünce yazılar kesilmez
+          // SizedBox + physics ile yine sadece görünen öğeler render edilir
           SizedBox(
             height: listHeight,
             child: ListView.builder(
-              // shrinkWrap YOK - sabit yükseklik var
               physics: const BouncingScrollPhysics(),
               itemCount: questions.length,
-              itemExtent: 56, // Sabit item yüksekliği - daha hızlı scroll
+              // ✅ itemExtent KALDIRILDI - dinamik yükseklik
+              // Artık her satır kendi içeriğine göre boyutlanır
               itemBuilder: (context, index) {
                 final question = questions[index];
                 final questionId = (index + 1).toString();

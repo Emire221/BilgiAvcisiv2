@@ -16,6 +16,11 @@ dependencies:
   firebase_auth: ^5.3.3
   firebase_storage: ^12.3.7
   cloud_firestore: ^5.5.1
+  # 🔥 Firebase Analytics & Monitoring
+  firebase_crashlytics: ^4.2.1
+  firebase_analytics: ^11.4.1
+  firebase_remote_config: ^5.2.1
+  firebase_performance: ^0.10.0+11
   path_provider: ^2.1.5
   google_fonts: ^6.3.3
   sqflite: ^2.3.0

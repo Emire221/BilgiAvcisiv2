@@ -178,6 +178,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
   Future<void> _onCityChanged(String city) async {
     _triggerHaptic();
 
+    // ✅ UX: Şehir seçildiğinde klavyeyi kapat
+    FocusScope.of(context).unfocus();
+
     // Loading sadece picker kapatıldığında ve okul verisi indirilirken gösterilecek
     // setState ile ana ekranı yenileme - sadece seçim değişikliği
     setState(() {
@@ -1073,6 +1076,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                 ),
               )
             else
+              // ⚠️ PERFORMANS NOTU: shrinkWrap burada kabul edilebilir
+              // Maksimum 6 sınıf kartı var (3-8. sınıf)
+              // Lazy loading gereksiz - tüm kartlar zaten görünür
+              // SliverGrid'e çevirmek complexity artırır, kazanç minimal
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1176,7 +1183,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
   }
 
   Widget _buildContinueButton(Size size) {
-    final isEnabled = _isFormComplete && !_isSubmitting;
+    // ✅ UX: Şehir yüklenirken de butonu devre dışı bırak
+    final isEnabled = _isFormComplete && !_isSubmitting && !_isCityLoading;
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
