@@ -312,50 +312,84 @@ class _TestScreenState extends ConsumerState<TestScreen>
     );
   }
 
-  /// Soru içeriği
+  /// Soru içeriği (📱 UX Faz 4.1: Oransal Soru/Şık Alanı)
   Widget _buildQuestionContent({
     required Key key,
     required QuestionModel question,
     required dynamic controller,
     required int questionIndex,
   }) {
-    return SingleChildScrollView(
+    return LayoutBuilder(
       key: key,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-      child: Column(
-        children: [
-          // Hologram Soru Kartı
-          _HoloQuestionCard(
-                questionText: question.soruMetni,
-                questionNumber: questionIndex + 1,
-              )
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
+      builder: (context, constraints) {
+        final availableHeight = constraints.maxHeight;
+        final isSmallScreen = availableHeight < 500;
 
-          const SizedBox(height: 32),
+        // Soru alanı max %40, şıklar Expanded ile kalan alanı alır
+        final questionMaxHeight = availableHeight * 0.40;
 
-          // Cevap Seçenekleri
-          ...question.secenekler.asMap().entries.map((entry) {
-            final index = entry.key;
-            final option = entry.value;
-            final label = String.fromCharCode(65 + index);
+        return Column(
+          children: [
+            // Hologram Soru Kartı - Max %40 yükseklik
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: questionMaxHeight,
+                minHeight: 80,
+              ),
+              child:
+                  _HoloQuestionCard(
+                        questionText: question.soruMetni,
+                        questionNumber: questionIndex + 1,
+                        isCompact: isSmallScreen,
+                      )
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .scale(
+                        begin: const Offset(0.95, 0.95),
+                        end: const Offset(1, 1),
+                      ),
+            ),
 
-            return _GameOptionButton(
-                  label: label,
-                  optionText: option,
-                  index: index,
-                  isSelected: _selectedOptionIndex == index,
-                  isDisabled: _isAnswering,
-                  onTap: () => _handleAnswer(option, index, controller),
-                )
-                .animate(delay: Duration(milliseconds: 100 + (index * 100)))
-                .fadeIn()
-                .slideY(begin: 0.3, end: 0);
-          }),
-        ],
-      ),
+            SizedBox(height: isSmallScreen ? 16 : 24),
+
+            // Cevap Seçenekleri - Kalan alan (%60)
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: question.secenekler.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final option = entry.value;
+                    final label = String.fromCharCode(65 + index);
+
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
+                      child:
+                          _GameOptionButton(
+                                label: label,
+                                optionText: option,
+                                index: index,
+                                isSelected: _selectedOptionIndex == index,
+                                isDisabled: _isAnswering,
+                                isCompact: isSmallScreen,
+                                onTap: () =>
+                                    _handleAnswer(option, index, controller),
+                              )
+                              .animate(
+                                delay: Duration(
+                                  milliseconds: 100 + (index * 100),
+                                ),
+                              )
+                              .fadeIn()
+                              .slideY(begin: 0.3, end: 0),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -583,21 +617,40 @@ class _GlassContainer extends StatelessWidget {
   }
 }
 
-/// Hologram Soru Kartı
+/// Hologram Soru Kartı (📱 UX Faz 4.1: Auto-size text)
 class _HoloQuestionCard extends StatelessWidget {
   final String questionText;
   final int questionNumber;
+  final bool isCompact;
 
   const _HoloQuestionCard({
     required this.questionText,
     required this.questionNumber,
+    this.isCompact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Soru uzunluğuna göre font boyutu ayarla
+    final textLength = questionText.length;
+    double fontSize;
+    if (isCompact) {
+      fontSize = textLength > 200
+          ? 14
+          : textLength > 100
+          ? 16
+          : 18;
+    } else {
+      fontSize = textLength > 200
+          ? 16
+          : textLength > 100
+          ? 18
+          : 20;
+    }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isCompact ? 16 : 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
@@ -625,10 +678,14 @@ class _HoloQuestionCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Soru numarası badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 10 : 12,
+              vertical: isCompact ? 4 : 6,
+            ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Colors.cyan, Colors.blue],
@@ -638,17 +695,17 @@ class _HoloQuestionCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const FaIcon(
+                FaIcon(
                   FontAwesomeIcons.question,
                   color: Colors.white,
-                  size: 12,
+                  size: isCompact ? 10 : 12,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: isCompact ? 4 : 6),
                 Text(
                   'Soru $questionNumber',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
+                    fontSize: isCompact ? 10 : 12,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
                   ),
@@ -657,17 +714,22 @@ class _HoloQuestionCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: isCompact ? 12 : 20),
 
-          // Soru metni
-          Text(
-            questionText,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              height: 1.5,
-              letterSpacing: 0.5,
+          // Soru metni - Auto-size
+          Flexible(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Text(
+                questionText,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ),
           ),
         ],
@@ -676,13 +738,14 @@ class _HoloQuestionCard extends StatelessWidget {
   }
 }
 
-/// Game Option Button - Oyun tarzı seçenek butonu
+/// Game Option Button - Oyun tarzı seçenek butonu (📱 UX Faz 4.1: Compact Mode)
 class _GameOptionButton extends StatefulWidget {
   final String label;
   final String optionText;
   final int index;
   final bool isSelected;
   final bool isDisabled;
+  final bool isCompact;
   final VoidCallback onTap;
 
   const _GameOptionButton({
@@ -691,6 +754,7 @@ class _GameOptionButton extends StatefulWidget {
     required this.index,
     required this.isSelected,
     required this.isDisabled,
+    this.isCompact = false,
     required this.onTap,
   });
 
@@ -734,168 +798,169 @@ class _GameOptionButtonState extends State<_GameOptionButton>
   @override
   Widget build(BuildContext context) {
     final colors = _optionColors[widget.index % _optionColors.length];
+    final labelSize = widget.isCompact ? 36.0 : 44.0;
+    final fontSize = widget.isCompact ? 14.0 : 16.0;
+    final padding = widget.isCompact ? 12.0 : 16.0;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
-        onTapDown: widget.isDisabled
-            ? null
-            : (_) {
-                setState(() => _isPressed = true);
-                _controller.forward();
-              },
-        onTapUp: widget.isDisabled
-            ? null
-            : (_) {
-                setState(() => _isPressed = false);
-                _controller.reverse();
-              },
-        onTapCancel: widget.isDisabled
-            ? null
-            : () {
-                setState(() => _isPressed = false);
-                _controller.reverse();
-              },
-        onTap: widget.isDisabled ? null : widget.onTap,
-        child: AnimatedBuilder(
-          animation: _scaleAnimation,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: widget.isSelected
-                        ? [
-                            Colors.amber.withValues(alpha: 0.4),
-                            Colors.orange.withValues(alpha: 0.3),
-                          ]
-                        : [
-                            Colors.white.withValues(alpha: 0.08),
-                            Colors.white.withValues(alpha: 0.04),
-                          ],
-                  ),
-                  border: Border.all(
-                    color: widget.isSelected
-                        ? Colors.amber
-                        : _isPressed
-                        ? colors[0]
-                        : Colors.white.withValues(alpha: 0.2),
-                    width: widget.isSelected ? 2.5 : 1.5,
-                  ),
-                  boxShadow: widget.isSelected
-                      ? [
-                          BoxShadow(
-                            color: Colors.amber.withValues(alpha: 0.4),
-                            blurRadius: 15,
-                            spreadRadius: 2,
-                          ),
-                        ]
-                      : _isPressed
-                      ? [
-                          BoxShadow(
-                            color: colors[0].withValues(alpha: 0.3),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  children: [
-                    // Label Circle
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: widget.isSelected
-                              ? [Colors.amber, Colors.orange]
-                              : colors,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                (widget.isSelected ? Colors.amber : colors[0])
-                                    .withValues(alpha: 0.5),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 16),
-
-                    // Option Text
-                    Expanded(
-                      child: Text(
-                        widget.optionText,
-                        style: TextStyle(
-                          color: widget.isSelected
-                              ? Colors.amber
-                              : Colors.white.withValues(alpha: 0.9),
-                          fontSize: 16,
-                          fontWeight: widget.isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-
-                    // Selected indicator
-                    if (widget.isSelected)
-                      Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Colors.amber, Colors.orange],
-                              ),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Center(
-                              child: FaIcon(
-                                FontAwesomeIcons.check,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                            ),
-                          )
-                          .animate()
-                          .scale(
-                            begin: const Offset(0, 0),
-                            end: const Offset(1, 1),
-                          )
-                          .fadeIn(),
-                  ],
-                ),
+    return GestureDetector(
+      onTapDown: widget.isDisabled
+          ? null
+          : (_) {
+              setState(() => _isPressed = true);
+              _controller.forward();
+            },
+      onTapUp: widget.isDisabled
+          ? null
+          : (_) {
+              setState(() => _isPressed = false);
+              _controller.reverse();
+            },
+      onTapCancel: widget.isDisabled
+          ? null
+          : () {
+              setState(() => _isPressed = false);
+              _controller.reverse();
+            },
+      onTap: widget.isDisabled ? null : widget.onTap,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.symmetric(
+                horizontal: padding,
+                vertical: padding,
               ),
-            );
-          },
-        ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: widget.isSelected
+                      ? [
+                          Colors.amber.withValues(alpha: 0.4),
+                          Colors.orange.withValues(alpha: 0.3),
+                        ]
+                      : [
+                          Colors.white.withValues(alpha: 0.08),
+                          Colors.white.withValues(alpha: 0.04),
+                        ],
+                ),
+                border: Border.all(
+                  color: widget.isSelected
+                      ? Colors.amber
+                      : _isPressed
+                      ? colors[0]
+                      : Colors.white.withValues(alpha: 0.2),
+                  width: widget.isSelected ? 2.5 : 1.5,
+                ),
+                boxShadow: widget.isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.amber.withValues(alpha: 0.4),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : _isPressed
+                    ? [
+                        BoxShadow(
+                          color: colors[0].withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  // Label Circle
+                  Container(
+                    width: labelSize,
+                    height: labelSize,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: widget.isSelected
+                            ? [Colors.amber, Colors.orange]
+                            : colors,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        widget.isCompact ? 10 : 12,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (widget.isSelected ? Colors.amber : colors[0])
+                              .withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        widget.label,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: widget.isCompact ? 16 : 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: widget.isCompact ? 12 : 16),
+
+                  // Option Text
+                  Expanded(
+                    child: Text(
+                      widget.optionText,
+                      style: TextStyle(
+                        color: widget.isSelected
+                            ? Colors.amber
+                            : Colors.white.withValues(alpha: 0.9),
+                        fontSize: fontSize,
+                        fontWeight: widget.isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+
+                  // Selected indicator
+                  if (widget.isSelected)
+                    Container(
+                          width: widget.isCompact ? 24 : 28,
+                          height: widget.isCompact ? 24 : 28,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Colors.amber, Colors.orange],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Center(
+                            child: FaIcon(
+                              FontAwesomeIcons.check,
+                              color: Colors.white,
+                              size: widget.isCompact ? 12 : 14,
+                            ),
+                          ),
+                        )
+                        .animate()
+                        .scale(
+                          begin: const Offset(0, 0),
+                          end: const Offset(1, 1),
+                        )
+                        .fadeIn(),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

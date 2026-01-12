@@ -296,43 +296,6 @@ class _DuelGameSelectionScreenState
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // Icon
-          AnimatedBuilder(
-            animation: _glowAnimation,
-            builder: (context, child) {
-              return Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      _neonCyan.withValues(alpha: 0.3),
-                      _neonPurple.withValues(alpha: 0.2),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: _neonCyan.withValues(
-                      alpha: 0.5 * _glowAnimation.value,
-                    ),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _neonCyan.withValues(
-                        alpha: 0.3 * _glowAnimation.value,
-                      ),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: const Text('🎮', style: TextStyle(fontSize: 36)),
-              );
-            },
-          ),
-
-          const SizedBox(height: 20),
-
           // Title
           Text(
             '1v1 DÜELLO',

@@ -200,7 +200,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.3, end: 0);
+    );
   }
 
   /// Deneme trend grafiği göster
@@ -1945,9 +1945,7 @@ class _DenemeTrendModalState extends State<_DenemeTrendModal>
             // Chart
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: widget.dbHelper.getWeeklyExamResults(
-                  onlyAnnounced: false,
-                ),
+                future: widget.dbHelper.getWeeklyExamResults(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(

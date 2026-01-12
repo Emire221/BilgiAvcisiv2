@@ -314,7 +314,7 @@ class _GamesTabState extends ConsumerState<GamesTab>
 
               // Oyun kartları - Bento Grid
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 sliver: SliverToBoxAdapter(
                   child: isTablet
                       ? _buildTabletLayout(isDarkMode)
@@ -416,51 +416,84 @@ class _GamesTabState extends ConsumerState<GamesTab>
     );
   }
 
-  /// Mobil Bento Grid Layout
+  /// Mobil Bento Grid Layout (📱 UX Faz 3.1: Responsive Grid)
   Widget _buildMobileLayout(bool isDarkMode) {
+    // Ekran yüksekliğine göre dinamik boyutlandırma
+    final screenHeight = MediaQuery.of(context).size.height;
+    final rawAvailableHeight =
+        screenHeight -
+        MediaQuery.of(context).padding.top -
+        MediaQuery.of(context).padding.bottom -
+        200; // Header ve bottom nav için daha az alan ayır
+    final availableHeight = rawAvailableHeight.clamp(350.0, double.infinity);
+
+    // Küçük ekranlar için daha kompakt kartlar
+    final isSmallScreen = screenHeight < 700;
+    
+    // Kartlar daha büyük olsun - flex oranlarını artır
+    final heroHeight = isSmallScreen
+        ? availableHeight * 0.34
+        : availableHeight * 0.36;
+    final rowHeight = isSmallScreen
+        ? availableHeight * 0.32
+        : availableHeight * 0.34;
+    final wideHeight = isSmallScreen
+        ? availableHeight * 0.28
+        : availableHeight * 0.30;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Hero Card - Düello (Tam genişlik)
-        _buildArcadeCard(
-          game: _games[0],
-          isDarkMode: isDarkMode,
-          height: 200,
-          animationDelay: 0,
+        SizedBox(
+          height: heroHeight.clamp(150.0, 220.0),
+          child: _buildArcadeCard(
+            game: _games[0],
+            isDarkMode: isDarkMode,
+            height: heroHeight.clamp(150.0, 220.0),
+            animationDelay: 0,
+          ),
         ),
 
-        const SizedBox(height: 16),
+        SizedBox(height: isSmallScreen ? 8 : 12),
 
         // İkili Satır - Hafıza & Cümle Tamamla
-        Row(
-          children: [
-            Expanded(
-              child: _buildArcadeCard(
-                game: _games[1],
-                isDarkMode: isDarkMode,
-                height: 180,
-                animationDelay: 100,
+        SizedBox(
+          height: rowHeight.clamp(140.0, 200.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildArcadeCard(
+                  game: _games[1],
+                  isDarkMode: isDarkMode,
+                  height: rowHeight.clamp(140.0, 200.0),
+                  animationDelay: 100,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildArcadeCard(
-                game: _games[2],
-                isDarkMode: isDarkMode,
-                height: 180,
-                animationDelay: 200,
+              SizedBox(width: isSmallScreen ? 8 : 12),
+              Expanded(
+                child: _buildArcadeCard(
+                  game: _games[2],
+                  isDarkMode: isDarkMode,
+                  height: rowHeight.clamp(140.0, 200.0),
+                  animationDelay: 200,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
-        const SizedBox(height: 16),
+        SizedBox(height: isSmallScreen ? 8 : 12),
 
         // Geniş Kart - Salla Bakalım
-        _buildArcadeCard(
-          game: _games[3],
-          isDarkMode: isDarkMode,
-          height: 160,
-          animationDelay: 300,
+        SizedBox(
+          height: wideHeight.clamp(130.0, 180.0),
+          child: _buildArcadeCard(
+            game: _games[3],
+            isDarkMode: isDarkMode,
+            height: wideHeight.clamp(130.0, 180.0),
+            animationDelay: 300,
+          ),
         ),
       ],
     );
@@ -922,13 +955,13 @@ class _ArcadeGameCardState extends State<_ArcadeGameCard>
                             ),
                           ),
 
-                          const Spacer(),
+                          const SizedBox(height: 8),
 
                           // Oyna butonu
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 10,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),

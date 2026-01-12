@@ -457,8 +457,11 @@ class _RegisterScreenState extends State<RegisterScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.height < 700;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardOpen = bottomInset > 0;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -480,71 +483,82 @@ class _RegisterScreenState extends State<RegisterScreen>
             // Grid pattern
             _buildGridPattern(),
 
-            // Main content
+            // Main content - Responsive layout
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  // 📱 UX Faz 2.1: Oransal yükseklik hesaplaması
+                  final availableHeight = constraints.maxHeight;
+                  final mascotHeight = isKeyboardOpen
+                      ? 0.0
+                      : (isSmallScreen
+                            ? availableHeight * 0.12
+                            : availableHeight * 0.15);
+                  final titleSpacing = isSmallScreen ? 8.0 : 16.0;
+                  final formPadding = isSmallScreen ? 16.0 : 24.0;
+
                   return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
+                    physics: isKeyboardOpen
+                        ? const ClampingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: IntrinsicHeight(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: isSmallScreen ? 16 : 24,
-                          ),
-                          child: Column(
-                            children: [
-                              // Back button
-                              _buildBackButton()
-                                  .animate()
-                                  .fadeIn(duration: 400.ms)
-                                  .slideX(begin: -0.3),
+                      constraints: BoxConstraints(minHeight: availableHeight),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: isSmallScreen ? 8 : 16,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Back button
+                            _buildBackButton()
+                                .animate()
+                                .fadeIn(duration: 400.ms)
+                                .slideX(begin: -0.3),
 
-                              SizedBox(height: isSmallScreen ? 16 : 32),
+                            SizedBox(height: titleSpacing),
 
-                              // Spacer - İçeriği ortalar (klavye kapalıyken)
-                              const Spacer(),
-
-                              // Mascot
-                              _buildMascot(isSmallScreen)
-                                  .animate()
-                                  .fadeIn(delay: 200.ms, duration: 600.ms)
-                                  .scale(begin: const Offset(0.8, 0.8)),
-
-                              SizedBox(height: isSmallScreen ? 16 : 24),
-
-                              // Title
-                              _buildTitle()
-                                  .animate()
-                                  .fadeIn(delay: 300.ms, duration: 500.ms)
-                                  .slideY(begin: 0.3),
-
-                              SizedBox(height: isSmallScreen ? 24 : 32),
-
-                              // Form Card
-                              _buildFormCard(isSmallScreen)
-                                  .animate()
-                                  .fadeIn(delay: 400.ms, duration: 600.ms)
-                                  .slideY(begin: 0.2),
-
-                              SizedBox(height: isSmallScreen ? 16 : 24),
-
-                              // Login link
-                              _buildLoginLink().animate().fadeIn(
-                                delay: 600.ms,
-                                duration: 400.ms,
+                            // Mascot - Klavye açıkken gizle
+                            if (!isKeyboardOpen)
+                              SizedBox(
+                                height: mascotHeight,
+                                child: _buildMascot(isSmallScreen)
+                                    .animate()
+                                    .fadeIn(delay: 200.ms, duration: 600.ms)
+                                    .scale(begin: const Offset(0.8, 0.8)),
                               ),
 
-                              const SizedBox(height: 20),
+                            if (!isKeyboardOpen) SizedBox(height: titleSpacing),
 
-                              // Spacer - İçeriği ortalar (klavye kapalıyken)
-                              const Spacer(),
-                            ],
-                          ),
+                            // Title - Klavye açıkken küçült
+                            _buildTitle(isCompact: isKeyboardOpen)
+                                .animate()
+                                .fadeIn(delay: 300.ms, duration: 500.ms)
+                                .slideY(begin: 0.3),
+
+                            SizedBox(
+                              height: isKeyboardOpen
+                                  ? 12
+                                  : (isSmallScreen ? 16 : 24),
+                            ),
+
+                            // Form Card - Responsive
+                            _buildFormCard(isSmallScreen, formPadding)
+                                .animate()
+                                .fadeIn(delay: 400.ms, duration: 600.ms)
+                                .slideY(begin: 0.2),
+
+                            SizedBox(height: isSmallScreen ? 12 : 20),
+
+                            // Login link
+                            _buildLoginLink().animate().fadeIn(
+                              delay: 600.ms,
+                              duration: 400.ms,
+                            ),
+
+                            SizedBox(height: isSmallScreen ? 8 : 16),
+                          ],
                         ),
                       ),
                     ),
@@ -659,7 +673,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle({bool isCompact = false}) {
     return Column(
       children: [
         // Animated title with shimmer
@@ -678,7 +692,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               child: Text(
                 '🚀 MACERAYA KATIL',
                 style: GoogleFonts.nunito(
-                  fontSize: 28,
+                  fontSize: isCompact ? 22 : 28,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
                   letterSpacing: 1.5,
@@ -688,22 +702,23 @@ class _RegisterScreenState extends State<RegisterScreen>
           },
         ),
 
-        const SizedBox(height: 8),
-
-        Text(
-          'Bilgi evrenini keşfetmeye hazır mısın?',
-          style: GoogleFonts.nunito(
-            fontSize: 14,
-            color: Colors.white.withOpacity(0.7),
+        if (!isCompact) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Bilgi evrenini keşfetmeye hazır mısın?',
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.7),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
 
-  Widget _buildFormCard(bool isSmallScreen) {
+  Widget _buildFormCard(bool isSmallScreen, double padding) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -721,6 +736,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // ✅ Email input - Ortak AuthTextFieldDark widget'ı
           AuthTextFieldDark(
@@ -733,7 +749,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             accentColor: _primaryCyan,
           ),
 
-          SizedBox(height: isSmallScreen ? 14 : 18),
+          SizedBox(height: isSmallScreen ? 10 : 14),
 
           // ✅ Password input - Ortak AuthTextFieldDark widget'ı
           AuthTextFieldDark(
@@ -753,11 +769,11 @@ class _RegisterScreenState extends State<RegisterScreen>
 
           // Password strength indicator
           if (_passwordStrength > 0) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildPasswordStrengthIndicator(),
           ],
 
-          SizedBox(height: isSmallScreen ? 14 : 18),
+          SizedBox(height: isSmallScreen ? 10 : 14),
 
           // ✅ Confirm password input - Ortak AuthTextFieldDark widget'ı
           AuthTextFieldDark(
@@ -776,12 +792,12 @@ class _RegisterScreenState extends State<RegisterScreen>
             accentColor: _primaryCyan,
           ),
 
-          SizedBox(height: isSmallScreen ? 10 : 14),
+          SizedBox(height: isSmallScreen ? 8 : 12),
 
           // Forgot password button
           _buildForgotPasswordButton(),
 
-          SizedBox(height: isSmallScreen ? 20 : 28),
+          SizedBox(height: isSmallScreen ? 16 : 24),
 
           // Register button
           _buildRegisterButton(isSmallScreen),
@@ -1017,11 +1033,12 @@ class _StarsPainter extends CustomPainter {
       final twinkle =
           0.3 +
           0.7 * math.sin(animationValue * math.pi * 2 * star.twinkleSpeed);
-      final currentOpacity = star.opacity * twinkle;
+      // ✅ Opacity değerini 0-1 aralığında sınırla
+      final currentOpacity = (star.opacity * twinkle).clamp(0.0, 1.0);
 
       // Yıldız için gradient efekti
       final paint = Paint()
-        ..color = glowColor.withOpacity(currentOpacity * 0.8)
+        ..color = glowColor.withOpacity((currentOpacity * 0.8).clamp(0.0, 1.0))
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
       // Yıldız çizimi

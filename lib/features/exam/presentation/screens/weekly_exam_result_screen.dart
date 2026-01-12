@@ -911,7 +911,7 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
                       const SizedBox(height: 8),
 
                       Text(
-                        'Sonuçlar Pazar 20:00\'da açıklanacak',
+                        'Sonuçlar Cumartesi 12:00\'de açıklanacak',
                         style: TextStyle(
                           color: isDarkMode
                               ? _darkText.withOpacity(0.7)

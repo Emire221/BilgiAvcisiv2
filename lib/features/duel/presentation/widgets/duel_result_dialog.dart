@@ -49,6 +49,14 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isCompact = screenHeight < 600;
+    final iconSize = isCompact ? 40.0 : 60.0;
+    final titleSize = isCompact ? 22.0 : 28.0;
+    final subtitleSize = isCompact ? 14.0 : 16.0;
+    final scoreFontSize = isCompact ? 20.0 : 24.0;
+    final padding = isCompact ? 16.0 : 24.0;
+
     return Stack(
       children: [
         Dialog(
@@ -56,39 +64,44 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
             borderRadius: BorderRadius.circular(24),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(padding),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Sonuç ikonu
-                _buildResultIcon(),
+                _buildResultIcon(iconSize, isCompact),
 
-                const SizedBox(height: 16),
+                SizedBox(height: isCompact ? 12 : 16),
 
                 // Sonuç başlığı
                 Text(
                   _getResultTitle(),
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: titleSize,
                     fontWeight: FontWeight.bold,
                     color: _getResultColor(),
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                SizedBox(height: isCompact ? 4 : 8),
 
                 // Alt başlık
                 Text(
                   _getResultSubtitle(),
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: subtitleSize,
+                    color: Colors.grey[600],
+                  ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
-                const SizedBox(height: 24),
+                SizedBox(height: isCompact ? 16 : 24),
 
                 // Skor özeti
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(isCompact ? 12 : 16),
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
@@ -96,18 +109,30 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildScoreColumn('Sen', widget.userScore, Colors.blue),
-                      Container(width: 2, height: 50, color: Colors.grey[300]),
+                      _buildScoreColumn(
+                        'Sen',
+                        widget.userScore,
+                        Colors.blue,
+                        scoreFontSize,
+                        isCompact,
+                      ),
+                      Container(
+                        width: 2,
+                        height: isCompact ? 40 : 50,
+                        color: Colors.grey[300],
+                      ),
                       _buildScoreColumn(
                         widget.botName,
                         widget.botScore,
                         Colors.orange,
+                        scoreFontSize,
+                        isCompact,
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                SizedBox(height: isCompact ? 16 : 24),
 
                 // Butonlar
                 Row(
@@ -116,7 +141,9 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
                       child: OutlinedButton(
                         onPressed: widget.onExit,
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: EdgeInsets.symmetric(
+                            vertical: isCompact ? 10 : 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -124,14 +151,16 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
                         child: const Text('Çık'),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: isCompact ? 8 : 12),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: widget.onPlayAgain,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: EdgeInsets.symmetric(
+                            vertical: isCompact ? 10 : 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -169,7 +198,7 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
     );
   }
 
-  Widget _buildResultIcon() {
+  Widget _buildResultIcon(double iconSize, bool isCompact) {
     IconData icon;
     Color color;
 
@@ -189,12 +218,12 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isCompact ? 14 : 20),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, size: 60, color: color),
+      child: Icon(icon, size: iconSize, color: color),
     );
   }
 
@@ -231,26 +260,38 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
     }
   }
 
-  Widget _buildScoreColumn(String name, int score, Color color) {
+  Widget _buildScoreColumn(
+    String name,
+    int score,
+    Color color,
+    double fontSize,
+    bool isCompact,
+  ) {
     return Column(
       children: [
         Text(
           name,
-          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+          style: TextStyle(
+            fontSize: isCompact ? 12 : 14,
+            color: Colors.grey[600],
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: isCompact ? 6 : 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 14 : 20,
+            vertical: isCompact ? 6 : 8,
+          ),
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             '$score',
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),

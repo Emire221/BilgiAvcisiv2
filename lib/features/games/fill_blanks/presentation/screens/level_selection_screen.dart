@@ -65,22 +65,22 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
 
     _scrollController = ScrollController();
 
-    // Pulse animasyonu (aktif seviye için nabız efekti)
+    // Pulse animasyonu (aktif seviye için nabız efekti) - 2x hızlandırıldı
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 750),
     )..repeat(reverse: true);
 
-    // Bulut animasyonu
+    // Bulut animasyonu - 2x hızlandırıldı
     _cloudController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 30),
+      duration: const Duration(seconds: 15),
     )..repeat();
 
-    // Bounce animasyonu (play ikonu için)
+    // Bounce animasyonu (play ikonu için) - 2x hızlandırıldı
     _bounceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 400),
     )..repeat(reverse: true);
 
     // Verileri yükle
@@ -165,7 +165,7 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
 
     _scrollController.animateTo(
       targetPosition.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 400), // 2x hızlandırıldı
       curve: Curves.easeOutCubic,
     );
   }
@@ -210,7 +210,7 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
             borderRadius: BorderRadius.circular(16),
           ),
           margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
+          duration: const Duration(seconds: 1), // 2x hızlandırıldı
         ),
       );
     } else {
@@ -258,8 +258,8 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: isDark 
-                    ? [_darkSkyTop, _darkSkyBottom] 
+                colors: isDark
+                    ? [_darkSkyTop, _darkSkyBottom]
                     : [_skyTop, _skyBottom],
               ),
             ),
@@ -316,7 +316,7 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
                 )
                 .animate(onPlay: (c) => c.repeat())
                 .shimmer(
-                  duration: 1500.ms,
+                  duration: 750.ms, // 2x hızlandırıldı
                   color: Colors.white.withValues(alpha: 0.3),
                 ),
       );
@@ -536,7 +536,7 @@ class _LevelSelectionScreenState extends ConsumerState<LevelSelectionScreen>
           ),
         )
         .animate()
-        .fadeIn(duration: 600.ms)
+        .fadeIn(duration: 300.ms) // 2x hızlandırıldı
         .slideY(begin: -0.3, end: 0, curve: Curves.easeOutCubic);
   }
 
@@ -703,7 +703,7 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
     super.initState();
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 250), // 2x hızlandırıldı
     );
     _shakeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
@@ -805,8 +805,10 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
             ),
           ),
         )
-        .animate(delay: Duration(milliseconds: widget.animationDelay))
-        .fadeIn(duration: 500.ms)
+        .animate(
+          delay: Duration(milliseconds: widget.animationDelay ~/ 2),
+        ) // 2x hızlandırıldı
+        .fadeIn(duration: 250.ms) // 2x hızlandırıldı
         .slideY(begin: 0.5, end: 0, curve: Curves.easeOutBack);
   }
 
@@ -1045,7 +1047,9 @@ class _LevelNodeState extends ConsumerState<_LevelNode>
                   )
                   .animate(
                     delay: Duration(
-                      milliseconds: widget.animationDelay + (index * 100),
+                      milliseconds:
+                          (widget.animationDelay ~/ 2) +
+                          (index * 50), // 2x hızlandırıldı
                     ),
                   )
                   .scale(

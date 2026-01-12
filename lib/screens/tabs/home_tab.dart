@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:math' as math;
+
+// Import yollarını kendi projene göre kontrol et
 import '../../widgets/glass_container.dart';
 import '../../services/daily_fact_service.dart';
 import '../../core/providers/user_provider.dart';
@@ -13,7 +15,6 @@ import '../../features/mascot/domain/entities/mascot.dart';
 import '../lesson_selection_screen.dart';
 import '../achievements_screen.dart';
 
-/// Ana sayfa tab'ı - "Maskotun Evi" konseptinde immersive deneyim
 class HomeTab extends ConsumerStatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
 
@@ -25,32 +26,28 @@ class HomeTab extends ConsumerStatefulWidget {
 
 class _HomeTabState extends ConsumerState<HomeTab>
     with TickerProviderStateMixin {
-  // Animasyon controller'ları
   late AnimationController _floatController;
   late AnimationController _bubbleController;
 
-  // Günlük bilgi state'i
   String _typedText = '';
   bool _isTyping = false;
   DailyFact? _dailyFact;
+  bool _isSpeechBubbleExpanded = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Floating animasyon (bulutlar için)
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
 
-    // Bubble animasyon
     _bubbleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
 
-    // Günlük bilgiyi yükle ve typing animasyonu başlat
     _loadDailyFact();
   }
 
@@ -62,30 +59,22 @@ class _HomeTabState extends ConsumerState<HomeTab>
           setState(() => _dailyFact = fact);
           _startTypingAnimation(fact.fact);
         } else {
-          // Fallback: JSON yüklenemezse varsayılan bilgi göster
-          const fallbackFact = DailyFact(
-            dayOfYear: 1,
-            title: 'İlginç Bilgi',
-            fact:
-                'Dünya, Güneş etrafındaki turunu tam 365 gün 6 saatte tamamlar!',
-          );
-          setState(() => _dailyFact = fallbackFact);
-          _startTypingAnimation(fallbackFact.fact);
+          _setFallbackFact();
         }
       }
     } catch (e) {
-      // Hata durumunda da fallback göster
-      if (mounted) {
-        const fallbackFact = DailyFact(
-          dayOfYear: 1,
-          title: 'İlginç Bilgi',
-          fact:
-              'Dünya, Güneş etrafındaki turunu tam 365 gün 6 saatte tamamlar!',
-        );
-        setState(() => _dailyFact = fallbackFact);
-        _startTypingAnimation(fallbackFact.fact);
-      }
+      if (mounted) _setFallbackFact();
     }
+  }
+
+  void _setFallbackFact() {
+    const fallbackFact = DailyFact(
+      dayOfYear: 1,
+      title: 'İlginç Bilgi',
+      fact: 'Dünya, Güneş etrafındaki turunu tam 365 gün 6 saatte tamamlar!',
+    );
+    setState(() => _dailyFact = fallbackFact);
+    _startTypingAnimation(fallbackFact.fact);
   }
 
   void _startTypingAnimation(String text) async {
@@ -123,14 +112,11 @@ class _HomeTabState extends ConsumerState<HomeTab>
 
     return Stack(
       children: [
-        // Katman 1: Animated Background
         _buildAnimatedBackground(isDarkMode),
-
-        // Katman 2: Floating Clouds/Shapes
         _buildFloatingElements(isDarkMode),
-
-        // Katman 3: Main Content
         SafeArea(
+          // Bottom padding'i kendimiz yönetiyoruz (Dock için)
+          bottom: false,
           child: isTablet
               ? _buildTabletLayout(
                   isDarkMode,
@@ -149,7 +135,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
     );
   }
 
-  /// Tablet Layout - Yatay düzen
+  /// Tablet Layout
   Widget _buildTabletLayout(
     bool isDarkMode,
     AsyncValue<Map<String, dynamic>?> userProfileAsync,
@@ -158,19 +144,21 @@ class _HomeTabState extends ConsumerState<HomeTab>
   ) {
     return Row(
       children: [
-        // Sol taraf - Maskot Alanı
         Expanded(
           flex: 5,
           child: Column(
             children: [
               _buildHeader(isDarkMode, userProfileAsync, mascotAsync),
               Expanded(
-                child: _buildMascotStage(isDarkMode, mascotAsync, screenSize),
+                child: _buildMascotStage(
+                  isDarkMode,
+                  mascotAsync,
+                  screenSize.height * 0.5,
+                ),
               ),
             ],
           ),
         ),
-        // Sağ taraf - Kartlar
         Expanded(
           flex: 4,
           child: Padding(
@@ -182,82 +170,88 @@ class _HomeTabState extends ConsumerState<HomeTab>
     );
   }
 
-  /// Phone Layout - Dikey düzen
+  /// Phone Layout - FIX UYGULANDI
   Widget _buildPhoneLayout(
     bool isDarkMode,
     AsyncValue<Map<String, dynamic>?> userProfileAsync,
     AsyncValue<Mascot?> mascotAsync,
     Size screenSize,
   ) {
-    final isSmallScreen = screenSize.height < 700;
-    final mascotHeight = isSmallScreen
-        ? screenSize.height * 0.35
-        : screenSize.height * 0.40;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight:
-              screenSize.height -
-              MediaQuery.of(context).padding.top -
-              MediaQuery.of(context).padding.bottom,
-        ),
-        child: Column(
-          children: [
-            // Header
-            _buildHeader(
-              isDarkMode,
-              userProfileAsync,
-              mascotAsync,
-            ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.3, end: 0),
+    // GÜNCELLEME: Boşluğu minimize ettik - kartlar dock'un hemen üstünde
+    // Dock yüksekliği (~60px) + minimum margin
+    final dockReservedSpace = 30.0 + bottomPadding;
 
-            // Speech Bubble - Header altında
-            if (_dailyFact != null)
+    return Padding(
+      // Bu padding tüm içeriği Dock'un hemen üzerinde bitmeye zorlar
+      padding: EdgeInsets.only(bottom: dockReservedSpace),
+      child: Column(
+        // Elementleri dikeyde yayar (Üst - Orta - Alt)
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // 1. HEADER & BALON
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: _buildSpeechBubbleCard(isDarkMode, mascotAsync),
-                  )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 100.ms)
-                  .slideY(begin: -0.2, end: 0),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                child: _buildHeader(isDarkMode, userProfileAsync, mascotAsync)
+                    .animate()
+                    .fadeIn(duration: 500.ms)
+                    .slideY(begin: -0.3, end: 0),
+              ),
+              if (_dailyFact != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildSpeechBubbleCard(isDarkMode, mascotAsync)
+                      .animate()
+                      .fadeIn(duration: 500.ms, delay: 100.ms)
+                      .slideY(begin: -0.2, end: 0),
+                ),
+            ],
+          ),
 
-            // Mascot Stage - Daha büyük
-            SizedBox(
-                  height: mascotHeight,
-                  child: _buildMascotStage(isDarkMode, mascotAsync, screenSize),
-                )
-                .animate()
-                .fadeIn(duration: 600.ms, delay: 200.ms)
-                .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
+          // 2. MASKOT (Expanded ile taşmayı önler)
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Center(
+                  child:
+                      _buildMascotStage(
+                            isDarkMode,
+                            mascotAsync,
+                            constraints.maxHeight,
+                          )
+                          .animate()
+                          .fadeIn(duration: 600.ms, delay: 200.ms)
+                          .scale(
+                            begin: const Offset(0.9, 0.9),
+                            end: const Offset(1, 1),
+                          ),
+                );
+              },
+            ),
+          ),
 
-            // Action Deck
-            Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    8,
-                    16,
-                    isSmallScreen ? 90 : 110,
-                  ),
-                  child: _buildActionDeck(
-                    isDarkMode,
-                    isVertical: false,
-                    isSmallScreen: isSmallScreen,
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 500.ms, delay: 400.ms)
-                .slideY(begin: 0.3, end: 0),
-          ],
-        ),
+          // 3. KARTLAR
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child:
+                _buildActionDeck(
+                      isDarkMode,
+                      isVertical: false,
+                      isSmallScreen: screenSize.height < 700,
+                    )
+                    .animate()
+                    .fadeIn(duration: 500.ms, delay: 400.ms)
+                    .slideY(begin: 0.3, end: 0),
+          ),
+        ],
       ),
     );
   }
 
-  /// Animated gradient background
   Widget _buildAnimatedBackground(bool isDarkMode) {
     return AnimatedBuilder(
       animation: _floatController,
@@ -301,32 +295,27 @@ class _HomeTabState extends ConsumerState<HomeTab>
     );
   }
 
-  /// Floating decorative elements
   Widget _buildFloatingElements(bool isDarkMode) {
     return AnimatedBuilder(
       animation: _floatController,
       builder: (context, child) {
         return Stack(
           children: [
-            // Cloud 1
             Positioned(
               top: 60 + _floatController.value * 20,
               left: 20,
               child: _buildCloud(isDarkMode, size: 80),
             ),
-            // Cloud 2
             Positioned(
               top: 120 + (1 - _floatController.value) * 15,
               right: 30,
               child: _buildCloud(isDarkMode, size: 60),
             ),
-            // Cloud 3
             Positioned(
               top: 200 + _floatController.value * 10,
               left: 60,
               child: _buildCloud(isDarkMode, size: 50),
             ),
-            // Sparkles
             ..._buildSparkles(isDarkMode),
           ],
         );
@@ -384,7 +373,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
     });
   }
 
-  /// Header with greeting and stats
   Widget _buildHeader(
     bool isDarkMode,
     AsyncValue<Map<String, dynamic>?> userProfileAsync,
@@ -395,10 +383,9 @@ class _HomeTabState extends ConsumerState<HomeTab>
     final level = mascot?.level ?? 1;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
       child: Row(
         children: [
-          // Sol - Kullanıcı adı
           Flexible(
             child: Text(
               'Merhaba, $userName! 👋',
@@ -411,11 +398,9 @@ class _HomeTabState extends ConsumerState<HomeTab>
             ),
           ),
           const SizedBox(width: 8),
-          // Sağ - Streak ve Level (kompakt)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Streak Badge
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -448,7 +433,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
                 ),
               ),
               const SizedBox(width: 6),
-              // Level Badge
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -492,199 +476,185 @@ class _HomeTabState extends ConsumerState<HomeTab>
     );
   }
 
-  /// Speech Bubble Card - Header altında gösterilecek
   Widget _buildSpeechBubbleCard(
     bool isDarkMode,
     AsyncValue<Mascot?> mascotAsync,
   ) {
     final mascot = mascotAsync.asData?.value;
 
-    return GlassContainer(
-      blur: 10,
-      opacity: isDarkMode ? 0.15 : 0.6,
-      borderRadius: BorderRadius.circular(16),
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.lightbulb, size: 20, color: Colors.amber[600]),
-          ),
-          const SizedBox(width: 12),
-          // Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Bunu biliyor musun? 💡',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
-                  ),
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _isSpeechBubbleExpanded = !_isSpeechBubbleExpanded;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        child: GlassContainer(
+          blur: 10,
+          opacity: isDarkMode ? 0.15 : 0.6,
+          borderRadius: BorderRadius.circular(16),
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '💬 Maskota basarak konuşabilirsin',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode ? Colors.white54 : Colors.black45,
-                    fontStyle: FontStyle.italic,
-                  ),
+                child: Icon(
+                  Icons.lightbulb,
+                  size: 20,
+                  color: Colors.amber[600],
                 ),
-                const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: () => _showFullFactDialog(context, isDarkMode),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Bunu biliyor musun? 💡',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDarkMode ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                        const Spacer(),
+                        AnimatedRotation(
+                          turns: _isSpeechBubbleExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 300),
+                          child: Icon(
+                            Icons.expand_more,
+                            size: 18,
+                            color: isDarkMode ? Colors.white54 : Colors.black45,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '💬 Maskota basarak konuşabilirsin',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white54 : Colors.black45,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    AnimatedCrossFade(
+                      firstChild: Text(
                         _typedText,
                         style: TextStyle(
                           fontSize: 13,
-                          height: 1.3,
+                          height: 1.4,
                           color: isDarkMode ? Colors.white : Colors.black87,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (_dailyFact != null &&
-                          _dailyFact!.fact.length > 60 &&
-                          !_isTyping)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Devamını oku...',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.blue[400],
-                              fontWeight: FontWeight.w500,
-                            ),
+                      secondChild: Text(
+                        _dailyFact?.fact ?? _typedText,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      crossFadeState: _isSpeechBubbleExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 300),
+                    ),
+                    if (!_isSpeechBubbleExpanded &&
+                        _dailyFact != null &&
+                        _dailyFact!.fact.length > 60 &&
+                        !_isTyping)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Devamını görmek için dokun ↓',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.blue[400],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (_isTyping)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(
-                    mascot?.petType.color ?? Colors.purple,
-                  ),
+                      ),
+                  ],
                 ),
               ),
-            ),
-        ],
+              if (_isTyping)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(
+                        mascot?.petType.color ?? Colors.purple,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  /// Günlük bilginin tamamını gösteren dialog
-  void _showFullFactDialog(BuildContext context, bool isDarkMode) {
-    if (_dailyFact == null) return;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF1a1a2e) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.lightbulb, color: Colors.amber[600], size: 24),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Bunu Biliyor Musun?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Text(
-            _dailyFact!.fact,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.5,
-              color: isDarkMode ? Colors.white70 : Colors.black87,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Kapat',
-              style: TextStyle(
-                color: Colors.blue[400],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Mascot Stage - İnteraktif maskot alanı (Talking Tom benzeri)
   Widget _buildMascotStage(
     bool isDarkMode,
     AsyncValue<Mascot?> mascotAsync,
-    Size screenSize,
+    double availableHeight,
   ) {
-    final isSmallScreen = screenSize.height < 700;
-    final mascotHeight = isSmallScreen
-        ? screenSize.height * 0.32
-        : screenSize.height * 0.38;
+    // Maskot boyutunu dinamik ayarla ama min 120px koru
+    final mascotHeight = math.max(availableHeight * 0.9, 120.0);
 
     return mascotAsync.when(
       data: (mascot) {
         if (mascot == null) {
-          return _buildNoMascotState(isDarkMode);
+          return SizedBox(
+            height: availableHeight,
+            child: _buildNoMascotState(isDarkMode),
+          );
         }
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // InteractiveMascotWidget - Basılı tutup konuşma özelliği
-            InteractiveMascotWidget(
-              height: mascotHeight,
-              enableVoiceInteraction: true,
-            ),
-            // Mascot name badge
-            Positioned(
-              bottom: 0,
-              child: _buildMascotNameBadge(isDarkMode, mascot),
-            ),
-          ],
+        return SizedBox(
+          height: availableHeight,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              InteractiveMascotWidget(
+                height: mascotHeight,
+                enableVoiceInteraction: true,
+              ),
+              Positioned(
+                bottom: 0,
+                child: _buildMascotNameBadge(isDarkMode, mascot),
+              ),
+            ],
+          ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => _buildNoMascotState(isDarkMode),
+      loading: () => SizedBox(
+        height: availableHeight,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => SizedBox(
+        height: availableHeight,
+        child: _buildNoMascotState(isDarkMode),
+      ),
     );
   }
 
@@ -744,12 +714,16 @@ class _HomeTabState extends ConsumerState<HomeTab>
     ).animate().fadeIn(duration: 500.ms, delay: 600.ms);
   }
 
-  /// Action Deck - Hızlı işlem kartları
   Widget _buildActionDeck(
     bool isDarkMode, {
     required bool isVertical,
     bool isSmallScreen = false,
   }) {
+    // Kart yüksekliği
+    final double cardHeight = isVertical
+        ? 100.0
+        : (isSmallScreen ? 110.0 : 125.0);
+
     final cards = [
       _ActionCard(
         icon: FontAwesomeIcons.clipboardQuestion,
@@ -786,13 +760,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
           MaterialPageRoute(builder: (context) => const AchievementsScreen()),
         ),
       ),
-      _ActionCard(
-        icon: FontAwesomeIcons.gamepad,
-        title: 'Oyun Odası',
-        subtitle: 'Eğlenerek öğren',
-        gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
-        onTap: () => widget.onNavigateToTab?.call(2),
-      ),
     ];
 
     if (isVertical) {
@@ -801,28 +768,32 @@ class _HomeTabState extends ConsumerState<HomeTab>
         itemCount: cards.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          return _buildActionCard(
-            cards[index],
-            isDarkMode,
-            index,
-            isSmallScreen: isSmallScreen,
+          return SizedBox(
+            height: 90,
+            child: _buildActionCard(
+              cards[index],
+              isDarkMode,
+              index,
+              isSmallScreen: isSmallScreen,
+              height: 90,
+            ),
           );
         },
       );
     }
 
-    final cardHeight = isSmallScreen ? 110.0 : 125.0;
+    const cardSpacing = 10.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Text(
             '🚀 Hızlı Başlat',
             style: TextStyle(
-              fontSize: isSmallScreen ? 16 : 18,
+              fontSize: isSmallScreen ? 14 : 16,
               fontWeight: FontWeight.bold,
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
@@ -830,19 +801,26 @@ class _HomeTabState extends ConsumerState<HomeTab>
         ),
         SizedBox(
           height: cardHeight,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: cards.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              return _buildActionCard(
-                cards[index],
-                isDarkMode,
-                index,
-                isSmallScreen: isSmallScreen,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List.generate(cards.length, (index) {
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : cardSpacing / 2,
+                    right: index == cards.length - 1 ? 0 : cardSpacing / 2,
+                    bottom: 0, // Alt boşluğu kaldırdık
+                  ),
+                  child: _buildActionCard(
+                    cards[index],
+                    isDarkMode,
+                    index,
+                    isSmallScreen: isSmallScreen,
+                    height: cardHeight,
+                  ),
+                ),
               );
-            },
+            }),
           ),
         ),
       ],
@@ -854,10 +832,10 @@ class _HomeTabState extends ConsumerState<HomeTab>
     bool isDarkMode,
     int index, {
     bool isSmallScreen = false,
+    required double height,
   }) {
-    final cardWidth = isSmallScreen ? 130.0 : 145.0;
-    final iconSize = isSmallScreen ? 32.0 : 38.0;
-    final iconInnerSize = isSmallScreen ? 16.0 : 18.0;
+    final iconSize = height * 0.32;
+    final iconInnerSize = iconSize * 0.5;
 
     return GestureDetector(
           onTap: () {
@@ -865,26 +843,25 @@ class _HomeTabState extends ConsumerState<HomeTab>
             card.onTap();
           },
           child: Container(
-            width: cardWidth,
-            padding: EdgeInsets.all(isSmallScreen ? 12 : 14),
+            padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: card.gradient,
               ),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
                   color: card.gradient[0].withValues(alpha: 0.3),
-                  blurRadius: 10,
+                  blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   width: iconSize,
@@ -901,26 +878,33 @@ class _HomeTabState extends ConsumerState<HomeTab>
                     ),
                   ),
                 ),
-                SizedBox(height: isSmallScreen ? 8 : 10),
-                Text(
-                  card.title,
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 13 : 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  card.subtitle,
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 9 : 10,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      card.title,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 11 : 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      card.subtitle,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 9 : 10,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -932,7 +916,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
   }
 }
 
-/// Action Card data model
 class _ActionCard {
   final IconData icon;
   final String title;

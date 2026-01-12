@@ -369,6 +369,10 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
   }
 
   Widget _buildMascotSection(AsyncValue<Mascot?> mascotAsync) {
+    // Animasyon boyutunu ekran yüksekliğinin %20'si ile sınırla (max 180)
+    final screenHeight = MediaQuery.of(context).size.height;
+    final mascotSize = (screenHeight * 0.20).clamp(120.0, 180.0);
+
     return mascotAsync.when(
       data: (mascot) {
         final lottiePath =
@@ -376,8 +380,8 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
             'assets/animation/kedi_mascot.json';
 
         return Container(
-          height: 180,
-          width: 180,
+          height: mascotSize,
+          width: mascotSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
@@ -413,8 +417,8 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
         );
       },
       loading: () => Container(
-        height: 180,
-        width: 180,
+        height: mascotSize,
+        width: mascotSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withOpacity(0.2),
@@ -424,8 +428,8 @@ class _ResultScreenState extends ConsumerState<ResultScreen>
         ),
       ),
       error: (_, __) => Container(
-        height: 180,
-        width: 180,
+        height: mascotSize,
+        width: mascotSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withOpacity(0.2),

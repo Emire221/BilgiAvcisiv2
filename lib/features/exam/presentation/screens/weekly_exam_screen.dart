@@ -221,7 +221,7 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen>
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'Cevapların kaydedildi! Sonuçlar Pazar 20:00\'da açıklanacak.',
+                  'Cevapların kaydedildi! Sonuçlar Cumartesi 12:00\'de açıklanacak.',
                   style: TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),

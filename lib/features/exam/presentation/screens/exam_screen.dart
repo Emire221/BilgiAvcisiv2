@@ -101,7 +101,7 @@ class _ExamScreenState extends State<ExamScreen> {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Cevapların alındı! Sonuçlar Cuma günü açıklanacak.'),
+        content: Text('Cevapların alındı! Sonuçlar Cumartesi 12:00\'de açıklanacak.'),
         duration: Duration(seconds: 3),
       ),
     );

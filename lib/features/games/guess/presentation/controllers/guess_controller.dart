@@ -166,7 +166,9 @@ class GuessController extends StateNotifier<GuessState> {
     );
   }
 
-  /// Sıcaklık hesaplama algoritması
+  /// Sıcaklık hesaplama algoritması - Linear 0-100 hassasiyetli
+  /// Tolerans aralığı 0-100 skalasına dönüştürülür
+  /// Küçük farklar bile anlamlı sıcaklık değişimi yaratır
   Temperature _calculateTemperature(int guess, int answer, int tolerance) {
     final difference = (guess - answer).abs();
 
@@ -175,26 +177,28 @@ class GuessController extends StateNotifier<GuessState> {
       return Temperature.correct;
     }
 
-    // Tolerans içinde doğru sayılır
-    if (difference <= tolerance * 0.05) {
+    // Tolerans içinde doğru sayılır (%2'den az fark)
+    if (difference <= tolerance * 0.02) {
       return Temperature.correct;
     }
 
-    // Sıcaklık seviyeleri (toleransa göre oransal)
-    final ratio = difference / tolerance;
+    // Linear 0-100 skalası: difference / tolerance * 100
+    // Daha hassas geçişler için 6 seviye kullan
+    final proximityScore = 100 - ((difference / tolerance) * 100).clamp(0, 100);
 
-    if (ratio <= 0.1) {
-      return Temperature.boiling; // %10 içinde
-    } else if (ratio <= 0.25) {
-      return Temperature.hot; // %25 içinde
-    } else if (ratio <= 0.5) {
-      return Temperature.warm; // %50 içinde
-    } else if (ratio <= 1.0) {
-      return Temperature.cool; // Tolerans içinde
-    } else if (ratio <= 2.0) {
-      return Temperature.cold; // 2x tolerans
+    // proximityScore: 100 = tam doğru, 0 = çok uzak
+    if (proximityScore >= 95) {
+      return Temperature.boiling; // %5 içinde - Yanıyor!
+    } else if (proximityScore >= 80) {
+      return Temperature.hot; // %20 içinde - Çok sıcak
+    } else if (proximityScore >= 60) {
+      return Temperature.warm; // %40 içinde - Ilık
+    } else if (proximityScore >= 40) {
+      return Temperature.cool; // %60 içinde - Serin
+    } else if (proximityScore >= 20) {
+      return Temperature.cold; // %80 içinde - Soğuk
     } else {
-      return Temperature.freezing; // Çok uzak
+      return Temperature.freezing; // %80+ uzak - Buz gibi
     }
   }
 

@@ -36,6 +36,8 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
   late AnimationController _waveController;
   ShakeDetector? _shakeDetector;
   bool _showIntro = true;
+  bool _showHint = false;
+  int _hintShownForQuestion = -1;
 
   // Shake Wave Teması Renkleri
   static const Color _primaryOrange = Color(0xFFFF6B35);
@@ -267,57 +269,77 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
             // Wave efekti
             _buildWaveEffect(),
 
-            // Ana içerik
+            // Ana içerik (📱 UX Faz 3.3: No-Scroll Layout)
             SafeArea(
-              child: Column(
-                children: [
-                  // Üst bar
-                  _buildTopBar(state)
-                      .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: -0.3, end: 0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight = constraints.maxHeight;
+                  final isSmallScreen = availableHeight < 600;
 
-                  // İçerik
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            // Soru alanı
-                            _buildQuestionCard(state)
-                                .animate()
-                                .fadeIn(delay: 100.ms, duration: 500.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
+                  return Column(
+                    children: [
+                      // Üst bar - Sabit
+                      _buildTopBar(state)
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideY(begin: -0.3, end: 0),
 
-                            const SizedBox(height: 24),
+                      // İçerik - Esnek, scroll yok
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: isSmallScreen ? 8 : 12,
+                          ),
+                          child: Column(
+                            children: [
+                              // Soru alanı - Daha fazla yer
+                              Flexible(
+                                flex: 35,
+                                child: _buildQuestionCard(state)
+                                    .animate()
+                                    .fadeIn(delay: 100.ms, duration: 500.ms)
+                                    .scale(begin: const Offset(0.9, 0.9)),
+                              ),
 
-                            // Orta alan: Maskot + Termometre
-                            _buildMiddleSection(
-                              state,
-                            ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+                              SizedBox(height: isSmallScreen ? 8 : 12),
 
-                            const SizedBox(height: 24),
+                              // Orta alan: Maskot + Termometre - Kompakt
+                              Expanded(
+                                flex: 30,
+                                child: _buildMiddleSection(state)
+                                    .animate()
+                                    .fadeIn(delay: 200.ms, duration: 500.ms),
+                              ),
 
-                            // Input alanı
-                            if (!state.isCorrect)
-                              _buildInputSection(state)
-                                  .animate()
-                                  .fadeIn(delay: 300.ms, duration: 500.ms)
-                                  .slideY(begin: 0.2, end: 0),
+                              SizedBox(height: isSmallScreen ? 12 : 20),
 
-                            // Doğru cevap bilgisi
-                            if (state.isCorrect)
-                              _buildCorrectAnswerSection(state)
-                                  .animate()
-                                  .fadeIn(duration: 500.ms)
-                                  .scale(begin: const Offset(0.8, 0.8)),
-                          ],
+                              // Input alanı - Sabit yükseklik
+                              if (!state.isCorrect)
+                                Flexible(
+                                  flex: 35,
+                                  child: _buildInputSection(state)
+                                      .animate()
+                                      .fadeIn(delay: 300.ms, duration: 500.ms)
+                                      .slideY(begin: 0.2, end: 0),
+                                ),
+
+                              // Doğru cevap bilgisi
+                              if (state.isCorrect)
+                                Flexible(
+                                  flex: 35,
+                                  child: _buildCorrectAnswerSection(state)
+                                      .animate()
+                                      .fadeIn(duration: 500.ms)
+                                      .scale(begin: const Offset(0.8, 0.8)),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
 
@@ -373,6 +395,100 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                     ),
                   ),
                 ),
+              ),
+
+            // İpucu Popup Overlay
+            if (_showHint)
+              Consumer(
+                builder: (context, ref, _) {
+                  final state = ref.watch(guessControllerProvider);
+                  final hint = state.currentQuestion?.hint;
+                  if (hint == null) return const SizedBox.shrink();
+                  
+                  return Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 32),
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.amber.withValues(alpha: 0.4),
+                                    Colors.orange.withValues(alpha: 0.3),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.amber,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.amber.withValues(alpha: 0.5),
+                                    blurRadius: 30,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // İkon
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.withValues(alpha: 0.3),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      FontAwesomeIcons.lightbulb,
+                                      color: Colors.amber,
+                                      size: 32,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Başlık
+                                  Text(
+                                    '💡 İPUCU',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.amber,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // İpucu metni
+                                  Text(
+                                    hint,
+                                    style: GoogleFonts.nunito(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.4,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .scale(begin: const Offset(0.8, 0.8), duration: 300.ms);
+                },
               ),
           ],
         ),
@@ -634,121 +750,87 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                // Soru ikonu
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _accentCyan.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: _accentCyan.withValues(alpha: 0.3),
-                        blurRadius: 15,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    FontAwesomeIcons.question,
-                    color: _accentCyan,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  question.question,
-                  style: GoogleFonts.nunito(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (state.attempts > 2 && question.hint != null) ...[
-                  const SizedBox(height: 20),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Soru ikonu
                   Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _accentCyan.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: _accentCyan.withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          spreadRadius: 2,
                         ),
+                      ],
+                    ),
+                    child: const Icon(
+                      FontAwesomeIcons.question,
+                      color: _accentCyan,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    question.question,
+                    style: GoogleFonts.nunito(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (state.attempts > 2 && question.hint != null) ...[
+                    const SizedBox(height: 12),
+                    // İpucu butonu - tıklandığında popup gösterir
+                    GestureDetector(
+                      onTap: () {
+                        if (_hintShownForQuestion != state.currentQuestionIndex) {
+                          setState(() {
+                            _showHint = true;
+                            _hintShownForQuestion = state.currentQuestionIndex;
+                          });
+                          // 2 saniye sonra kapat
+                          Future.delayed(const Duration(seconds: 2), () {
+                            if (mounted) {
+                              setState(() => _showHint = false);
+                            }
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.amber.withValues(alpha: 0.35),
-                              Colors.orange.withValues(alpha: 0.35),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.amber.withValues(alpha: 0.8),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.amber.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
+                          color: Colors.amber.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.3),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                FontAwesomeIcons.lightbulb,
+                            const Icon(FontAwesomeIcons.lightbulb, color: Colors.amber, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'İpucu Göster 💡',
+                              style: GoogleFonts.nunito(
                                 color: Colors.amber,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Flexible(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '💡 İPUCU',
-                                    style: GoogleFonts.nunito(
-                                      color: Colors.amber,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 12,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    question.hint!,
-                                    style: GoogleFonts.nunito(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
                             ),
                           ],
                         ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: -0.3, end: 0)
-                      .then()
-                      .shimmer(
-                        duration: 1500.ms,
-                        color: Colors.amber.withValues(alpha: 0.3),
                       ),
+                    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9)),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

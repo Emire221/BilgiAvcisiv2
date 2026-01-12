@@ -241,7 +241,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
           ..._buildFloatingParticles(size),
 
           // ═══════════════════════════════════════════════════════════════════
-          // MAIN CONTENT
+          // MAIN CONTENT (📱 UX Faz 3.2: Responsive Layout - No Scroll)
           // ═══════════════════════════════════════════════════════════════════
           SafeArea(
             child: Column(
@@ -249,42 +249,40 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                 // Back button
                 _buildTopBar(state),
 
-                // Main matchmaking area
+                // Main matchmaking area - Esnek yerleşim
                 Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Lottie Animation
-                          _buildLottieAnimation(),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Lottie Animation
+                      _buildLottieAnimation(),
 
-                          const SizedBox(height: 24),
+                      SizedBox(height: size.height * 0.02),
 
-                          // VS Badge or Avatar
-                          _buildMatchmakingVisual(botProfile),
+                      // VS Badge or Avatar
+                      Flexible(child: _buildMatchmakingVisual(botProfile)),
 
-                          const SizedBox(height: 32),
+                      SizedBox(height: size.height * 0.03),
 
-                          // Status Text
-                          _buildStatusText(),
+                      // Status Text
+                      _buildStatusText(),
 
-                          const SizedBox(height: 16),
+                      SizedBox(height: size.height * 0.015),
 
-                          // Bot info (when found)
-                          if (_isFound && botProfile != null)
-                            _buildBotInfo(botProfile),
+                      // Bot info (when found)
+                      if (_isFound && botProfile != null)
+                        _buildBotInfo(botProfile),
 
-                          // Progress indicator
-                          if (!_isFound) _buildProgressIndicator(),
+                      // Progress indicator
+                      if (!_isFound) _buildProgressIndicator(),
 
-                          const SizedBox(height: 32),
+                      SizedBox(height: size.height * 0.03),
 
-                          // Cancel button
-                          if (!_isFound) _buildCancelButton(),
-                        ],
-                      ),
-                    ),
+                      // Cancel button
+                      if (!_isFound) _buildCancelButton(),
+
+                      SizedBox(height: size.height * 0.02),
+                    ],
                   ),
                 ),
               ],
@@ -462,14 +460,18 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   }
 
   Widget _buildLottieAnimation() {
+    // 📱 UX Faz 3.2: Animasyon ekranın max %30'unu kaplamalı
+    final screenHeight = MediaQuery.of(context).size.height;
+    final animationSize = (screenHeight * 0.25).clamp(120.0, 200.0);
+
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
         return Transform.scale(
           scale: _isFound ? 1.0 : _pulseAnimation.value,
           child: Container(
-            width: 200,
-            height: 200,
+            width: animationSize,
+            height: animationSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               boxShadow: [

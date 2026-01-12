@@ -25,98 +25,111 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isSmallScreen = constraints.maxHeight < 400;
-        final sentenceFontSize = isSmallScreen ? 18.0 : 22.0;
-        final optionFontSize = isSmallScreen ? 14.0 : 16.0;
-        
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Konu Adı (varsa)
-              if (question.topicName != null && question.topicName!.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        _neonCyan.withOpacity(0.2),
-                        _neonCyan.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _neonCyan.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.topic_rounded, color: _neonCyan, size: 16),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          question.topicName!,
-                          style: GoogleFonts.nunito(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: _neonCyan,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+        final availableHeight = constraints.maxHeight;
+        final isCompact = availableHeight < 400;
+        final sentenceFontSize = isCompact ? 16.0 : 20.0;
+        final optionFontSize = isCompact ? 13.0 : 15.0;
+
+        // Proportional layout: Topic ~8%, Sentence ~40%, Options ~52%
+        final topicHeight =
+            question.topicName != null && question.topicName!.isNotEmpty
+            ? (availableHeight * 0.08).clamp(32.0, 48.0)
+            : 0.0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Konu Adı (varsa)
+            if (question.topicName != null && question.topicName!.isNotEmpty)
+              Container(
+                height: topicHeight,
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _neonCyan.withOpacity(0.2),
+                      _neonCyan.withOpacity(0.1),
                     ],
                   ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _neonCyan.withOpacity(0.3)),
                 ),
-              
-              // Cümle - Esnek yükseklik
-              Container(
-                constraints: BoxConstraints(
-                  minHeight: 80,
-                  maxHeight: screenHeight * 0.30, // Ekranın max %30'u
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.topic_rounded, color: _neonCyan, size: 14),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        question.topicName!,
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _neonCyan,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.all(16),
+              ),
+
+            // Cümle - Flex 4
+            Expanded(
+              flex: 4,
+              child: Container(
+                padding: EdgeInsets.all(isCompact ? 12 : 16),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white.withOpacity(0.1)),
                 ),
-                child: SingleChildScrollView(
+                child: Center(
                   child: RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
                       style: TextStyle(
                         fontSize: sentenceFontSize,
                         color: Colors.white,
-                        height: 1.5,
+                        height: 1.4,
                       ),
                       children: _buildSentenceSpans(),
                     ),
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 20),
+            SizedBox(height: isCompact ? 12 : 16),
 
-              // Seçenekler (Grid) - Responsive
-              GridView.count(
+            // Seçenekler (Grid) - Flex 5
+            Expanded(
+              flex: 5,
+              child: GridView.count(
                 crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: isSmallScreen ? 2.8 : 2.5,
-                shrinkWrap: true,
+                mainAxisSpacing: isCompact ? 8 : 12,
+                crossAxisSpacing: isCompact ? 8 : 12,
+                childAspectRatio: isCompact ? 3.0 : 2.5,
                 physics: const NeverScrollableScrollPhysics(),
                 children: List.generate(question.options.length, (index) {
-                  return _buildOptionButton(context, index, optionFontSize);
+                  return _buildOptionButton(
+                    context,
+                    index,
+                    optionFontSize,
+                    isCompact,
+                  );
                 }),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -164,7 +177,12 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
     return spans;
   }
 
-  Widget _buildOptionButton(BuildContext context, int index, double fontSize) {
+  Widget _buildOptionButton(
+    BuildContext context,
+    int index,
+    double fontSize,
+    bool isCompact,
+  ) {
     final option = question.options[index];
     final isCorrect = option == question.answer;
     final isUserSelected = userSelectedIndex == index;
@@ -193,13 +211,16 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
 
     return InkWell(
       onTap: isAnswered ? null : () => onAnswerSelected(index),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(isCompact ? 10 : 14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 8 : 12,
+          vertical: isCompact ? 6 : 10,
+        ),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 2),
+          borderRadius: BorderRadius.circular(isCompact ? 10 : 14),
+          border: Border.all(color: borderColor, width: isCompact ? 1.5 : 2),
           boxShadow: [
             if (isUserSelected || (isAnswered && isCorrect))
               BoxShadow(
@@ -222,6 +243,8 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
                 softWrap: true,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
 
@@ -230,29 +253,29 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
               const SizedBox(width: 4),
               if (isUserSelected)
                 Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: EdgeInsets.all(isCompact ? 1 : 2),
                   decoration: const BoxDecoration(
                     color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.person,
                     color: Colors.white,
-                    size: 12,
+                    size: isCompact ? 10 : 12,
                   ),
                 ),
               if (isBotSelected) ...[
                 if (isUserSelected) const SizedBox(width: 2),
                 Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: EdgeInsets.all(isCompact ? 1 : 2),
                   decoration: const BoxDecoration(
                     color: Colors.orange,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.smart_toy,
                     color: Colors.white,
-                    size: 12,
+                    size: isCompact ? 10 : 12,
                   ),
                 ),
               ],

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'dart:ui';
 import '../providers/theme_provider.dart'; // ✅ Riverpod themeProvider
 import '../core/providers/user_provider.dart';
@@ -64,6 +65,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void initState() {
     super.initState();
 
+    // ⚡ Uygulama ön planda olduğu sürece ekran açık kalacak (UX Faz 1.2)
+    WakelockPlus.enable();
+
     // İnitial tab index'i ayarla
     _currentIndex = widget.initialTabIndex;
 
@@ -98,6 +102,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void dispose() {
+    // ⚡ Ana ekrandan çıkıldığında wakelock'u kapat
+    WakelockPlus.disable();
     _glowController.dispose();
     _bounceController.dispose();
     super.dispose();
@@ -484,7 +490,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
           margin: EdgeInsets.only(
             left: isTablet ? (screenWidth - dockWidth) / 2 : 20,
             right: isTablet ? (screenWidth - dockWidth) / 2 : 20,
-            bottom: (isSmallScreen ? 12 : 20) + bottomPadding,
+            bottom: (isSmallScreen ? 8 : 12) + bottomPadding,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(isSmallScreen ? 24 : 28),
