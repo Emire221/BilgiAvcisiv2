@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import '../../../mascot/domain/entities/mascot.dart';
 import '../../logic/duel_controller.dart';
 import '../../domain/entities/duel_entities.dart';
 import 'duel_game_screen.dart';
@@ -47,6 +48,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   String _statusText = 'Rakip Aranıyor...';
   bool _isFound = false;
   final Random _random = Random();
+  late final PetType _botMascot; // Bot için rastgele maskot
 
   // ═══════════════════════════════════════════════════════════════════════════
   // THEME COLORS
@@ -62,6 +64,8 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
+    // Bot için rastgele maskot seç
+    _botMascot = PetType.values[_random.nextInt(PetType.values.length)];
     _startMatchmaking();
   }
 
@@ -264,8 +268,8 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
 
                       SizedBox(height: size.height * 0.03),
 
-                      // Status Text
-                      _buildStatusText(),
+                      // Status Text - Sadece aranırken göster
+                      if (!_isFound) _buildStatusText(),
 
                       SizedBox(height: size.height * 0.015),
 
@@ -579,7 +583,53 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
 
   Widget _buildFoundVisual(dynamic botProfile) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
+        // Rakip Bulundu! başlığı
+        Text(
+          'Rakip Bulundu!',
+          style: GoogleFonts.nunito(
+            color: _neonGreen,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                color: _neonGreen.withValues(alpha: 0.5),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // Hazırlanıyor animasyonu
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle_rounded,
+              color: _neonGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Hazırlanıyor...',
+              style: GoogleFonts.nunito(
+                color: _neonGreen.withValues(alpha: 0.8),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .fadeIn()
+        .then()
+        .fadeOut(duration: 800.ms),
+        
+        const SizedBox(height: 16),
+
         // VS Badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -652,10 +702,11 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                       ),
                       border: Border.all(color: _neonGreen, width: 3),
                     ),
-                    child: Center(
-                      child: Text(
-                        botProfile.avatar,
-                        style: const TextStyle(fontSize: 40),
+                    child: ClipOval(
+                      child: Lottie.asset(
+                        _botMascot.getLottiePath(),
+                        fit: BoxFit.cover,
+                        repeat: true,
                       ),
                     ),
                   ),

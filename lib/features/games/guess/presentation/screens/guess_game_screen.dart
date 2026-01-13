@@ -37,7 +37,6 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
   ShakeDetector? _shakeDetector;
   bool _showIntro = true;
   bool _showHint = false;
-  int _hintShownForQuestion = -1;
 
   // Shake Wave Teması Renkleri
   static const Color _primaryOrange = Color(0xFFFF6B35);
@@ -302,17 +301,61 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                                     .scale(begin: const Offset(0.9, 0.9)),
                               ),
 
-                              SizedBox(height: isSmallScreen ? 8 : 12),
+                              // İpucu Butonu - Soru kartının DIŞINDA (Kompakt)
+                              if (!state.isCorrect && state.attempts > 2 && state.currentQuestion?.hint != null)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 6),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.lightImpact();
+                                      setState(() => _showHint = true);
+                                      // 3 saniye sonra otomatik kapat
+                                      Future.delayed(const Duration(seconds: 3), () {
+                                        if (mounted) setState(() => _showHint = false);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.amber.withValues(alpha: 0.3),
+                                            Colors.orange.withValues(alpha: 0.2),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(FontAwesomeIcons.lightbulb, color: Colors.amber, size: 14),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'İpucu Göster 💡',
+                                            style: GoogleFonts.nunito(
+                                              color: Colors.amber,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ).animate().fadeIn(duration: 400.ms),
+                                ),
+
+                              SizedBox(height: isSmallScreen ? 4 : 8),
 
                               // Orta alan: Maskot + Termometre - Kompakt
                               Expanded(
-                                flex: 30,
+                                flex: state.attempts > 2 && state.currentQuestion?.hint != null ? 25 : 30,
                                 child: _buildMiddleSection(state)
                                     .animate()
                                     .fadeIn(delay: 200.ms, duration: 500.ms),
                               ),
 
-                              SizedBox(height: isSmallScreen ? 12 : 20),
+                              SizedBox(height: isSmallScreen ? 8 : 12),
 
                               // Input alanı - Sabit yükseklik
                               if (!state.isCorrect)
@@ -324,15 +367,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                                       .slideY(begin: 0.2, end: 0),
                                 ),
 
-                              // Doğru cevap bilgisi
-                              if (state.isCorrect)
-                                Flexible(
-                                  flex: 35,
-                                  child: _buildCorrectAnswerSection(state)
-                                      .animate()
-                                      .fadeIn(duration: 500.ms)
-                                      .scale(begin: const Offset(0.8, 0.8)),
-                                ),
+                              // Doğru cevap olduğunda input gizlenir, overlay gösterilir
                             ],
                           ),
                         ),
@@ -396,6 +431,10 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                   ),
                 ),
               ),
+
+            // 🎉 Doğru Cevap Popup Overlay
+            if (state.isCorrect)
+              _buildCorrectAnswerSection(state),
 
             // İpucu Popup Overlay
             if (_showHint)
@@ -786,49 +825,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  if (state.attempts > 2 && question.hint != null) ...[
-                    const SizedBox(height: 12),
-                    // İpucu butonu - tıklandığında popup gösterir
-                    GestureDetector(
-                      onTap: () {
-                        if (_hintShownForQuestion != state.currentQuestionIndex) {
-                          setState(() {
-                            _showHint = true;
-                            _hintShownForQuestion = state.currentQuestionIndex;
-                          });
-                          // 2 saniye sonra kapat
-                          Future.delayed(const Duration(seconds: 2), () {
-                            if (mounted) {
-                              setState(() => _showHint = false);
-                            }
-                          });
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(FontAwesomeIcons.lightbulb, color: Colors.amber, size: 16),
-                            const SizedBox(width: 8),
-                            Text(
-                              'İpucu Göster 💡',
-                              style: GoogleFonts.nunito(
-                                color: Colors.amber,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9)),
-                  ],
+
                 ],
               ),
             ),
@@ -1191,214 +1188,376 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
     );
   }
 
+  /// ════════════════════════════════════════════════════════════════════════
+  /// 🎨 DOĞRU CEVAP POPUP - Ekran Ortasında Overlay
+  /// ════════════════════════════════════════════════════════════════════════
   Widget _buildCorrectAnswerSection(GuessState state) {
     final question = state.currentQuestion;
     if (question == null) return const SizedBox.shrink();
 
-    return Column(
-      children: [
-        // Doğru cevap
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF00E676).withValues(alpha: 0.3),
-                    const Color(0xFF69F0AE).withValues(alpha: 0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFF00E676), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Başarı ikonu
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF00E676).withValues(alpha: 0.2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF00E676).withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      FontAwesomeIcons.check,
-                      color: Color(0xFF00E676),
-                      size: 32,
-                    ),
-                  ).animate().scale(
-                    begin: const Offset(0, 0),
-                    duration: 500.ms,
-                    curve: Curves.elasticOut,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '🎉 DOĞRU!',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        const Shadow(color: Color(0xFF00E676), blurRadius: 10),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Cevap: ${question.answer}',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ).animate().fadeIn().then().shimmer(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${state.attempts} denemede buldun!',
-                    style: GoogleFonts.nunito(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
+    return Positioned.fill(
+      child: GestureDetector(
+        onTap: () {}, // Arka plana tıklamayı engelle
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.85),
+                _deepPurple.withValues(alpha: 0.95),
+              ],
             ),
           ),
-        ),
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Responsive değerler hesaplama
+                final availableHeight = constraints.maxHeight;
+                final availableWidth = constraints.maxWidth;
+                final isCompact = availableHeight < 600;
+                
+                // Dinamik boyutlar
+                final iconSize = isCompact ? 24.0 : 32.0;
+                final titleSize = isCompact ? 20.0 : 26.0;
+                final answerSize = isCompact ? 32.0 : 44.0;
+                final subTextSize = isCompact ? 11.0 : 13.0;
+                final cardPadding = isCompact ? 16.0 : 24.0;
+                final spacing = isCompact ? 12.0 : 16.0;
+                final horizontalPadding = availableWidth * 0.05;
+                
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: availableHeight),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: spacing,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                  // ═══ ANA BAŞARI KARTI ═══
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(cardPadding),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF00E676).withValues(alpha: 0.25),
+                              const Color(0xFF00D9FF).withValues(alpha: 0.15),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: const Color(0xFF00E676).withValues(alpha: 0.6),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00E676).withValues(alpha: 0.2),
+                              blurRadius: 30,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Başarı İkonu
+                            Container(
+                              padding: EdgeInsets.all(isCompact ? 12 : 16),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFF00E676).withValues(alpha: 0.4),
+                                    const Color(0xFF00E676).withValues(alpha: 0.1),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF00E676).withValues(alpha: 0.4),
+                                    blurRadius: 20,
+                                    spreadRadius: 3,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                FontAwesomeIcons.check,
+                                color: const Color(0xFF00E676),
+                                size: iconSize,
+                              ),
+                            )
+                                .animate()
+                                .scale(
+                                  begin: const Offset(0, 0),
+                                  duration: 500.ms,
+                                  curve: Curves.elasticOut,
+                                )
+                                .then()
+                                .shimmer(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  duration: 1500.ms,
+                                ),
 
-        // Bilgi kartı
-        if (question.info != null) ...[
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.amber.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            FontAwesomeIcons.lightbulb,
-                            color: Colors.amber,
-                            size: 16,
-                          ),
+                            SizedBox(height: spacing),
+
+                            // DOĞRU yazısı
+                            Text(
+                              '🎉 DOĞRU!',
+                              style: GoogleFonts.orbitron(
+                                color: Colors.white,
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                                shadows: [
+                                  const Shadow(
+                                    color: Color(0xFF00E676),
+                                    blurRadius: 15,
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            SizedBox(height: spacing * 1.5),
+
+                            // Doğru Cevap Değeri
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                vertical: isCompact ? 12 : 16,
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color(0xFF00E676).withValues(alpha: 0.4),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'CEVAP',
+                                    style: GoogleFonts.nunito(
+                                      color: Colors.white.withValues(alpha: 0.6),
+                                      fontSize: subTextSize * 0.9,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      '${question.answer}',
+                                      style: GoogleFonts.orbitron(
+                                        color: const Color(0xFF00E676),
+                                        fontSize: answerSize,
+                                        fontWeight: FontWeight.bold,
+                                        shadows: [
+                                          Shadow(
+                                            color: const Color(0xFF00E676).withValues(alpha: 0.5),
+                                            blurRadius: 10,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                                .animate()
+                                .fadeIn(delay: 200.ms)
+                                .shimmer(
+                                  color: const Color(0xFF00E676).withValues(alpha: 0.3),
+                                  delay: 500.ms,
+                                  duration: 1500.ms,
+                                ),
+
+                            SizedBox(height: spacing),
+
+                            // Deneme sayısı
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    FontAwesomeIcons.bullseye,
+                                    color: _accentCyan,
+                                    size: subTextSize,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${state.attempts} denemede buldun!',
+                                    style: GoogleFonts.nunito(
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                      fontSize: subTextSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Biliyor muydun?',
-                          style: GoogleFonts.nunito(
-                            color: Colors.amber,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      question.info!,
-                      style: GoogleFonts.nunito(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.5,
                       ),
                     ),
+                  ).animate().fadeIn(duration: 400.ms).scale(
+                        begin: const Offset(0.9, 0.9),
+                        duration: 400.ms,
+                        curve: Curves.easeOut,
+                      ),
+
+                  // ═══ BİLGİ KARTI ═══
+                  if (question.info != null) ...[
+                    SizedBox(height: spacing * 1.5),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isCompact ? 12 : 16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.amber.withValues(alpha: 0.15),
+                                Colors.orange.withValues(alpha: 0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.amber.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      FontAwesomeIcons.lightbulb,
+                                      color: Colors.amber,
+                                      size: isCompact ? 14 : 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Biliyor muydun?',
+                                    style: GoogleFonts.nunito(
+                                      color: Colors.amber,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isCompact ? 14 : 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: spacing),
+                              Text(
+                                question.info!,
+                                style: GoogleFonts.nunito(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: isCompact ? 13 : 14,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
                   ],
-                ),
-              ),
-            ),
-          ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
-        ],
 
-        const SizedBox(height: 24),
+                  SizedBox(height: spacing * 2),
 
-        // Devam butonu
-        SizedBox(
-          width: double.infinity,
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              ref.read(guessControllerProvider.notifier).nextQuestion();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [_primaryOrange, Color(0xFFFF8F5C)],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: _primaryOrange.withValues(alpha: 0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    state.currentQuestionIndex + 1 >= state.totalQuestions
-                        ? 'Sonuçları Gör'
-                        : 'Sonraki Soru',
-                    style: GoogleFonts.nunito(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  // ═══ DEVAM BUTONU ═══
+                  SizedBox(
+                    width: double.infinity,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        ref.read(guessControllerProvider.notifier).nextQuestion();
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: isCompact ? 14 : 18,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_primaryOrange, _accentCyan],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _primaryOrange.withValues(alpha: 0.4),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              state.currentQuestionIndex + 1 >= state.totalQuestions
+                                  ? 'Sonuçları Gör'
+                                  : 'Sonraki Soru',
+                              style: GoogleFonts.nunito(
+                                fontSize: isCompact ? 16 : 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(
+                              FontAwesomeIcons.arrowRight,
+                              color: Colors.white,
+                              size: isCompact ? 14 : 16,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    FontAwesomeIcons.arrowRight,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+                  ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.3, end: 0),
                 ],
               ),
             ),
           ),
-        ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.3, end: 0),
-      ],
-    );
+        );
+      },
+    ),
+          ),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 300.ms);
   }
 
   Widget _buildNeonButton({

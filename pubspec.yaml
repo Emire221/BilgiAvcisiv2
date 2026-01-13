@@ -54,7 +54,7 @@ dependencies:
   fl_chart: ^0.69.0
   wakelock_plus: ^1.4.0
   # Background scheduled alarms
-  android_alarm_manager_plus: ^4.0.4
+  android_alarm_manager_plus: ^5.0.0
   # Paylaşım ve Ekran Görüntüsü
   share_plus: ^7.2.2
   gal: ^2.3.0

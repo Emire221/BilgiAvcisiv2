@@ -180,59 +180,48 @@ class _DuelGuessGameScreenState extends ConsumerState<DuelGuessGameScreen>
                     controller,
                   ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.3),
 
-                  // İçerik - Kalan tüm alan
+                  // İçerik - Kalan tüm alan (scroll edilebilir)
                   Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 8),
+
+                            // Soru kartı
+                            _buildQuestionCard(state, controller)
+                                .animate()
+                                .fadeIn(delay: 100.ms, duration: 500.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
+
+                            const SizedBox(height: 16),
+
+                            // Orta alan: Tahminler + Sonuç
+                            _buildMiddleSection(state).animate().fadeIn(
+                              delay: 200.ms,
+                              duration: 500.ms,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const SizedBox(height: 12),
 
-                                  // Soru kartı
-                                  _buildQuestionCard(state, controller)
-                                      .animate()
-                                      .fadeIn(delay: 100.ms, duration: 500.ms)
-                                      .scale(begin: const Offset(0.9, 0.9)),
-
-                                  const SizedBox(height: 12),
-
-                                  // Orta alan: Tahminler + Sonuç
-                                  _buildMiddleSection(state).animate().fadeIn(
-                                    delay: 200.ms,
-                                    duration: 500.ms,
-                                  ),
-
-                                  const SizedBox(height: 12),
-
-                                  // Input alanı (henüz tahmin yapılmadıysa)
-                                  if (state.userGuess == null)
-                                    _buildInputSection(state)
-                                        .animate()
-                                        .fadeIn(delay: 300.ms, duration: 500.ms)
-                                        .slideY(begin: 0.2),
-
-                                  // Tur sonucu artık overlay olarak gösteriliyor
-
-                                  const SizedBox(height: 12),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                            // Tur sonucu artık overlay olarak gösteriliyor
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
+
+                  // Input alanı - En altta sabit (henüz tahmin yapılmadıysa)
+                  if (state.userGuess == null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: _buildInputSection(state)
+                          .animate()
+                          .fadeIn(delay: 300.ms, duration: 500.ms)
+                          .slideY(begin: 0.2),
+                    ),
 
                   // Bot durumu - Doğal boyutunda
                   _buildBotStatus(
@@ -1042,162 +1031,10 @@ class _DuelGuessGameScreenState extends ConsumerState<DuelGuessGameScreen>
     );
   }
 
-  /// Tur sonunda kazananı ve uzaklıkları gösteren kart
-  Widget _buildRoundResultSection(DuelState state) {
-    final controller = ref.read(duelControllerProvider.notifier);
-    final question = controller.currentGuessQuestion;
-    if (question == null) return const SizedBox.shrink();
-
-    final userGuess = state.userGuess ?? 0;
-    final botGuess = state.botGuess ?? 0;
-    final correctAnswer = question.answer;
-
-    final userDistance = (userGuess - correctAnswer).abs();
-    final botDistance = (botGuess - correctAnswer).abs();
-
-    final userWon = state.userGuessCorrect == true;
-    final botWon = state.botGuessCorrect == true;
-    final isDraw = !userWon && !botWon;
-
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    (userWon ? _neonGreen : (isDraw ? _accentCyan : _neonRed))
-                        .withValues(alpha: 0.3),
-                    (userWon ? _neonGreen : (isDraw ? _accentCyan : _neonRed))
-                        .withValues(alpha: 0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: userWon
-                      ? _neonGreen
-                      : (isDraw ? _accentCyan : _neonRed),
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Kazanan ikonu ve mesaj - tek satırda
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        userWon
-                            ? FontAwesomeIcons.trophy
-                            : (isDraw
-                                  ? FontAwesomeIcons.handshake
-                                  : FontAwesomeIcons.faceSadTear),
-                        color: userWon
-                            ? _neonGreen
-                            : (isDraw ? _accentCyan : _neonRed),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        userWon
-                            ? 'KAZANDIN! 🎉'
-                            : (isDraw ? 'BERABERE! 🤝' : 'Rakip Kazandı'),
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Doğru cevap
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _neonGreen.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _neonGreen.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Text(
-                      'Doğru Cevap: ${question.answer}',
-                      style: GoogleFonts.poppins(
-                        color: _neonGreen,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Uzaklık karşılaştırması
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Kullanıcı uzaklığı
-                      _buildDistanceChip(
-                        label: 'Senin tahminin',
-                        guess: userGuess,
-                        distance: userDistance,
-                        isWinner: userWon,
-                      ),
-
-                      // VS
-                      Text(
-                        'vs',
-                        style: GoogleFonts.orbitron(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 14,
-                        ),
-                      ),
-
-                      // Bot uzaklığı
-                      _buildDistanceChip(
-                        label: state.botProfile?.name ?? 'Rakip',
-                        guess: botGuess,
-                        distance: botDistance,
-                        isWinner: botWon,
-                      ),
-                    ],
-                  ),
-
-                  // Bilgi
-                  if (question.info != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      question.info!,
-                      style: GoogleFonts.nunito(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 11,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Tur sonucunu ekranın ortasında popup olarak gösterir
+  /// ════════════════════════════════════════════════════════════════════════
+  /// 🎨 TUR SONUÇ OVERLAY - Tamamen Responsive Tasarım
+  /// ════════════════════════════════════════════════════════════════════════
   Widget _buildRoundResultOverlay(DuelState state) {
     final controller = ref.read(duelControllerProvider.notifier);
     final question = controller.currentGuessQuestion;
@@ -1214,262 +1051,414 @@ class _DuelGuessGameScreenState extends ConsumerState<DuelGuessGameScreen>
     final botWon = state.botGuessCorrect == true;
     final isDraw = !userWon && !botWon;
 
+    // Durum rengi
+    final statusColor = userWon ? _neonGreen : (isDraw ? _accentCyan : _neonRed);
+
     return Positioned.fill(
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.5),
-        child: Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 32),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      (userWon
-                              ? _neonGreen
-                              : (isDraw ? _accentCyan : _neonRed))
-                          .withValues(alpha: 0.4),
-                      (userWon
-                              ? _neonGreen
-                              : (isDraw ? _accentCyan : _neonRed))
-                          .withValues(alpha: 0.3),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Responsive değerler
+          final screenHeight = constraints.maxHeight;
+          final screenWidth = constraints.maxWidth;
+          final isSmallScreen = screenHeight < 700;
+          
+          // Dinamik boyutlar
+          final verticalPadding = screenHeight * 0.02;
+          final horizontalPadding = screenWidth * 0.06;
+          final iconSize = isSmallScreen ? 28.0 : 36.0;
+          final titleFontSize = isSmallScreen ? 18.0 : 24.0;
+          final answerFontSize = isSmallScreen ? 32.0 : 42.0;
+          final labelFontSize = isSmallScreen ? 11.0 : 13.0;
+          final guessFontSize = isSmallScreen ? 16.0 : 20.0;
+          final buttonFontSize = isSmallScreen ? 15.0 : 18.0;
+          final spacing = screenHeight * 0.015;
+          
+          return GestureDetector(
+            onTap: () {}, // Arka plana tıklamayı engelle
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.85),
+                    _deepPurple.withValues(alpha: 0.95),
+                  ],
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
+                  child: Column(
+                    children: [
+                      // ═══ ÜST KISIM: Durum İkonu ve Mesaj ═══
+                      Flexible(
+                        flex: 2,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Animasyonlu ikon container
+                              Container(
+                                padding: EdgeInsets.all(screenWidth * 0.05),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      statusColor.withValues(alpha: 0.4),
+                                      statusColor.withValues(alpha: 0.1),
+                                    ],
+                                  ),
+                                  border: Border.all(
+                                    color: statusColor.withValues(alpha: 0.6),
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: statusColor.withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  userWon
+                                      ? FontAwesomeIcons.trophy
+                                      : (isDraw
+                                          ? FontAwesomeIcons.handshake
+                                          : FontAwesomeIcons.faceSadTear),
+                                  color: statusColor,
+                                  size: iconSize,
+                                ),
+                              )
+                                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                                  .scale(
+                                    begin: const Offset(1, 1),
+                                    end: const Offset(1.1, 1.1),
+                                    duration: 800.ms,
+                                  ),
+                              SizedBox(height: spacing),
+                              // Durum metni
+                              Text(
+                                userWon
+                                    ? 'KAZANDIN!'
+                                    : (isDraw ? 'BERABERE!' : 'Rakip Kazandı'),
+                                style: GoogleFonts.orbitron(
+                                  color: statusColor,
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                  shadows: [
+                                    Shadow(
+                                      color: statusColor.withValues(alpha: 0.5),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (userWon)
+                                Text(
+                                  '🎉',
+                                  style: TextStyle(fontSize: titleFontSize),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // ═══ ORTA KISIM: Doğru Cevap ═══
+                      Flexible(
+                        flex: 2,
+                        child: Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: horizontalPadding,
+                                  vertical: spacing * 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      _neonGreen.withValues(alpha: 0.25),
+                                      _accentCyan.withValues(alpha: 0.15),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: _neonGreen.withValues(alpha: 0.5),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'DOĞRU CEVAP',
+                                      style: GoogleFonts.nunito(
+                                        color: Colors.white.withValues(alpha: 0.7),
+                                        fontSize: labelFontSize,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    SizedBox(height: spacing * 0.5),
+                                    Text(
+                                      '${question.answer}',
+                                      style: GoogleFonts.orbitron(
+                                        color: _neonGreen,
+                                        fontSize: answerFontSize,
+                                        fontWeight: FontWeight.bold,
+                                        shadows: [
+                                          Shadow(
+                                            color: _neonGreen.withValues(alpha: 0.5),
+                                            blurRadius: 15,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: spacing),
+
+                      // ═══ ALT-ORTA KISIM: Karşılaştırma ═══
+                      Flexible(
+                        flex: 3,
+                        child: Row(
+                          children: [
+                            // Kullanıcı kartı
+                            Expanded(
+                              child: _buildResponsivePlayerCard(
+                                label: 'SEN',
+                                guess: userGuess,
+                                distance: userDistance,
+                                isWinner: userWon,
+                                accentColor: userWon ? _neonGreen : _primaryOrange,
+                                fontSize: guessFontSize,
+                                labelSize: labelFontSize,
+                              ),
+                            ),
+                            // VS Badge
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: spacing),
+                              child: Container(
+                                padding: EdgeInsets.all(screenWidth * 0.025),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _deepPurple.withValues(alpha: 0.8),
+                                  border: Border.all(
+                                    color: _accentCyan.withValues(alpha: 0.5),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  'VS',
+                                  style: GoogleFonts.orbitron(
+                                    color: _accentCyan,
+                                    fontSize: labelFontSize,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Rakip kartı
+                            Expanded(
+                              child: _buildResponsivePlayerCard(
+                                label: state.botProfile?.name ?? 'RAKİP',
+                                guess: botGuess,
+                                distance: botDistance,
+                                isWinner: botWon,
+                                accentColor: botWon ? _neonGreen : _neonRed,
+                                fontSize: guessFontSize,
+                                labelSize: labelFontSize,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: spacing * 1.5),
+
+                      // ═══ ALT KISIM: Devam Butonu ═══
+                      SizedBox(
+                        width: double.infinity,
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            ref.read(duelControllerProvider.notifier).skipGuessQuestion();
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: screenHeight * 0.02,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [_primaryOrange, _accentCyan],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _primaryOrange.withValues(alpha: 0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  state.currentQuestionIndex >= 9
+                                      ? 'Sonuçları Gör'
+                                      : 'Sıradaki Soru',
+                                  style: GoogleFonts.nunito(
+                                    color: Colors.white,
+                                    fontSize: buttonFontSize,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: spacing),
+                                Icon(
+                                  FontAwesomeIcons.arrowRight,
+                                  color: Colors.white,
+                                  size: buttonFontSize,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 300.ms, duration: 300.ms)
+                          .slideY(begin: 0.3, duration: 300.ms),
+
+                      SizedBox(height: verticalPadding),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: userWon
-                        ? _neonGreen
-                        : (isDraw ? _accentCyan : _neonRed),
-                    width: 3,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (userWon
-                              ? _neonGreen
-                              : (isDraw ? _accentCyan : _neonRed))
-                          .withValues(alpha: 0.5),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Kazanan mesajı
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          userWon
-                              ? FontAwesomeIcons.trophy
-                              : (isDraw
-                                  ? FontAwesomeIcons.handshake
-                                  : FontAwesomeIcons.faceSadTear),
-                          color: userWon
-                              ? _neonGreen
-                              : (isDraw ? _accentCyan : _neonRed),
-                          size: 32,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          userWon
-                              ? 'KAZANDIN! 🎉'
-                              : (isDraw ? 'BERABERE! 🤝' : 'Rakip Kazandı'),
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Doğru cevap
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _neonGreen.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _neonGreen.withValues(alpha: 0.7),
-                          width: 2,
-                        ),
-                      ),
-                      child: Text(
-                        'Doğru Cevap: ${question.answer}',
-                        style: GoogleFonts.poppins(
-                          color: _neonGreen,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Karşılaştırma
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildOverlayDistanceChip(
-                          'Sen',
-                          userGuess,
-                          userDistance,
-                          userWon,
-                        ),
-                        Text(
-                          'vs',
-                          style: GoogleFonts.orbitron(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 16,
-                          ),
-                        ),
-                        _buildOverlayDistanceChip(
-                          state.botProfile?.name ?? 'Rakip',
-                          botGuess,
-                          botDistance,
-                          botWon,
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ),
             ),
-          ),
-        ),
+          )
+              .animate()
+              .fadeIn(duration: 250.ms);
+        },
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms)
-        .scale(begin: const Offset(0.8, 0.8), duration: 300.ms)
-        .then(delay: 1000.ms)
-        .fadeOut(duration: 300.ms);
-  }
-
-  Widget _buildOverlayDistanceChip(
-    String label,
-    int guess,
-    int distance,
-    bool isWinner,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            color: Colors.white.withValues(alpha: 0.8),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color:
-                (isWinner ? _neonGreen : Colors.white).withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color:
-                  isWinner ? _neonGreen : Colors.white.withValues(alpha: 0.4),
-              width: 2,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                guess.toString(),
-                style: GoogleFonts.poppins(
-                  color: isWinner ? _neonGreen : Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '$distance uzakta',
-                style: GoogleFonts.nunito(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (isWinner)
-          const Text('👑', style: TextStyle(fontSize: 16))
-        else
-          const SizedBox(height: 16),
-      ],
     );
   }
 
-  Widget _buildDistanceChip({
+  /// Responsive oyuncu kartı (Sen / Rakip)
+  Widget _buildResponsivePlayerCard({
     required String label,
     required int guess,
     required int distance,
     required bool isWinner,
+    required Color accentColor,
+    required double fontSize,
+    required double labelSize,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 10,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: (isWinner ? _neonGreen : Colors.white).withValues(
-              alpha: 0.2,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                accentColor.withValues(alpha: isWinner ? 0.3 : 0.15),
+                _deepPurple.withValues(alpha: 0.6),
+              ],
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isWinner
-                  ? _neonGreen
-                  : Colors.white.withValues(alpha: 0.3),
+              color: accentColor.withValues(alpha: isWinner ? 0.7 : 0.3),
+              width: isWinner ? 2 : 1,
             ),
+            boxShadow: isWinner
+                ? [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Kazanan tacı
+              if (isWinner)
+                Text('👑', style: TextStyle(fontSize: fontSize))
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 600.ms),
+              // Label
               Text(
-                guess.toString(),
-                style: GoogleFonts.poppins(
-                  color: isWinner ? _neonGreen : Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                label.toUpperCase(),
+                style: GoogleFonts.nunito(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: labelSize,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              // Tahmin değeri
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  guess.toString(),
+                  style: GoogleFonts.orbitron(
+                    color: accentColor,
+                    fontSize: fontSize * 1.4,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: accentColor.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Text(
-                '$distance uzakta',
-                style: GoogleFonts.nunito(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 9,
+              const SizedBox(height: 4),
+              // Uzaklık
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$distance uzakta',
+                  style: GoogleFonts.nunito(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: labelSize * 0.9,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        if (isWinner) const Text('👑', style: TextStyle(fontSize: 12)),
-      ],
+      ),
     );
   }
 

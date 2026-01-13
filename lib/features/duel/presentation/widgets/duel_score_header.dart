@@ -1,14 +1,20 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../mascot/domain/entities/mascot.dart';
+import '../../../mascot/presentation/providers/mascot_provider.dart';
 import '../../domain/entities/bot_profile.dart';
 
-/// Düello skor header'ı - kullanıcı ve bot skorlarını gösterir
-class DuelScoreHeader extends StatelessWidget {
+/// Düello skor header'ı - maskotlarla kompakt bar tasarımı
+class DuelScoreHeader extends ConsumerStatefulWidget {
   final int userScore;
   final int botScore;
   final BotProfile? botProfile;
   final int currentQuestion;
   final int totalQuestions;
-  final bool hideQuestionCounter; // Memory oyunları için true
+  final bool hideQuestionCounter;
 
   const DuelScoreHeader({
     super.key,
@@ -21,131 +27,256 @@ class DuelScoreHeader extends StatelessWidget {
   });
 
   @override
+  ConsumerState<DuelScoreHeader> createState() => _DuelScoreHeaderState();
+}
+
+class _DuelScoreHeaderState extends ConsumerState<DuelScoreHeader> {
+  // Bot için rastgele seçilen maskot tipi (bir kere seçilip sabit kalır)
+  late final PetType _botMascot;
+
+  // Renk tanımları
+  static const Color _userColor = Color(0xFF00D9FF); // Cyan
+  static const Color _botColor = Color(0xFFFF6B35); // Orange
+
+  @override
+  void initState() {
+    super.initState();
+    // Bot için rastgele maskot seç
+    final random = Random();
+    _botMascot = PetType.values[random.nextInt(PetType.values.length)];
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Kullanıcı maskotunu al
+    final mascotAsync = ref.watch(activeMascotProvider);
+    final userMascot = mascotAsync.valueOrNull;
+    final userPetType = userMascot?.petType ?? PetType.astronaut;
+
+    final maxScore = widget.totalQuestions;
+    final userProgress = maxScore > 0 ? widget.userScore / maxScore : 0.0;
+    final botProgress = maxScore > 0 ? widget.botScore / maxScore : 0.0;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Soru sayısı (Memory oyunlarında gizli)
-          if (!hideQuestionCounter)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Soru $currentQuestion / $totalQuestions',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-
-          if (!hideQuestionCounter) const SizedBox(height: 16),
-
-          // Skor kartları
+          // Ana skor bar
           Row(
             children: [
-              // Kullanıcı skoru
+              // Kullanıcı maskotu
+              _buildMascotAvatar(userPetType, _userColor, true),
+
+              const SizedBox(width: 8),
+
+              // Kullanıcı skor bar
               Expanded(
-                child: _buildScoreCard(
-                  emoji: '👤',
-                  name: 'Sen',
-                  score: userScore,
+                child: _buildScoreBar(
+                  score: widget.userScore,
+                  progress: userProgress,
+                  color: _userColor,
                   isUser: true,
                 ),
               ),
 
-              // VS
+              // VS badge
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    colors: [
+                      _userColor.withValues(alpha: 0.3),
+                      _botColor.withValues(alpha: 0.3),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: const Text(
+                child: Text(
                   'VS',
-                  style: TextStyle(
-                    fontSize: 16,
+                  style: GoogleFonts.orbitron(
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: Colors.white,
                   ),
                 ),
               ),
 
-              // Bot skoru
+              // Bot skor bar
               Expanded(
-                child: _buildScoreCard(
-                  emoji: botProfile?.avatar ?? '🤖',
-                  name: botProfile?.name ?? 'Rakip',
-                  score: botScore,
+                child: _buildScoreBar(
+                  score: widget.botScore,
+                  progress: botProgress,
+                  color: _botColor,
                   isUser: false,
                 ),
               ),
+
+              const SizedBox(width: 8),
+
+              // Bot maskotu
+              _buildMascotAvatar(_botMascot, _botColor, false),
             ],
           ),
+
+          // Soru sayısı (opsiyonel)
+          if (!widget.hideQuestionCounter) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Soru ${widget.currentQuestion} / ${widget.totalQuestions}',
+                style: GoogleFonts.nunito(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildScoreCard({
-    required String emoji,
-    required String name,
+  Widget _buildMascotAvatar(PetType petType, Color color, bool isUser) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            color.withValues(alpha: 0.4),
+            color.withValues(alpha: 0.1),
+          ],
+        ),
+        border: Border.all(
+          color: color.withValues(alpha: 0.6),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: Lottie.asset(
+          petType.getLottiePath(),
+          fit: BoxFit.cover,
+          repeat: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreBar({
     required int score,
+    required double progress,
+    required Color color,
     required bool isUser,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          const SizedBox(height: 4),
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: isUser ? Colors.blue : Colors.orange,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '$score',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      children: [
+        // İsim ve skor
+        Row(
+          mainAxisAlignment: isUser ? MainAxisAlignment.start : MainAxisAlignment.end,
+          children: [
+            if (!isUser) ...[
+              Text(
+                '$score',
+                style: GoogleFonts.orbitron(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              isUser ? 'Sen' : (widget.botProfile?.name ?? 'Rakip'),
+              style: GoogleFonts.nunito(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+            if (isUser) ...[
+              const SizedBox(width: 6),
+              Text(
+                '$score',
+                style: GoogleFonts.orbitron(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ],
+        ),
+
+        const SizedBox(height: 4),
+
+        // Progress bar
+        Container(
+          height: 6,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(3),
           ),
-        ],
-      ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutCubic,
+                    width: constraints.maxWidth * progress.clamp(0.0, 1.0),
+                    height: 6,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isUser
+                            ? [color, color.withValues(alpha: 0.7)]
+                            : [color.withValues(alpha: 0.7), color],
+                      ),
+                      borderRadius: BorderRadius.circular(3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

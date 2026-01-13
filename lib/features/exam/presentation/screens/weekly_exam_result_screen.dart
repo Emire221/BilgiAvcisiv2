@@ -352,10 +352,13 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen>
             for (var row in results)
               row['konuID'] as String: row['konuAdi'] as String,
           };
+          // Cache'i temizle - yeni topic isimleriyle yeniden hesaplansın
+          _knowledgeMapCache = null;
         });
       }
     } catch (e) {
       // Hata durumunda boş map kullan, topicId'ler olduğu gibi görünür
+      debugPrint('❌ Konu isimleri yüklenemedi: $e');
       if (mounted) {
         setState(() {
           _topicNames = {};

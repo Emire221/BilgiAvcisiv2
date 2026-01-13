@@ -1066,8 +1066,11 @@ class _ReportModal extends StatelessWidget {
     List<Map<String, dynamic>> allTopics,
     bool isDarkMode,
   ) {
+    // Alt navigation bar için SafeArea padding ekle
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
       child: GestureDetector(
         onTap: () {
           Navigator.pop(context);
