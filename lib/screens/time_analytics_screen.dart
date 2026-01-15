@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../services/database_helper.dart';
+import '../services/time_tracking_service.dart';
 
 /// Haftalık Eğitim Süresi Grafiği Ekranı
 class TimeAnalyticsScreen extends StatefulWidget {
@@ -18,7 +20,9 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
     with TickerProviderStateMixin {
   List<Map<String, dynamic>> _weekData = [];
   bool _isLoading = true;
+  bool _isLoading = true;
   late AnimationController _animController;
+  StreamSubscription<int>? _timeSubscription;
 
   @override
   void initState() {
@@ -28,10 +32,12 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
       duration: const Duration(milliseconds: 1500),
     );
     _loadData();
+    _subscribeToTimeStream();
   }
 
   @override
   void dispose() {
+    _timeSubscription?.cancel();
     _animController.dispose();
     super.dispose();
   }
@@ -43,6 +49,47 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
       _isLoading = false;
     });
     _animController.forward();
+    // Veri yüklendikten sonra anlık veriyi de kontrol et (ilk açılışta güncel olsun)
+    if (mounted) {
+      _updateTodayData(TimeTrackingService().todaySeconds);
+    }
+  }
+
+  void _subscribeToTimeStream() {
+    _timeSubscription = TimeTrackingService().timeStream.listen((totalSeconds) {
+      if (mounted) {
+        _updateTodayData(totalSeconds);
+      }
+    });
+  }
+
+  void _updateTodayData(int totalSeconds) {
+    if (_weekData.isEmpty) return;
+
+    final now = DateTime.now();
+    // Pazartesi=1 ... Pazar=7. Listemiz 0..6 arası indeksli.
+    // _weekData genellikle 7 günlük veri içerir ve indeksler günlere karşılık gelir.
+    // DatabaseHelper'dan gelen verinin formatına güveniyoruz (Pzt=0, Sal=1...).
+    final todayIndex = now.weekday - 1;
+
+    if (todayIndex >= 0 && todayIndex < _weekData.length) {
+      final currentMinutesInList = _weekData[todayIndex]['durationMinutes'] as int;
+      final liveMinutes = (totalSeconds / 60).floor(); // Aşağı yuvarla veya round
+
+      // Sadece dakika değiştiyse güncelle (gereksiz build'i önlemek için)
+      // Ancak animasyonun akıcı olması için her saniye güncellemek de bir seçenek,
+      // ama bar chart dakika bazlı olduğu için gerek yok.
+      // EĞER mevcut veri veritabanından geldiyse ve eski olabilirse,
+      // liveMinutes daha büyük veya eşitse güncelle.
+      if (liveMinutes != currentMinutesInList) {
+        setState(() {
+          // Map'i güncellemek için yeni bir map oluşturup değiştirmeliyiz (immutable ilkesi)
+          final updatedDay = Map<String, dynamic>.from(_weekData[todayIndex]);
+          updatedDay['durationMinutes'] = liveMinutes;
+          _weekData[todayIndex] = updatedDay;
+        });
+      }
+    }
   }
 
   int get _totalWeekMinutes =>
@@ -375,6 +422,9 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
     
     final message = messages[DateTime.now().weekday % messages.length];
 
+    // Haftalık vurgu içeren metin
+    final motivationText = 'Bu hafta $timeText çalışarak harika bir iş çıkardın!';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -401,13 +451,27 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Haftalık Başarım',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message.contains('Bu hafta') ? message : 'Bu hafta: $message',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -461,26 +525,7 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '$_totalWeekMinutes',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 5, left: 4),
-                          child: Text(
-                            'dakika',
-                            style: TextStyle(color: Colors.white70, fontSize: 15),
-                          ),
-                        ),
-                      ],
-                    ),
+                    _buildTimeDisplay(),
                   ],
                 ),
               ),
@@ -488,6 +533,72 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimeDisplay() {
+    final hours = _totalWeekMinutes ~/ 60;
+    final minutes = _totalWeekMinutes % 60;
+
+    if (hours > 0) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '$hours',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 6, left: 4, right: 8),
+            child: Text(
+              'saat',
+              style: TextStyle(color: Colors.white70, fontSize: 15),
+            ),
+          ),
+          if (minutes > 0) ...[
+            Text(
+              '$minutes',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 5, left: 4),
+              child: Text(
+                'dakika',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          '$_totalWeekMinutes',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 5, left: 4),
+          child: Text(
+            'dakika',
+            style: TextStyle(color: Colors.white70, fontSize: 15),
+          ),
+        ),
+      ],
     );
   }
 

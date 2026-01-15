@@ -255,9 +255,14 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
 
     return PopScope(
       canPop: true, // Oyun sırasında geri tuşu aktif
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        body: Stack(
+      child: GestureDetector(
+        onTap: () {
+          // Ekrana tıklayınca klavyeyi kapat
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          body: Stack(
           children: [
             // Animasyonlu arka plan
             _buildAnimatedBackground(state),
@@ -530,6 +535,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                 },
               ),
           ],
+        ),
         ),
       ),
     );
@@ -842,21 +848,8 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
         // Feedback alanı
         Expanded(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Sıcaklık ikonu
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) {
-                  return ScaleTransition(
-                    scale: animation,
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                child: _buildTemperatureIcon(state.temperature),
-              ),
-
-              const SizedBox(height: 16),
-
               // Feedback mesajı
               if (state.feedbackMessage.isNotEmpty) ...[
                 Text(

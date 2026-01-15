@@ -1,10 +1,18 @@
+import '../../../mascot/domain/entities/mascot.dart';
+
 /// Bot profil bilgilerini tutan entity
 class BotProfile {
   final String name;
   final String avatar;
   final int level;
+  final PetType mascotType;
 
-  const BotProfile({required this.name, required this.avatar, this.level = 1});
+  const BotProfile({
+    required this.name,
+    required this.avatar,
+    this.level = 1,
+    required this.mascotType,
+  });
 
   /// Türk erkek ve kadın isimlerinden rastgele bot ismi üretir
   static const List<String> _maleNames = [
@@ -177,10 +185,15 @@ class BotProfile {
 
     final fullName = '${names[nameIndex]} ${_lastInitials[lastInitialIndex]}.';
 
+    // Rastgele maskot seç
+    final mascotIndex = (random ~/ 20000) % PetType.values.length;
+    final mascot = PetType.values[mascotIndex];
+
     return BotProfile(
       name: fullName,
       avatar: _avatars[avatarIndex],
       level: level,
+      mascotType: mascot,
     );
   }
 }

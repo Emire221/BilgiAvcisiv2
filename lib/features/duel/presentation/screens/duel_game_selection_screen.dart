@@ -15,9 +15,10 @@ import 'matchmaking_screen.dart';
 /// 🎮 DUEL GAME SELECTION - Düello Oyun Seçim Ekranı (Tam Ekran)
 /// ═══════════════════════════════════════════════════════════════════════════
 /// Design: Cyberpunk Arena temalı tam ekran oyun seçim sayfası
-/// - Modal yerine tam ekran deneyimi
+/// - Modal yerine tam ekran deneyimi (Light/Dark Mode destekli)
 /// - Tüm düello oyunlarını listeler
-/// - Neon ışık efektleri ve animasyonlar
+/// - Neon ışık efektleri ve animasyonlar (dark mode)
+/// - Pastel renkler ve soft shadows (light mode)
 /// ═══════════════════════════════════════════════════════════════════════════
 
 class DuelGameSelectionScreen extends ConsumerStatefulWidget {
@@ -32,16 +33,47 @@ class _DuelGameSelectionScreenState
     extends ConsumerState<DuelGameSelectionScreen>
     with SingleTickerProviderStateMixin {
   // ═══════════════════════════════════════════════════════════════════════════
-  // THEME COLORS
+  // DARK MODE THEME COLORS
   // ═══════════════════════════════════════════════════════════════════════════
-  static const Color _neonCyan = Color(0xFF00F5FF);
-  static const Color _neonPurple = Color(0xFFBF40FF);
-  static const Color _neonPink = Color(0xFFFF0080);
-  static const Color _neonBlue = Color(0xFF0080FF);
-  static const Color _neonOrange = Color(0xFFFF6B35);
-  static const Color _neonYellow = Color(0xFFFFD700);
+  static const Color _darkNeonCyan = Color(0xFF00F5FF);
+  static const Color _darkNeonPurple = Color(0xFFBF40FF);
+  static const Color _darkNeonPink = Color(0xFFFF0080);
+  static const Color _darkNeonBlue = Color(0xFF0080FF);
+  static const Color _darkNeonOrange = Color(0xFFFF6B35);
+  static const Color _darkNeonYellow = Color(0xFFFFD700);
+  static const Color _darkNeonGreen = Color(0xFF39FF14);
   static const Color _darkBg = Color(0xFF0D0D1A);
   static const Color _darkBg2 = Color(0xFF1A1A2E);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT MODE THEME COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _lightAccentCyan = Color(0xFF0EA5E9);
+  static const Color _lightAccentPurple = Color(0xFF8B5CF6);
+  static const Color _lightAccentPink = Color(0xFFEC4899);
+  static const Color _lightAccentBlue = Color(0xFF3B82F6);
+  static const Color _lightAccentOrange = Color(0xFFF97316);
+  static const Color _lightAccentYellow = Color(0xFFF59E0B);
+  static const Color _lightAccentGreen = Color(0xFF10B981);
+  static const Color _lightBgStart = Color(0xFFF8FAFC);
+  static const Color _lightBgEnd = Color(0xFFE2E8F0);
+  static const Color _lightTextPrimary = Color(0xFF1E293B);
+  static const Color _lightTextSecondary = Color(0xFF64748B);
+
+  bool _isDarkMode = true;
+
+  // Dinamik renkler için getter'lar
+  Color get _neonCyan => _isDarkMode ? _darkNeonCyan : _lightAccentCyan;
+  Color get _neonPurple => _isDarkMode ? _darkNeonPurple : _lightAccentPurple;
+  Color get _neonPink => _isDarkMode ? _darkNeonPink : _lightAccentPink;
+  Color get _neonBlue => _isDarkMode ? _darkNeonBlue : _lightAccentBlue;
+  Color get _neonOrange => _isDarkMode ? _darkNeonOrange : _lightAccentOrange;
+  Color get _neonYellow => _isDarkMode ? _darkNeonYellow : _lightAccentYellow;
+  Color get _neonGreen => _isDarkMode ? _darkNeonGreen : _lightAccentGreen;
+  Color get _textPrimary => _isDarkMode ? Colors.white : _lightTextPrimary;
+  Color get _textSecondary => _isDarkMode 
+      ? Colors.white.withValues(alpha: 0.7) 
+      : _lightTextSecondary;
 
   late AnimationController _glowController;
   late Animation<double> _glowAnimation;
@@ -60,6 +92,12 @@ class _DuelGameSelectionScreenState
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  }
+
+  @override
   void dispose() {
     _glowController.dispose();
     super.dispose();
@@ -68,17 +106,18 @@ class _DuelGameSelectionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _darkBg,
+      backgroundColor: _isDarkMode ? _darkBg : _lightBgStart,
       body: Stack(
         children: [
           // Animated Background
           _buildAnimatedBackground(),
 
-          // Grid overlay
-          CustomPaint(
-            size: MediaQuery.of(context).size,
-            painter: _GridPainter(color: _neonCyan.withValues(alpha: 0.03)),
-          ),
+          // Grid overlay (only for dark mode)
+          if (_isDarkMode)
+            CustomPaint(
+              size: MediaQuery.of(context).size,
+              painter: _GridPainter(color: _darkNeonCyan.withValues(alpha: 0.03)),
+            ),
 
           // Main Content
           SafeArea(
@@ -164,9 +203,7 @@ class _DuelGameSelectionScreenState
                                   'Kartları sırayla bul! Yanlış yaparsan sıra rakibe geçer.',
                               icon: FontAwesomeIcons.brain,
                               emoji: '🧠',
-                              primaryColor: const Color(
-                                0xFF39FF14,
-                              ), // neonGreen
+                              primaryColor: _neonGreen,
                               secondaryColor: _neonCyan,
                               gameType: DuelGameType.findCards,
                             )
@@ -203,27 +240,55 @@ class _DuelGameSelectionScreenState
     return AnimatedBuilder(
       animation: _glowAnimation,
       builder: (context, child) {
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.topCenter,
-              radius: 1.5,
-              colors: [
-                _neonPurple.withValues(alpha: 0.15 * _glowAnimation.value),
-                _darkBg2,
-                _darkBg,
-              ],
-              stops: const [0.0, 0.4, 1.0],
+        if (_isDarkMode) {
+          // Dark mode: Neon glow gradient
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.5,
+                colors: [
+                  _darkNeonPurple.withValues(alpha: 0.15 * _glowAnimation.value),
+                  _darkBg2,
+                  _darkBg,
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Light mode: Soft pastel gradient
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _lightBgStart,
+                  _lightAccentPurple.withValues(alpha: 0.06 * _glowAnimation.value),
+                  _lightBgEnd,
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              ),
+            ),
+          );
+        }
       },
     );
   }
 
   Widget _buildAppBar() {
+    final barBgColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.85);
+    final barBorderColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.2)
+        : _lightAccentPink.withValues(alpha: 0.2);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -237,13 +302,20 @@ class _DuelGameSelectionScreenState
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: barBgColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(color: barBorderColor),
+                boxShadow: _isDarkMode ? [] : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+                color: _textPrimary,
                 size: 20,
               ),
             ),
@@ -257,12 +329,12 @@ class _DuelGameSelectionScreenState
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  _neonPink.withValues(alpha: 0.2),
-                  _neonPurple.withValues(alpha: 0.2),
+                  _neonPink.withValues(alpha: _isDarkMode ? 0.2 : 0.15),
+                  _neonPurple.withValues(alpha: _isDarkMode ? 0.2 : 0.15),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _neonPink.withValues(alpha: 0.4)),
+              border: Border.all(color: _neonPink.withValues(alpha: _isDarkMode ? 0.4 : 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -272,7 +344,7 @@ class _DuelGameSelectionScreenState
                 Text(
                   'ARENA',
                   style: GoogleFonts.orbitron(
-                    color: Colors.white,
+                    color: _isDarkMode ? Colors.white : _neonPink,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 2,
@@ -302,11 +374,11 @@ class _DuelGameSelectionScreenState
             style: GoogleFonts.orbitron(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: _textPrimary,
               letterSpacing: 3,
-              shadows: [
-                Shadow(color: _neonCyan.withValues(alpha: 0.5), blurRadius: 15),
-              ],
+              shadows: _isDarkMode ? [
+                Shadow(color: _darkNeonCyan.withValues(alpha: 0.5), blurRadius: 15),
+              ] : [],
             ),
           ),
 
@@ -316,15 +388,28 @@ class _DuelGameSelectionScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: _isDarkMode 
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: _isDarkMode 
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : _lightAccentPurple.withValues(alpha: 0.2),
+              ),
+              boxShadow: _isDarkMode ? [] : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Text(
               'Rakibinle yarış! Hangi oyun türünde mücadele etmek istersin?',
               style: GoogleFonts.nunito(
                 fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: _textSecondary,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -344,6 +429,17 @@ class _DuelGameSelectionScreenState
     required Color secondaryColor,
     required DuelGameType gameType,
   }) {
+    // Kart arka plan renkleri
+    final cardGradientColors = _isDarkMode
+        ? [
+            primaryColor.withValues(alpha: 0.15),
+            secondaryColor.withValues(alpha: 0.08),
+          ]
+        : [
+            Colors.white.withValues(alpha: 0.95),
+            primaryColor.withValues(alpha: 0.05),
+          ];
+
     return GestureDetector(
       onTap: () => _onGameTypeSelected(context, ref, gameType),
       child: AnimatedBuilder(
@@ -355,27 +451,32 @@ class _DuelGameSelectionScreenState
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  primaryColor.withValues(alpha: 0.15),
-                  secondaryColor.withValues(alpha: 0.08),
-                ],
+                colors: cardGradientColors,
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: primaryColor.withValues(
-                  alpha: 0.4 + (0.2 * _glowAnimation.value),
+                  alpha: _isDarkMode ? 0.4 + (0.2 * _glowAnimation.value) : 0.3,
                 ),
-                width: 2,
+                width: _isDarkMode ? 2 : 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withValues(
-                    alpha: 0.15 * _glowAnimation.value,
-                  ),
-                  blurRadius: 25,
-                  spreadRadius: 3,
-                ),
-              ],
+              boxShadow: _isDarkMode
+                  ? [
+                      BoxShadow(
+                        color: primaryColor.withValues(
+                          alpha: 0.15 * _glowAnimation.value,
+                        ),
+                        blurRadius: 25,
+                        spreadRadius: 3,
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: primaryColor.withValues(alpha: 0.15),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
             ),
             child: Row(
               children: [
@@ -388,17 +489,17 @@ class _DuelGameSelectionScreenState
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        primaryColor.withValues(alpha: 0.4),
-                        secondaryColor.withValues(alpha: 0.3),
+                        primaryColor.withValues(alpha: _isDarkMode ? 0.4 : 0.25),
+                        secondaryColor.withValues(alpha: _isDarkMode ? 0.3 : 0.15),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: primaryColor.withValues(alpha: 0.6),
+                      color: primaryColor.withValues(alpha: _isDarkMode ? 0.6 : 0.4),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withValues(alpha: 0.4),
+                        color: primaryColor.withValues(alpha: _isDarkMode ? 0.4 : 0.2),
                         blurRadius: 15,
                         spreadRadius: 2,
                       ),
@@ -421,7 +522,7 @@ class _DuelGameSelectionScreenState
                         style: GoogleFonts.nunito(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: _textPrimary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -429,7 +530,7 @@ class _DuelGameSelectionScreenState
                         description,
                         style: GoogleFonts.nunito(
                           fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: _textSecondary,
                           fontWeight: FontWeight.w500,
                           height: 1.3,
                         ),
@@ -442,10 +543,10 @@ class _DuelGameSelectionScreenState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.2),
+                    color: primaryColor.withValues(alpha: _isDarkMode ? 0.2 : 0.1),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: primaryColor.withValues(alpha: 0.4),
+                      color: primaryColor.withValues(alpha: _isDarkMode ? 0.4 : 0.3),
                     ),
                   ),
                   child: Icon(
@@ -466,16 +567,22 @@ class _DuelGameSelectionScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: _isDarkMode 
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: _isDarkMode 
+              ? Colors.white.withValues(alpha: 0.1)
+              : _lightAccentCyan.withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.wifi_rounded,
-            color: Colors.white.withValues(alpha: 0.5),
+            color: _textSecondary,
             size: 18,
           ),
           const SizedBox(width: 8),
@@ -483,7 +590,7 @@ class _DuelGameSelectionScreenState
             'Online bağlantı gerektirir',
             style: GoogleFonts.nunito(
               fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: _textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -511,9 +618,18 @@ class _DuelGameSelectionScreenState
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: _darkBg.withValues(alpha: 0.9),
+            color: _isDarkMode 
+                ? _darkBg.withValues(alpha: 0.9)
+                : Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: _neonCyan.withValues(alpha: 0.5)),
+            boxShadow: _isDarkMode ? [] : [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -530,7 +646,7 @@ class _DuelGameSelectionScreenState
               Text(
                 'Bağlanıyor...',
                 style: GoogleFonts.nunito(
-                  color: Colors.white,
+                  color: _textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -583,6 +699,16 @@ class _DuelGameSelectionScreenState
   }
 
   void _showNoInternetDialog(BuildContext context) {
+    final dialogBgColors = _isDarkMode
+        ? [
+            _darkBg2.withValues(alpha: 0.95),
+            _darkBg.withValues(alpha: 0.98),
+          ]
+        : [
+            Colors.white.withValues(alpha: 0.98),
+            _lightBgEnd.withValues(alpha: 0.95),
+          ];
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -597,10 +723,7 @@ class _DuelGameSelectionScreenState
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    _darkBg2.withValues(alpha: 0.95),
-                    _darkBg.withValues(alpha: 0.98),
-                  ],
+                  colors: dialogBgColors,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
@@ -615,7 +738,7 @@ class _DuelGameSelectionScreenState
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _neonPink.withValues(alpha: 0.2),
+                      color: _neonPink.withValues(alpha: _isDarkMode ? 0.2 : 0.1),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: _neonPink.withValues(alpha: 0.5),
@@ -636,7 +759,7 @@ class _DuelGameSelectionScreenState
                     style: GoogleFonts.nunito(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: _textPrimary,
                     ),
                   ),
 
@@ -648,7 +771,7 @@ class _DuelGameSelectionScreenState
                     textAlign: TextAlign.center,
                     style: GoogleFonts.nunito(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: _textSecondary,
                     ),
                   ),
 
@@ -670,7 +793,7 @@ class _DuelGameSelectionScreenState
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: _neonCyan.withValues(alpha: 0.3),
+                            color: _neonCyan.withValues(alpha: _isDarkMode ? 0.3 : 0.2),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),

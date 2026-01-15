@@ -15,7 +15,7 @@ import '../../../../../providers/repository_providers.dart';
 /// 📳 SHAKE WAVE SELECTION - Salla Bakalım Seviye Seçim Ekranı
 /// ═══════════════════════════════════════════════════════════════════════════
 /// Design: Vibrant Wave temalı seviye seçim deneyimi
-/// - Gradient wave arka plan
+/// - Gradient wave arka plan (Light/Dark Mode destekli)
 /// - Glassmorphism seviye kartları
 /// - Animated difficulty indicators
 /// - Haptic feedback
@@ -33,15 +33,41 @@ class _GuessLevelSelectionScreenState
     extends ConsumerState<GuessLevelSelectionScreen>
     with TickerProviderStateMixin {
   // ═══════════════════════════════════════════════════════════════════════════
-  // THEME COLORS
+  // DARK MODE THEME COLORS
   // ═══════════════════════════════════════════════════════════════════════════
-  static const Color _neonCyan = Color(0xFF00F5FF);
-  static const Color _neonPurple = Color(0xFFBF40FF);
-  static const Color _neonPink = Color(0xFFFF0080);
-  static const Color _neonGreen = Color(0xFF39FF14);
-  static const Color _neonOrange = Color(0xFFFF6B35);
+  static const Color _darkNeonCyan = Color(0xFF00F5FF);
+  static const Color _darkNeonPurple = Color(0xFFBF40FF);
+  static const Color _darkNeonPink = Color(0xFFFF0080);
+  static const Color _darkNeonGreen = Color(0xFF39FF14);
+  static const Color _darkNeonOrange = Color(0xFFFF6B35);
   static const Color _darkBg = Color(0xFF0D0D1A);
   static const Color _darkBg2 = Color(0xFF1A1A2E);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT MODE THEME COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _lightAccentCyan = Color(0xFF0EA5E9);
+  static const Color _lightAccentPurple = Color(0xFF8B5CF6);
+  static const Color _lightAccentPink = Color(0xFFEC4899);
+  static const Color _lightAccentGreen = Color(0xFF10B981);
+  static const Color _lightAccentOrange = Color(0xFFF97316);
+  static const Color _lightBgStart = Color(0xFFF8FAFC);
+  static const Color _lightBgEnd = Color(0xFFE2E8F0);
+  static const Color _lightTextPrimary = Color(0xFF1E293B);
+  static const Color _lightTextSecondary = Color(0xFF64748B);
+
+  bool _isDarkMode = true;
+
+  // Dinamik renkler için getter'lar
+  Color get _neonCyan => _isDarkMode ? _darkNeonCyan : _lightAccentCyan;
+  Color get _neonPurple => _isDarkMode ? _darkNeonPurple : _lightAccentPurple;
+  Color get _neonPink => _isDarkMode ? _darkNeonPink : _lightAccentPink;
+  Color get _neonGreen => _isDarkMode ? _darkNeonGreen : _lightAccentGreen;
+  Color get _neonOrange => _isDarkMode ? _darkNeonOrange : _lightAccentOrange;
+  Color get _textPrimary => _isDarkMode ? Colors.white : _lightTextPrimary;
+  Color get _textSecondary => _isDarkMode 
+      ? Colors.white.withValues(alpha: 0.7) 
+      : _lightTextSecondary;
 
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<GuessLevel>? _levels;
@@ -71,6 +97,12 @@ class _GuessLevelSelectionScreenState
     );
 
     _loadLevels();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -124,7 +156,7 @@ class _GuessLevelSelectionScreenState
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: _darkBg,
+      backgroundColor: _isDarkMode ? _darkBg : _lightBgStart,
       body: Stack(
         children: [
           // ═══════════════════════════════════════════════════════════════════
@@ -163,28 +195,52 @@ class _GuessLevelSelectionScreenState
     return AnimatedBuilder(
       animation: _glowAnimation,
       builder: (context, child) {
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.topCenter,
-              radius: 1.5,
-              colors: [
-                _neonOrange.withValues(alpha: 0.15 * _glowAnimation.value),
-                _neonPurple.withValues(alpha: 0.1 * _glowAnimation.value),
-                _darkBg2,
-                _darkBg,
-              ],
-              stops: const [0.0, 0.3, 0.6, 1.0],
+        if (_isDarkMode) {
+          // Dark mode: Neon glow gradient
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.5,
+                colors: [
+                  _darkNeonOrange.withValues(alpha: 0.15 * _glowAnimation.value),
+                  _darkNeonPurple.withValues(alpha: 0.1 * _glowAnimation.value),
+                  _darkBg2,
+                  _darkBg,
+                ],
+                stops: const [0.0, 0.3, 0.6, 1.0],
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Light mode: Soft pastel gradient
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _lightBgStart,
+                  _lightAccentOrange.withValues(alpha: 0.08 * _glowAnimation.value),
+                  _lightBgEnd,
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              ),
+            ),
+          );
+        }
       },
     );
   }
 
   List<Widget> _buildFloatingParticles(Size size) {
+    final particleOpacity = _isDarkMode ? 0.5 : 0.25;
+    final glowOpacity = _isDarkMode ? 0.3 : 0.15;
+
     return List.generate(10, (index) {
       final random = index * 654321;
       final startX = (random % size.width.toInt()).toDouble();
@@ -203,10 +259,10 @@ class _GuessLevelSelectionScreenState
                   height: particleSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withValues(alpha: 0.5),
+                    color: color.withValues(alpha: particleOpacity),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.3),
+                        color: color.withValues(alpha: glowOpacity),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -225,6 +281,13 @@ class _GuessLevelSelectionScreenState
   }
 
   Widget _buildHeader(BuildContext context) {
+    final headerBgColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.8);
+    final headerBorderColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.2)
+        : _lightAccentOrange.withValues(alpha: 0.2);
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -238,13 +301,20 @@ class _GuessLevelSelectionScreenState
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: headerBgColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(color: headerBorderColor),
+                boxShadow: _isDarkMode ? [] : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_rounded,
-                color: Colors.white,
+                color: _textPrimary,
                 size: 20,
               ),
             ),
@@ -276,13 +346,13 @@ class _GuessLevelSelectionScreenState
                       style: GoogleFonts.nunito(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
+                        color: _textPrimary,
+                        shadows: _isDarkMode ? [
                           Shadow(
-                            color: _neonOrange.withValues(alpha: 0.5),
+                            color: _darkNeonOrange.withValues(alpha: 0.5),
                             blurRadius: 10,
                           ),
-                        ],
+                        ] : [],
                       ),
                     ),
                   ],
@@ -294,7 +364,7 @@ class _GuessLevelSelectionScreenState
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _neonOrange.withValues(alpha: 0.15),
+                    color: _neonOrange.withValues(alpha: _isDarkMode ? 0.15 : 0.1),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _neonOrange.withValues(alpha: 0.3),
@@ -325,7 +395,7 @@ class _GuessLevelSelectionScreenState
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _neonCyan.withValues(alpha: 0.15),
+                color: _neonCyan.withValues(alpha: _isDarkMode ? 0.15 : 0.1),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: _neonCyan.withValues(alpha: 0.3)),
               ),
@@ -355,7 +425,7 @@ class _GuessLevelSelectionScreenState
             Text(
               'Seviyeler yükleniyor...',
               style: GoogleFonts.nunito(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: _textSecondary,
                 fontSize: 16,
               ),
             ),
@@ -381,6 +451,9 @@ class _GuessLevelSelectionScreenState
               index: index,
               glowAnimation: _glowAnimation,
               getLevelColors: _getLevelColors,
+              isDarkMode: _isDarkMode,
+              textPrimary: _textPrimary,
+              textSecondary: _textSecondary,
             )
             .animate()
             .fadeIn(
@@ -402,7 +475,7 @@ class _GuessLevelSelectionScreenState
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: _neonPink.withValues(alpha: 0.15),
+                color: _neonPink.withValues(alpha: _isDarkMode ? 0.15 : 0.1),
                 shape: BoxShape.circle,
                 border: Border.all(color: _neonPink.withValues(alpha: 0.3)),
               ),
@@ -418,7 +491,7 @@ class _GuessLevelSelectionScreenState
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(
                 fontSize: 16,
-                color: Colors.white.withValues(alpha: 0.8),
+                color: _textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -442,7 +515,7 @@ class _GuessLevelSelectionScreenState
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: _neonPurple.withValues(alpha: 0.15),
+              color: _neonPurple.withValues(alpha: _isDarkMode ? 0.15 : 0.1),
               shape: BoxShape.circle,
               border: Border.all(color: _neonPurple.withValues(alpha: 0.3)),
             ),
@@ -454,7 +527,7 @@ class _GuessLevelSelectionScreenState
             style: GoogleFonts.nunito(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: _textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -462,7 +535,7 @@ class _GuessLevelSelectionScreenState
             'Veri senkronizasyonunu yapın',
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: _textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -497,7 +570,7 @@ class _GuessLevelSelectionScreenState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.4),
+              color: color.withValues(alpha: _isDarkMode ? 0.4 : 0.3),
               blurRadius: 15,
               spreadRadius: 2,
             ),
@@ -537,19 +610,25 @@ class _GuessLevelSelectionScreenState
 }
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// Level Kartı Widget'ı - YENİ/OYNANDI badge içerir
+/// Level Kartı Widget'ı - YENİ/OYNANDI badge içerir (Light/Dark Mode destekli)
 /// ═══════════════════════════════════════════════════════════════════════════
 class _GuessLevelCard extends ConsumerWidget {
   final GuessLevel level;
   final int index;
   final Animation<double> glowAnimation;
   final List<Color> Function(int) getLevelColors;
+  final bool isDarkMode;
+  final Color textPrimary;
+  final Color textSecondary;
 
   const _GuessLevelCard({
     required this.level,
     required this.index,
     required this.glowAnimation,
     required this.getLevelColors,
+    required this.isDarkMode,
+    required this.textPrimary,
+    required this.textSecondary,
   });
 
   @override
@@ -564,6 +643,17 @@ class _GuessLevelCard extends ConsumerWidget {
       data: (completed) => completed,
       orElse: () => false,
     );
+
+    // Kart arka plan renkleri
+    final cardGradientColors = isDarkMode
+        ? [
+            Colors.white.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.05),
+          ]
+        : [
+            Colors.white.withValues(alpha: 0.95),
+            Colors.white.withValues(alpha: 0.85),
+          ];
 
     return GestureDetector(
       onTap: () {
@@ -604,29 +694,36 @@ class _GuessLevelCard extends ConsumerWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.1),
-                        Colors.white.withValues(alpha: 0.05),
-                      ],
+                      colors: cardGradientColors,
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isCompleted
                           ? Colors.green.withValues(alpha: 0.5)
                           : colors[0].withValues(
-                              alpha: 0.3 + (0.2 * glowAnimation.value),
+                              alpha: isDarkMode 
+                                  ? 0.3 + (0.2 * glowAnimation.value)
+                                  : 0.25,
                             ),
                       width: 1.5,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors[0].withValues(
-                          alpha: 0.15 * glowAnimation.value,
-                        ),
-                        blurRadius: 15,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    boxShadow: isDarkMode
+                        ? [
+                            BoxShadow(
+                              color: colors[0].withValues(
+                                alpha: 0.15 * glowAnimation.value,
+                              ),
+                              blurRadius: 15,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : [
+                            BoxShadow(
+                              color: colors[0].withValues(alpha: 0.12),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                   ),
                   child: Row(
                     children: [
@@ -653,8 +750,8 @@ class _GuessLevelCard extends ConsumerWidget {
                           boxShadow: [
                             BoxShadow(
                               color: isCompleted
-                                  ? Colors.green.withValues(alpha: 0.4)
-                                  : colors[0].withValues(alpha: 0.4),
+                                  ? Colors.green.withValues(alpha: isDarkMode ? 0.4 : 0.3)
+                                  : colors[0].withValues(alpha: isDarkMode ? 0.4 : 0.3),
                               blurRadius: 12,
                               spreadRadius: 2,
                             ),
@@ -693,7 +790,7 @@ class _GuessLevelCard extends ConsumerWidget {
                                     style: GoogleFonts.nunito(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: textPrimary,
                                     ),
                                   ),
                                 ),
@@ -765,7 +862,7 @@ class _GuessLevelCard extends ConsumerWidget {
                               level.description,
                               style: GoogleFonts.nunito(
                                 fontSize: 13,
-                                color: Colors.white.withValues(alpha: 0.6),
+                                color: textSecondary,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -781,10 +878,10 @@ class _GuessLevelCard extends ConsumerWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: colors[0].withValues(alpha: 0.2),
+                                    color: colors[0].withValues(alpha: isDarkMode ? 0.2 : 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: colors[0].withValues(alpha: 0.4),
+                                      color: colors[0].withValues(alpha: isDarkMode ? 0.4 : 0.3),
                                     ),
                                   ),
                                   child: Text(
@@ -792,7 +889,7 @@ class _GuessLevelCard extends ConsumerWidget {
                                     style: GoogleFonts.nunito(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: isDarkMode ? Colors.white : colors[0],
                                     ),
                                   ),
                                 ),
@@ -801,7 +898,7 @@ class _GuessLevelCard extends ConsumerWidget {
                                   '${level.questions.length} Soru',
                                   style: GoogleFonts.nunito(
                                     fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: textSecondary,
                                   ),
                                 ),
                               ],
@@ -818,20 +915,20 @@ class _GuessLevelCard extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              colors[0].withValues(alpha: 0.3),
-                              colors[1].withValues(alpha: 0.2),
+                              colors[0].withValues(alpha: isDarkMode ? 0.3 : 0.2),
+                              colors[1].withValues(alpha: isDarkMode ? 0.2 : 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: colors[0].withValues(alpha: 0.5),
+                            color: colors[0].withValues(alpha: isDarkMode ? 0.5 : 0.3),
                           ),
                         ),
                         child: Icon(
                           isCompleted
                               ? Icons.replay_rounded
                               : Icons.play_arrow_rounded,
-                          color: Colors.white,
+                          color: isDarkMode ? Colors.white : colors[0],
                           size: 24,
                         ),
                       ),
@@ -858,7 +955,9 @@ class _GuessLevelCard extends ConsumerWidget {
             size: 16,
             color: isEarned
                 ? const Color(0xFFFFD700)
-                : Colors.white.withValues(alpha: 0.3),
+                : (isDarkMode 
+                    ? Colors.white.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.4)),
           ),
         );
       }),

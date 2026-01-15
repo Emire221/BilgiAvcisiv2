@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
-import '../../../mascot/domain/entities/mascot.dart';
 import '../../logic/duel_controller.dart';
 import '../../domain/entities/duel_entities.dart';
 import 'duel_game_screen.dart';
@@ -48,7 +47,6 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   String _statusText = 'Rakip Aranıyor...';
   bool _isFound = false;
   final Random _random = Random();
-  late final PetType _botMascot; // Bot için rastgele maskot
 
   // ═══════════════════════════════════════════════════════════════════════════
   // THEME COLORS
@@ -64,8 +62,6 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
-    // Bot için rastgele maskot seç
-    _botMascot = PetType.values[_random.nextInt(PetType.values.length)];
     _startMatchmaking();
   }
 
@@ -704,7 +700,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                     ),
                     child: ClipOval(
                       child: Lottie.asset(
-                        _botMascot.getLottiePath(),
+                        botProfile.mascotType.getLottiePath(),
                         fit: BoxFit.cover,
                         repeat: true,
                       ),

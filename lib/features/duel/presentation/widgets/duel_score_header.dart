@@ -31,20 +31,9 @@ class DuelScoreHeader extends ConsumerStatefulWidget {
 }
 
 class _DuelScoreHeaderState extends ConsumerState<DuelScoreHeader> {
-  // Bot için rastgele seçilen maskot tipi (bir kere seçilip sabit kalır)
-  late final PetType _botMascot;
-
   // Renk tanımları
   static const Color _userColor = Color(0xFF00D9FF); // Cyan
   static const Color _botColor = Color(0xFFFF6B35); // Orange
-
-  @override
-  void initState() {
-    super.initState();
-    // Bot için rastgele maskot seç
-    final random = Random();
-    _botMascot = PetType.values[random.nextInt(PetType.values.length)];
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +115,11 @@ class _DuelScoreHeaderState extends ConsumerState<DuelScoreHeader> {
               const SizedBox(width: 8),
 
               // Bot maskotu
-              _buildMascotAvatar(_botMascot, _botColor, false),
+              _buildMascotAvatar(
+                widget.botProfile?.mascotType ?? PetType.astronaut,
+                _botColor,
+                false,
+              ),
             ],
           ),
 

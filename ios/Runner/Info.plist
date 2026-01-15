@@ -28,18 +28,16 @@
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
+		<!-- iPhone: Sadece Dikey Mod -->
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<!-- iPad: Sadece Dikey Mod -->
 		<key>UISupportedInterfaceOrientations~ipad</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
 			<string>UIInterfaceOrientationPortraitUpsideDown</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
@@ -49,15 +47,15 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-		
+
 		<!-- Bildirim İzni Açıklaması -->
 		<key>NSUserNotificationAlertStyle</key>
 		<string>alert</string>
-		
+
 		<!-- Mikrofon İzni Açıklaması (Talking Mascot için) -->
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Sesli asistan özelliği için mikrofon erişimi gereklidir.</string>
-		
+
 		<!-- Arka Plan Modları -->
 		<key>UIBackgroundModes</key>
 		<array>

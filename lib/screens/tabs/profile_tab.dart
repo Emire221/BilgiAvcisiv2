@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../widgets/glass_container.dart';
@@ -195,16 +194,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
         totalWrong += (result['wrong'] as int?) ?? 0;
       }
 
-      // Streak hesapla (basit: ardışık günler)
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      int streak = 0;
-      if (userId != null) {
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .get();
-        streak = userDoc.data()?['loginStreak'] ?? 0;
-      }
+      // Streak hesapla (ardışık günler - en az 1 dakika kullanım)
+      int streak = await _calculateStreak(dbHelper);
 
       if (mounted) {
         setState(() {
@@ -216,6 +207,46 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     } catch (e) {
       debugPrint('İstatistik yükleme hatası: $e');
     }
+  }
+
+  /// Ardışık gün serisini hesapla
+  /// Her gün en az 60 saniye (1 dakika) kullanım gerekli
+  Future<int> _calculateStreak(DatabaseHelper dbHelper) async {
+    const int minSecondsPerDay = 60; // 1 dakika
+    int streak = 0;
+    DateTime checkDate = DateTime.now();
+
+    // Bugün kontrol et
+    String todayStr = _formatDateForDB(checkDate);
+    int todaySeconds = await dbHelper.getDailyTime(todayStr);
+
+    // Bugün henüz 1 dakika kullanım yoksa, dünden başla
+    if (todaySeconds < minSecondsPerDay) {
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    }
+
+    // Geriye doğru ardışık günleri say
+    while (true) {
+      String dateStr = _formatDateForDB(checkDate);
+      int seconds = await dbHelper.getDailyTime(dateStr);
+
+      if (seconds >= minSecondsPerDay) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+
+      // Maksimum 365 gün kontrol et (sonsuz döngü önleme)
+      if (streak >= 365) break;
+    }
+
+    return streak;
+  }
+
+  /// Tarihi veritabanı formatına çevir (YYYY-MM-DD)
+  String _formatDateForDB(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   /// Doğruluk oranı hesapla

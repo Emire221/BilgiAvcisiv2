@@ -577,7 +577,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
                     ),
                     if (!_isSpeechBubbleExpanded &&
                         _dailyFact != null &&
-                        _dailyFact!.fact.length > 60 &&
+                        _dailyFact!.fact.length > 100 &&
                         !_isTyping)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),

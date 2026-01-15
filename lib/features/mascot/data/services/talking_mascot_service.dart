@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+import 'package:audio_session/audio_session.dart';
 
 /// Talking Tom benzeri ses kaydı ve pitch shift oynatma servisi
 class TalkingMascotService {
@@ -64,14 +65,33 @@ class TalkingMascotService {
         return false;
       }
 
+      // iOS için AudioSession ayarla - Kayıt moduna geç
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker |
+            AVAudioSessionCategoryOptions.allowBluetooth |
+            AVAudioSessionCategoryOptions.allowAirPlay,
+        avAudioSessionMode: AVAudioSessionMode.defaultMode,
+        avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.defaultPolicy,
+        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+        androidAudioAttributes: AndroidAudioAttributes(
+          contentType: AndroidAudioContentType.speech,
+          flags: AndroidAudioFlags.none,
+          usage: AndroidAudioUsage.voiceCommunication,
+        ),
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+        androidWillPauseWhenDucked: true,
+      ));
+
       // Geçici dosya yolu
       final tempDir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${tempDir.path}/mascot_voice_$timestamp.m4a';
+      _currentRecordingPath = '${tempDir.path}/mascot_voice_$timestamp.wav';
 
       // Kayıt ayarları
       const config = RecordConfig(
-        encoder: AudioEncoder.aacLc,
+        encoder: AudioEncoder.wav, // iOS pitch shift uyumluluğu için WAV daha güvenli
         bitRate: 128000,
         sampleRate: 44100,
       );

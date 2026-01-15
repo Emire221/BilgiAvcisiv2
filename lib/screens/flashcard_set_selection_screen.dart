@@ -10,7 +10,7 @@ import '../core/providers/user_provider.dart';
 import 'flashcards_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// 🃏 BİLGİ KARTLARI SEÇİM - Modern Neon Tema
+/// 🃏 BİLGİ KARTLARI SEÇİM - Modern Neon Tema (Light/Dark Mode Destekli)
 /// ═══════════════════════════════════════════════════════════════════════════
 class FlashcardSetSelectionScreen extends ConsumerStatefulWidget {
   final String topicId;
@@ -38,12 +38,36 @@ class _FlashcardSetSelectionScreenState
   late AnimationController _glowController;
   late Animation<double> _glowAnimation;
 
-  // Tema renkleri - Yeşil/Turkuaz tema
-  static const Color _neonGreen = Color(0xFF10B981);
-  static const Color _neonCyan = Color(0xFF00D4FF);
-  static const Color _neonPurple = Color(0xFFBF40FF);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DARK MODE THEME COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _darkNeonGreen = Color(0xFF10B981);
+  static const Color _darkNeonCyan = Color(0xFF00D4FF);
+  static const Color _darkNeonPurple = Color(0xFFBF40FF);
   static const Color _darkBg = Color(0xFF0D0D1A);
   static const Color _darkBg2 = Color(0xFF1A1A2E);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT MODE THEME COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _lightAccentGreen = Color(0xFF10B981);
+  static const Color _lightAccentCyan = Color(0xFF0EA5E9);
+  static const Color _lightAccentPurple = Color(0xFF8B5CF6);
+  static const Color _lightBgStart = Color(0xFFF8FAFC);
+  static const Color _lightBgEnd = Color(0xFFE2E8F0);
+  static const Color _lightTextPrimary = Color(0xFF1E293B);
+  static const Color _lightTextSecondary = Color(0xFF64748B);
+
+  bool _isDarkMode = true;
+
+  // Dinamik renkler için getter'lar
+  Color get _neonGreen => _isDarkMode ? _darkNeonGreen : _lightAccentGreen;
+  Color get _neonCyan => _isDarkMode ? _darkNeonCyan : _lightAccentCyan;
+  Color get _neonPurple => _isDarkMode ? _darkNeonPurple : _lightAccentPurple;
+  Color get _textPrimary => _isDarkMode ? Colors.white : _lightTextPrimary;
+  Color get _textSecondary => _isDarkMode 
+      ? Colors.white.withValues(alpha: 0.7) 
+      : _lightTextSecondary;
 
   @override
   void initState() {
@@ -58,6 +82,12 @@ class _FlashcardSetSelectionScreenState
     );
 
     _loadFlashcardSets();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -97,7 +127,7 @@ class _FlashcardSetSelectionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _darkBg,
+      backgroundColor: _isDarkMode ? _darkBg : _lightBgStart,
       body: Stack(
         children: [
           // Animated Background
@@ -127,29 +157,53 @@ class _FlashcardSetSelectionScreenState
     return AnimatedBuilder(
       animation: _glowAnimation,
       builder: (context, child) {
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.topCenter,
-              radius: 1.5,
-              colors: [
-                _neonGreen.withValues(alpha: 0.15 * _glowAnimation.value),
-                _neonCyan.withValues(alpha: 0.1 * _glowAnimation.value),
-                _darkBg2,
-                _darkBg,
-              ],
-              stops: const [0.0, 0.3, 0.6, 1.0],
+        if (_isDarkMode) {
+          // Dark mode: Neon glow gradient
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.5,
+                colors: [
+                  _darkNeonGreen.withValues(alpha: 0.15 * _glowAnimation.value),
+                  _darkNeonCyan.withValues(alpha: 0.1 * _glowAnimation.value),
+                  _darkBg2,
+                  _darkBg,
+                ],
+                stops: const [0.0, 0.3, 0.6, 1.0],
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Light mode: Soft pastel gradient
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _lightBgStart,
+                  _lightAccentGreen.withValues(alpha: 0.06 * _glowAnimation.value),
+                  _lightBgEnd,
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              ),
+            ),
+          );
+        }
       },
     );
   }
 
   List<Widget> _buildFloatingParticles() {
     final size = MediaQuery.of(context).size;
+    final particleOpacity = _isDarkMode ? 0.5 : 0.25;
+    final glowOpacity = _isDarkMode ? 0.3 : 0.15;
+
     return List.generate(8, (index) {
       final random = index * 654321;
       final startX = (random % size.width.toInt()).toDouble();
@@ -168,10 +222,10 @@ class _FlashcardSetSelectionScreenState
                   height: particleSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withValues(alpha: 0.5),
+                    color: color.withValues(alpha: particleOpacity),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.3),
+                        color: color.withValues(alpha: glowOpacity),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -190,6 +244,13 @@ class _FlashcardSetSelectionScreenState
   }
 
   Widget _buildHeader() {
+    final headerBgColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.85);
+    final headerBorderColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.2)
+        : _lightAccentGreen.withValues(alpha: 0.2);
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -203,13 +264,20 @@ class _FlashcardSetSelectionScreenState
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: headerBgColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(color: headerBorderColor),
+                boxShadow: _isDarkMode ? [] : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_rounded,
-                color: Colors.white,
+                color: _textPrimary,
                 size: 20,
               ),
             ),
@@ -233,13 +301,13 @@ class _FlashcardSetSelectionScreenState
                         style: GoogleFonts.nunito(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
+                          color: _textPrimary,
+                          shadows: _isDarkMode ? [
                             Shadow(
-                              color: _neonGreen.withValues(alpha: 0.5),
+                              color: _darkNeonGreen.withValues(alpha: 0.5),
                               blurRadius: 10,
                             ),
-                          ],
+                          ] : [],
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -254,7 +322,7 @@ class _FlashcardSetSelectionScreenState
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _neonGreen.withValues(alpha: 0.15),
+                    color: _neonGreen.withValues(alpha: _isDarkMode ? 0.15 : 0.1),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _neonGreen.withValues(alpha: 0.3),
@@ -298,7 +366,7 @@ class _FlashcardSetSelectionScreenState
             Text(
               'Bilgi kartları yükleniyor...',
               style: GoogleFonts.nunito(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: _textSecondary,
                 fontSize: 16,
               ),
             ),
@@ -315,7 +383,7 @@ class _FlashcardSetSelectionScreenState
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: _neonGreen.withValues(alpha: 0.15),
+                color: _neonGreen.withValues(alpha: _isDarkMode ? 0.15 : 0.1),
                 shape: BoxShape.circle,
                 border: Border.all(color: _neonGreen.withValues(alpha: 0.3)),
               ),
@@ -327,7 +395,7 @@ class _FlashcardSetSelectionScreenState
               style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: _textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -345,6 +413,10 @@ class _FlashcardSetSelectionScreenState
               index: index,
               topicId: widget.topicId,
               glowAnimation: _glowAnimation,
+              isDarkMode: _isDarkMode,
+              neonGreen: _neonGreen,
+              textPrimary: _textPrimary,
+              textSecondary: _textSecondary,
             )
             .animate()
             .fadeIn(
@@ -358,21 +430,27 @@ class _FlashcardSetSelectionScreenState
 }
 
 /// ═══════════════════════════════════════════════════════════════════════════
-/// Bilgi Kartı Seti Widget'ı - Modern Glassmorphism
+/// Bilgi Kartı Seti Widget'ı - Modern Glassmorphism (Light/Dark Mode Destekli)
 /// ═══════════════════════════════════════════════════════════════════════════
 class _FlashcardSetCard extends ConsumerWidget {
   final dynamic flashcardSet;
   final int index;
   final String topicId;
   final Animation<double> glowAnimation;
-
-  static const Color _neonGreen = Color(0xFF10B981);
+  final bool isDarkMode;
+  final Color neonGreen;
+  final Color textPrimary;
+  final Color textSecondary;
 
   const _FlashcardSetCard({
     required this.flashcardSet,
     required this.index,
     required this.topicId,
     required this.glowAnimation,
+    required this.isDarkMode,
+    required this.neonGreen,
+    required this.textPrimary,
+    required this.textSecondary,
   });
 
   @override
@@ -383,6 +461,17 @@ class _FlashcardSetCard extends ConsumerWidget {
       data: (viewed) => viewed,
       orElse: () => false,
     );
+
+    // Kart arka plan renkleri
+    final cardGradientColors = isDarkMode
+        ? [
+            Colors.white.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.05),
+          ]
+        : [
+            Colors.white.withValues(alpha: 0.95),
+            Colors.white.withValues(alpha: 0.85),
+          ];
 
     return GestureDetector(
       onTap: () {
@@ -416,29 +505,36 @@ class _FlashcardSetCard extends ConsumerWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.1),
-                        Colors.white.withValues(alpha: 0.05),
-                      ],
+                      colors: cardGradientColors,
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isViewed
                           ? Colors.green.withValues(alpha: 0.5)
-                          : _neonGreen.withValues(
-                              alpha: 0.3 + (0.2 * glowAnimation.value),
+                          : neonGreen.withValues(
+                              alpha: isDarkMode 
+                                  ? 0.3 + (0.2 * glowAnimation.value)
+                                  : 0.25,
                             ),
                       width: 1.5,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _neonGreen.withValues(
-                          alpha: 0.15 * glowAnimation.value,
-                        ),
-                        blurRadius: 15,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    boxShadow: isDarkMode
+                        ? [
+                            BoxShadow(
+                              color: neonGreen.withValues(
+                                alpha: 0.15 * glowAnimation.value,
+                              ),
+                              blurRadius: 15,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : [
+                            BoxShadow(
+                              color: neonGreen.withValues(alpha: 0.12),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                   ),
                   child: Row(
                     children: [
@@ -458,8 +554,8 @@ class _FlashcardSetCard extends ConsumerWidget {
                                 )
                               : LinearGradient(
                                   colors: [
-                                    _neonGreen,
-                                    _neonGreen.withValues(alpha: 0.7),
+                                    neonGreen,
+                                    neonGreen.withValues(alpha: 0.7),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -468,8 +564,8 @@ class _FlashcardSetCard extends ConsumerWidget {
                           boxShadow: [
                             BoxShadow(
                               color: isViewed
-                                  ? Colors.green.withValues(alpha: 0.4)
-                                  : _neonGreen.withValues(alpha: 0.4),
+                                  ? Colors.green.withValues(alpha: isDarkMode ? 0.4 : 0.3)
+                                  : neonGreen.withValues(alpha: isDarkMode ? 0.4 : 0.3),
                               blurRadius: 10,
                               spreadRadius: 1,
                             ),
@@ -508,7 +604,7 @@ class _FlashcardSetCard extends ConsumerWidget {
                                     style: GoogleFonts.nunito(
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: textPrimary,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -585,7 +681,9 @@ class _FlashcardSetCard extends ConsumerWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: isDarkMode
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : neonGreen.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -594,16 +692,14 @@ class _FlashcardSetCard extends ConsumerWidget {
                                   Icon(
                                     Icons.style,
                                     size: 14,
-                                    color: Colors.white.withValues(alpha: 0.7),
+                                    color: textSecondary,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${flashcardSet.kartlar.length} Kart',
                                     style: GoogleFonts.nunito(
                                       fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.7,
-                                      ),
+                                      color: textSecondary,
                                     ),
                                   ),
                                 ],
@@ -621,20 +717,20 @@ class _FlashcardSetCard extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              _neonGreen.withValues(alpha: 0.3),
-                              _neonGreen.withValues(alpha: 0.2),
+                              neonGreen.withValues(alpha: isDarkMode ? 0.3 : 0.2),
+                              neonGreen.withValues(alpha: isDarkMode ? 0.2 : 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: _neonGreen.withValues(alpha: 0.5),
+                            color: neonGreen.withValues(alpha: isDarkMode ? 0.5 : 0.3),
                           ),
                         ),
                         child: Icon(
                           isViewed
                               ? Icons.replay_rounded
                               : Icons.play_arrow_rounded,
-                          color: Colors.white,
+                          color: isDarkMode ? Colors.white : neonGreen,
                           size: 20,
                         ),
                       ),

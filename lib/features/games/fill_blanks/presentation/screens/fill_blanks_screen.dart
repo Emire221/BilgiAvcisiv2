@@ -1,4 +1,5 @@
-﻿import 'dart:math';
+﻿import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,16 +49,23 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
   static const Color _nightMid = Color(0xFF1488CC);
   static const Color _nightBottom = Color(0xFF00C6FF);
   
-  static const Color _correctGreen = Color(0xFF56AB2F);
+  // Koyu yeşil (okunabilir)
+  static const Color _correctGreen = Color(0xFF1B5E20);
   static const Color _wrongRed = Color(0xFFFF5E62);
   static const Color _goldStar = Color(0xFFFFD700);
   static const Color _purpleAccent = Color(0xFF9B59B6);
   static const Color _orangeAccent = Color(0xFFFF9966);
 
+  // Motivasyon mesajları
+  List<String> _dogruMesajlar = [];
+  List<String> _yanlisMesajlar = [];
+  String _currentFeedbackMessage = '';
+
   @override
   void initState() {
     super.initState();
     _questions = widget.level.questions;
+    _loadMotivationMessages();
 
     // Bulut animasyonu
     _cloudController = AnimationController(
@@ -96,12 +104,39 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
     super.dispose();
   }
 
+  /// JSON dosyalarından motivasyon mesajlarını yükle
+  Future<void> _loadMotivationMessages() async {
+    try {
+      final dogruJson = await rootBundle.loadString('assets/json/dogru.json');
+      final dogruData = json.decode(dogruJson) as Map<String, dynamic>;
+      _dogruMesajlar = List<String>.from(dogruData['mesajlar'] ?? []);
+
+      final yanlisJson = await rootBundle.loadString('assets/json/yanlis.json');
+      final yanlisData = json.decode(yanlisJson) as Map<String, dynamic>;
+      _yanlisMesajlar = List<String>.from(yanlisData['mesajlar'] ?? []);
+    } catch (e) {
+      _dogruMesajlar = ['Harikastn! 🎉', 'Süper! ⭐', 'Mükemmel! 🏆'];
+      _yanlisMesajlar = ['Bir Dahakine! 💫', 'Pes Etme! 🚀', 'Devam Et! 💪'];
+    }
+  }
+
+  String _getRandomMessage(bool isCorrect) {
+    final messages = isCorrect ? _dogruMesajlar : _yanlisMesajlar;
+    if (messages.isEmpty) {
+      return isCorrect ? 'Doğru! 🎉' : 'Yanlış! 💪';
+    }
+    return messages[Random().nextInt(messages.length)];
+  }
+
   void _onAnswerDropped(String answer) {
+    if (_showFeedback) return;
+
     HapticFeedback.mediumImpact();
 
     setState(() {
       _selectedAnswer = answer;
       _isCorrect = answer == _questions[_currentQuestionIndex].answer;
+      _currentFeedbackMessage = _getRandomMessage(_isCorrect);
       _showFeedback = true;
 
       if (_isCorrect) {
@@ -707,12 +742,13 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen>
 
         // Mesaj
         Text(
-          _isCorrect ? 'Harika! 🎉' : 'Tekrar Dene! 💪',
+          _currentFeedbackMessage,
           style: GoogleFonts.nunito(
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
             color: _isCorrect ? _correctGreen : _wrongRed,
           ),
+          textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 200.ms),
 
         if (!_isCorrect) ...[

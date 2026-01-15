@@ -27,6 +27,10 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   ); // FAB görünürlüğü için
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
+  // Ders filtreleme için
+  String? _selectedLessonTest; // null = Tüm Dersler
+  String? _selectedLessonFlashcard; // null = Tüm Dersler
+
   // Tab verileri
   final List<_TabData> _tabs = [
     _TabData(
@@ -610,22 +614,185 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           return _buildErrorState(tab, snapshot.error.toString());
         }
 
-        final results = snapshot.data ?? [];
+        final allResults = snapshot.data ?? [];
 
-        if (results.isEmpty) {
+        if (allResults.isEmpty) {
           return _buildEmptyState(tab);
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-          physics: const BouncingScrollPhysics(),
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            final result = results[index];
-            return _AchievementCard(result: result, tab: tab, index: index);
-          },
+        // Benzersiz ders listesi oluştur
+        final lessonSet = <String>{};
+        for (final result in allResults) {
+          final dersAdi = result['dersAdi'] as String?;
+          if (dersAdi != null && dersAdi.isNotEmpty) {
+            lessonSet.add(dersAdi);
+          }
+        }
+        final lessons = lessonSet.toList()..sort();
+
+        // Seçili filtreyi al
+        final selectedLesson = tab.id == 'test' 
+            ? _selectedLessonTest 
+            : _selectedLessonFlashcard;
+
+        // Sonuçları filtrele
+        final filteredResults = selectedLesson == null
+            ? allResults
+            : allResults.where((r) => r['dersAdi'] == selectedLesson).toList();
+
+        return Column(
+          children: [
+            // Ders filtresi dropdown
+            if (lessons.isNotEmpty)
+              _buildLessonFilter(
+                tab: tab,
+                lessons: lessons,
+                selectedLesson: selectedLesson,
+                onChanged: (value) {
+                  setState(() {
+                    if (tab.id == 'test') {
+                      _selectedLessonTest = value;
+                    } else {
+                      _selectedLessonFlashcard = value;
+                    }
+                  });
+                },
+              ),
+
+            // Sonuç listesi
+            Expanded(
+              child: filteredResults.isEmpty
+                  ? _buildEmptyFilterState(tab)
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: filteredResults.length,
+                      itemBuilder: (context, index) {
+                        final result = filteredResults[index];
+                        return _AchievementCard(result: result, tab: tab, index: index);
+                      },
+                    ),
+            ),
+          ],
         );
       },
+    );
+  }
+
+  /// Ders filtresi dropdown
+  Widget _buildLessonFilter({
+    required _TabData tab,
+    required List<String> lessons,
+    required String? selectedLesson,
+    required void Function(String?) onChanged,
+  }) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: tab.glowColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          FaIcon(
+            FontAwesomeIcons.filter,
+            color: tab.glowColor,
+            size: 16,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String?>(
+                value: selectedLesson,
+                isExpanded: true,
+                dropdownColor: const Color(0xFF1a1a2e),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                icon: FaIcon(
+                  FontAwesomeIcons.chevronDown,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 14,
+                ),
+                hint: Text(
+                  'Tüm Dersler',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 14,
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.layerGroup,
+                          color: tab.glowColor,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text('Tüm Dersler'),
+                      ],
+                    ),
+                  ),
+                  ...lessons.map((lesson) => DropdownMenuItem<String?>(
+                    value: lesson,
+                    child: Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.book,
+                          color: Colors.white.withValues(alpha: 0.7),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            lesson,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Filtre sonucu boş olduğunda gösterilecek widget
+  Widget _buildEmptyFilterState(_TabData tab) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FaIcon(
+            FontAwesomeIcons.filterCircleXmark,
+            size: 48,
+            color: tab.glowColor.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Bu derse ait sonuç bulunamadı',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

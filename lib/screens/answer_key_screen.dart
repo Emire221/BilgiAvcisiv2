@@ -6,7 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-/// Cevap Anahtarı Ekranı - Neon Review Teması
+/// Cevap Anahtarı Ekranı - Light/Dark Mode Destekli
 class AnswerKeyScreen extends StatefulWidget {
   final List<Map<String, dynamic>> answeredQuestions;
 
@@ -21,13 +21,39 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
   late AnimationController _pulseController;
   bool _showIntro = true;
 
-  // Neon Review Teması Renkleri
-  static const Color _primaryPurple = Color(0xFF9C27B0);
-  static const Color _accentCyan = Color(0xFF00D9FF);
-  static const Color _successGreen = Color(0xFF00E676);
-  static const Color _errorRed = Color(0xFFFF5252);
-  static const Color _deepPurple = Color(0xFF1A0A2E);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DARK MODE RENK PALETİ (Neon Review)
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _darkPrimaryPurple = Color(0xFF9C27B0);
+  static const Color _darkAccentCyan = Color(0xFF00D9FF);
+  static const Color _darkSuccessGreen = Color(0xFF00E676);
+  static const Color _darkErrorRed = Color(0xFFFF5252);
+  static const Color _darkDeepPurple = Color(0xFF1A0A2E);
   static const Color _darkBg = Color(0xFF0D0D1A);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT MODE RENK PALETİ (Clean Review)
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _lightPrimaryPurple = Color(0xFF7C3AED);
+  static const Color _lightAccentCyan = Color(0xFF0EA5E9);
+  static const Color _lightSuccessGreen = Color(0xFF10B981);
+  static const Color _lightErrorRed = Color(0xFFEF4444);
+  static const Color _lightBgStart = Color(0xFFF0F4F8);
+  static const Color _lightBgEnd = Color(0xFFE2E8F0);
+  static const Color _lightTextPrimary = Color(0xFF1E293B);
+  static const Color _lightTextSecondary = Color(0xFF64748B);
+
+  // Dinamik renkler için getter'lar
+  Color get _accentCyan => _isDarkMode ? _darkAccentCyan : _lightAccentCyan;
+  Color get _successGreen =>
+      _isDarkMode ? _darkSuccessGreen : _lightSuccessGreen;
+  Color get _errorRed => _isDarkMode ? _darkErrorRed : _lightErrorRed;
+  Color get _textPrimary =>
+      _isDarkMode ? Colors.white : _lightTextPrimary;
+  Color get _textSecondary =>
+      _isDarkMode ? Colors.white.withValues(alpha: 0.7) : _lightTextSecondary;
+
+  bool _isDarkMode = true;
 
   @override
   void initState() {
@@ -43,6 +69,12 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
         setState(() => _showIntro = false);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -107,7 +139,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
               opacity: _showIntro ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 300),
               child: Container(
-                color: _darkBg,
+                color: _isDarkMode ? _darkBg : _lightBgStart,
                 child: Center(
                   child:
                       Icon(
@@ -121,7 +153,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                             end: const Offset(1.1, 1.1),
                           )
                           .then()
-                          .shimmer(color: Colors.white.withValues(alpha: 0.5)),
+                          .shimmer(color: (_isDarkMode ? Colors.white : _lightPrimaryPurple).withValues(alpha: 0.5)),
                 ),
               ),
             ),
@@ -131,20 +163,44 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
   }
 
   Widget _buildAnimatedBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_deepPurple, _darkBg, Color(0xFF150520)],
+    if (_isDarkMode) {
+      // Dark mode: Neon koyu gradient
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_darkDeepPurple, _darkBg, Color(0xFF150520)],
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      // Light mode: Yumuşak açık gradient
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              _lightBgStart,
+              _lightBgEnd,
+              Color(0xFFD1D5DB),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   List<Widget> _buildFloatingParticles() {
     return List.generate(10, (index) {
       final random = math.Random(index);
+      final particleColor = _isDarkMode
+          ? (index.isEven ? _darkPrimaryPurple : _darkAccentCyan)
+          : (index.isEven ? _lightPrimaryPurple : _lightAccentCyan);
+      final particleOpacity = _isDarkMode ? 0.3 : 0.15;
+      final glowOpacity = _isDarkMode ? 0.4 : 0.2;
+
       return Positioned(
         left: random.nextDouble() * MediaQuery.of(context).size.width,
         top: random.nextDouble() * MediaQuery.of(context).size.height,
@@ -157,7 +213,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                 math.cos(_pulseController.value * math.pi * 2 + index) * 15,
               ),
               child: Opacity(
-                opacity: 0.2 + (_pulseController.value * 0.2),
+                opacity: (_isDarkMode ? 0.2 : 0.1) + (_pulseController.value * 0.2),
                 child: child,
               ),
             );
@@ -167,13 +223,10 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
             height: 6 + random.nextDouble() * 10,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: (index.isEven ? _primaryPurple : _accentCyan).withValues(
-                alpha: 0.3,
-              ),
+              color: particleColor.withValues(alpha: particleOpacity),
               boxShadow: [
                 BoxShadow(
-                  color: (index.isEven ? _primaryPurple : _accentCyan)
-                      .withValues(alpha: 0.4),
+                  color: particleColor.withValues(alpha: glowOpacity),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -186,6 +239,13 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
   }
 
   Widget _buildTopBar() {
+    final barBgColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.8);
+    final borderColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.2)
+        : _lightPrimaryPurple.withValues(alpha: 0.2);
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -193,9 +253,18 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: barBgColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            border: Border.all(color: borderColor),
+            boxShadow: _isDarkMode
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Row(
             children: [
@@ -215,7 +284,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                   Text(
                     'CEVAP ANAHTARI',
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: _textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
@@ -236,6 +305,14 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
     required IconData icon,
     required VoidCallback onPressed,
   }) {
+    final btnBgColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.1)
+        : _lightPrimaryPurple.withValues(alpha: 0.1);
+    final btnBorderColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.2)
+        : _lightPrimaryPurple.withValues(alpha: 0.2);
+    final iconColor = _isDarkMode ? Colors.white : _lightPrimaryPurple;
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -244,11 +321,11 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: btnBgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          border: Border.all(color: btnBorderColor),
         ),
-        child: Icon(icon, color: Colors.white, size: 18),
+        child: Icon(icon, color: iconColor, size: 18),
       ),
     );
   }
@@ -257,6 +334,19 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
     final total = widget.answeredQuestions.length;
     final correct = _correctCount;
     final wrong = total - correct;
+
+    final cardBgColors = _isDarkMode
+        ? [
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.05),
+          ]
+        : [
+            Colors.white.withValues(alpha: 0.95),
+            Colors.white.withValues(alpha: 0.85),
+          ];
+    final borderColor = _isDarkMode
+        ? _darkAccentCyan.withValues(alpha: 0.3)
+        : _lightAccentCyan.withValues(alpha: 0.3);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -270,13 +360,19 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.15),
-                  Colors.white.withValues(alpha: 0.05),
-                ],
+                colors: cardBgColors,
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _accentCyan.withValues(alpha: 0.3)),
+              border: Border.all(color: borderColor),
+              boxShadow: _isDarkMode
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -310,6 +406,10 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
   }
 
   Widget _buildSummaryDivider() {
+    final dividerColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.3)
+        : _lightTextSecondary.withValues(alpha: 0.3);
+
     return Container(
       width: 1,
       height: 50,
@@ -319,7 +419,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            Colors.white.withValues(alpha: 0.3),
+            dividerColor,
             Colors.transparent,
           ],
         ),
@@ -333,16 +433,19 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
     required String label,
     required Color color,
   }) {
+    final iconBgOpacity = _isDarkMode ? 0.2 : 0.15;
+    final glowOpacity = _isDarkMode ? 0.3 : 0.15;
+
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
+            color: color.withValues(alpha: iconBgOpacity),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.3),
+                color: color.withValues(alpha: glowOpacity),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -354,7 +457,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
         Text(
           value,
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: _textPrimary,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -362,7 +465,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
         Text(
           label,
           style: GoogleFonts.nunito(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: _textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -379,12 +482,14 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: _isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : _lightPrimaryPurple.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               FontAwesomeIcons.inbox,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: _textSecondary,
               size: 48,
             ),
           ),
@@ -392,7 +497,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
           Text(
             'Hiç soru cevaplanmadı',
             style: GoogleFonts.nunito(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: _textSecondary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -432,6 +537,21 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
       final questionText =
           question['soruMetni']?.toString() ?? 'Soru metni bulunamadı';
 
+      final statusColor = isCorrect ? _successGreen : _errorRed;
+
+      // Kart arka plan renkleri
+      final cardGradientColors = _isDarkMode
+          ? [
+              statusColor.withValues(alpha: 0.15),
+              Colors.white.withValues(alpha: 0.05),
+            ]
+          : [
+              statusColor.withValues(alpha: 0.08),
+              Colors.white.withValues(alpha: 0.95),
+            ];
+
+      final borderColor = statusColor.withValues(alpha: _isDarkMode ? 0.4 : 0.3);
+
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
         child: ClipRRect(
@@ -444,20 +564,22 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    (isCorrect ? _successGreen : _errorRed).withValues(
-                      alpha: 0.15,
-                    ),
-                    Colors.white.withValues(alpha: 0.05),
-                  ],
+                  colors: cardGradientColors,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: (isCorrect ? _successGreen : _errorRed).withValues(
-                    alpha: 0.4,
-                  ),
+                  color: borderColor,
                   width: 1.5,
                 ),
+                boxShadow: _isDarkMode
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: statusColor.withValues(alpha: 0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,13 +591,15 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: (isCorrect ? _successGreen : _errorRed)
-                              .withValues(alpha: 0.2),
+                          color: statusColor.withValues(
+                            alpha: _isDarkMode ? 0.2 : 0.15,
+                          ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: (isCorrect ? _successGreen : _errorRed)
-                                  .withValues(alpha: 0.3),
+                              color: statusColor.withValues(
+                                alpha: _isDarkMode ? 0.3 : 0.2,
+                              ),
                               blurRadius: 10,
                               spreadRadius: 2,
                             ),
@@ -485,7 +609,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                           isCorrect
                               ? FontAwesomeIcons.check
                               : FontAwesomeIcons.xmark,
-                          color: isCorrect ? _successGreen : _errorRed,
+                          color: statusColor,
                           size: 20,
                         ),
                       ),
@@ -497,7 +621,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                             Text(
                               'Soru $questionNumber',
                               style: GoogleFonts.poppins(
-                                color: Colors.white,
+                                color: _textPrimary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
@@ -505,8 +629,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                             Text(
                               isCorrect ? 'Doğru cevapladın!' : 'Yanlış cevap',
                               style: GoogleFonts.nunito(
-                                color: (isCorrect ? _successGreen : _errorRed)
-                                    .withValues(alpha: 0.9),
+                                color: statusColor,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -523,13 +646,17 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: _isDarkMode
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : _lightTextPrimary.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       questionText,
                       style: GoogleFonts.nunito(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: _isDarkMode
+                            ? Colors.white.withValues(alpha: 0.9)
+                            : _lightTextPrimary.withValues(alpha: 0.85),
                         fontSize: 15,
                         height: 1.4,
                       ),
@@ -579,12 +706,15 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
     required Color color,
     required IconData icon,
   }) {
+    final bgOpacity = _isDarkMode ? 0.15 : 0.1;
+    final borderOpacity = _isDarkMode ? 0.4 : 0.3;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withValues(alpha: bgOpacity),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: borderOpacity)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,7 +727,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
               Text(
                 label,
                 style: GoogleFonts.nunito(
-                  color: color.withValues(alpha: 0.9),
+                  color: color,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -608,7 +738,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
           Text(
             value,
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: _textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -619,13 +749,20 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
   }
 
   Widget _buildErrorCard(int index) {
+    final bgColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.amber.withValues(alpha: 0.1);
+    final borderColor = _isDarkMode
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.amber.withValues(alpha: 0.3);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
@@ -638,7 +775,7 @@ class _AnswerKeyScreenState extends State<AnswerKeyScreen>
           Text(
             'Soru #${index + 1} verisi okunamadı',
             style: GoogleFonts.nunito(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: _textSecondary,
               fontSize: 14,
             ),
           ),

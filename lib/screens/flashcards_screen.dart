@@ -54,6 +54,21 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Theme mode
+  bool _isDarkMode = true;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT MODE THEME COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _lightBgStart = Color(0xFFF8FAFC);
+  static const Color _lightBgEnd = Color(0xFFE2E8F0);
+  static const Color _lightAccentCyan = Color(0xFF14B8A6);
+  static const Color _lightAccentPurple = Color(0xFF8B5CF6);
+  static const Color _lightAccentPink = Color(0xFFEC4899);
+  static const Color _lightAccentYellow = Color(0xFFF59E0B);
+  static const Color _lightTextPrimary = Color(0xFF1E293B);
+  static const Color _lightTextSecondary = Color(0xFF64748B);
+
   // Flip card state
   bool _isFlipped = false;
   late AnimationController _flipController;
@@ -97,6 +112,12 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
     _initParticles();
     _loadMotivationMessages();
     _loadCards();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
   }
 
   /// JSON dosyalarından motivasyon mesajlarını yükle
@@ -430,31 +451,49 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
   // ─────────────────────────────────────────────────────────────────────────
   // BUILD
   // ─────────────────────────────────────────────────────────────────────────
+  // Dinamik renkler için getter'lar
+  Color get _accentCyan => _isDarkMode ? const Color(0xFF00f5d4) : _lightAccentCyan;
+  Color get _accentPurple => _isDarkMode ? const Color(0xFF9b5de5) : _lightAccentPurple;
+  Color get _accentPink => _isDarkMode ? const Color(0xFFf15bb5) : _lightAccentPink;
+  Color get _accentYellow => _isDarkMode ? const Color(0xFFfee440) : _lightAccentYellow;
+  Color get _textPrimary => _isDarkMode ? Colors.white : _lightTextPrimary;
+  Color get _textSecondary => _isDarkMode ? Colors.white.withOpacity(0.7) : _lightTextSecondary;
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false, // Test/oyun sırasında geri tuşu devre dışı
       child: Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF1a0033), // Deep Violet
-                Color(0xFF0d1b2a), // Night Blue
-                Color(0xFF1b263b), // Dark Navy
-              ],
-              stops: [0.0, 0.5, 1.0],
-            ),
+          decoration: BoxDecoration(
+            gradient: _isDarkMode
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1a0033), // Deep Violet
+                      Color(0xFF0d1b2a), // Night Blue
+                      Color(0xFF1b263b), // Dark Navy
+                    ],
+                    stops: [0.0, 0.5, 1.0],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _lightBgStart,
+                      _lightAccentCyan.withOpacity(0.05),
+                      _lightBgEnd,
+                    ],
+                  ),
           ),
           child: Stack(
             children: [
-              // Dojo particles
-              ..._buildParticles(),
+              // Dojo particles (sadece dark mode'da görünür)
+              if (_isDarkMode) ..._buildParticles(),
 
-              // Grid pattern overlay
-              _buildGridPattern(),
+              // Grid pattern overlay (sadece dark mode'da görünür)
+              if (_isDarkMode) _buildGridPattern(),
 
               // Main content
               SafeArea(
@@ -553,7 +592,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                const Color(0xFF00f5d4).withOpacity(0.8),
+                _accentCyan.withOpacity(0.8),
               ),
             ),
           ),
@@ -561,7 +600,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
           Text(
             '🏯 Dojo hazırlanıyor...',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: _textSecondary,
               fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
@@ -581,14 +620,14 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
             Icon(
               Icons.error_outline_rounded,
               size: 64,
-              color: const Color(0xFFf15bb5).withOpacity(0.8),
+              color: _accentPink.withOpacity(0.8),
             ),
             const SizedBox(height: 16),
             Text(
               _errorMessage ?? 'Bir hata oluştu',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: _textSecondary,
                 fontSize: 16,
               ),
             ),
@@ -598,7 +637,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Tekrar Dene'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9b5de5),
+                backgroundColor: _accentPurple,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -679,16 +718,16 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
                       child: Text(
                         widget.topicName ?? 'Bilgi Kartları',
                         style: TextStyle(
-                          color: const Color(0xFF00f5d4),
+                          color: _accentCyan,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.5,
-                          shadows: [
+                          shadows: _isDarkMode ? [
                             Shadow(
-                              color: const Color(0xFF00f5d4).withOpacity(0.5),
+                              color: _accentCyan.withOpacity(0.5),
                               blurRadius: 10,
                             ),
-                          ],
+                          ] : [],
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -704,7 +743,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
                       child: Text(
                         'Bilgi kartlarıyla pekiştir',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: _textSecondary,
                           fontSize: 12,
                         ),
                         maxLines: 1,
@@ -724,29 +763,29 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF9b5de5).withOpacity(0.3),
-                  const Color(0xFFf15bb5).withOpacity(0.3),
+                  _accentPurple.withOpacity(_isDarkMode ? 0.3 : 0.15),
+                  _accentPink.withOpacity(_isDarkMode ? 0.3 : 0.15),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFF9b5de5).withOpacity(0.5),
+                color: _accentPurple.withOpacity(_isDarkMode ? 0.5 : 0.3),
                 width: 1,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.style_rounded,
-                  color: Color(0xFFf15bb5),
+                  color: _accentPink,
                   size: 16,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   '${_currentIndex + 1}/${_allCards.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: _textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -799,16 +838,16 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
               icon: Icons.close_rounded,
               label: 'Yanlış',
               count: _wrongCount,
-              color: const Color(0xFFf15bb5),
+              color: _accentPink,
               gradient: [
-                const Color(0xFFf15bb5).withOpacity(0.2),
-                const Color(0xFFf15bb5).withOpacity(0.1),
+                _accentPink.withOpacity(_isDarkMode ? 0.2 : 0.1),
+                _accentPink.withOpacity(_isDarkMode ? 0.1 : 0.05),
               ],
             ),
           ),
 
           // Divider
-          Container(width: 1, height: 40, color: Colors.white.withOpacity(0.1)),
+          Container(width: 1, height: 40, color: _isDarkMode ? Colors.white.withOpacity(0.1) : _lightTextSecondary.withOpacity(0.2)),
 
           // Correct counter
           ScaleTransition(
@@ -822,10 +861,10 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
               icon: Icons.check_circle_outline_rounded,
               label: 'Doğru',
               count: _correctCount,
-              color: const Color(0xFF00f5d4),
+              color: _accentCyan,
               gradient: [
-                const Color(0xFF00f5d4).withOpacity(0.2),
-                const Color(0xFF00f5d4).withOpacity(0.1),
+                _accentCyan.withOpacity(_isDarkMode ? 0.2 : 0.1),
+                _accentCyan.withOpacity(_isDarkMode ? 0.1 : 0.05),
               ],
             ),
           ),
@@ -846,7 +885,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: gradient),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.4), width: 1),
+        border: Border.all(color: color.withOpacity(_isDarkMode ? 0.4 : 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -860,7 +899,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: _textSecondary,
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
@@ -871,9 +910,9 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
                   color: color,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  shadows: [
+                  shadows: _isDarkMode ? [
                     Shadow(color: color.withOpacity(0.5), blurRadius: 10),
-                  ],
+                  ] : [],
                 ),
               ),
             ],

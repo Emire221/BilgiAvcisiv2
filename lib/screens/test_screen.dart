@@ -12,7 +12,7 @@ import '../features/test/models/test_state.dart';
 import '../models/question_model.dart';
 import 'result_screen.dart';
 
-/// 🎮 Cyber Quiz Arena - Test Ekranı
+/// 🎮 Cyber Quiz Arena - Test Ekranı (Light/Dark Mode Destekli)
 /// Neon vurgulu, koyu modlu yarışma ekranı
 class TestScreen extends ConsumerStatefulWidget {
   final String? topicId;
@@ -41,6 +41,19 @@ class _TestScreenState extends ConsumerState<TestScreen>
   // Animasyon controller'ları
   late AnimationController _pulseController;
   late AnimationController _glowController;
+
+  // Theme mode
+  bool _isDarkMode = true;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT MODE THEME COLORS
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const Color _lightBgStart = Color(0xFFF8FAFC);
+  static const Color _lightBgEnd = Color(0xFFE2E8F0);
+  static const Color _lightAccentCyan = Color(0xFF0EA5E9);
+  static const Color _lightAccentBlue = Color(0xFF3B82F6);
+  static const Color _lightTextPrimary = Color(0xFF1E293B);
+
 
   @override
   void initState() {
@@ -77,6 +90,12 @@ class _TestScreenState extends ConsumerState<TestScreen>
             .initializeTest(questionModels, testId: testId);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -127,12 +146,18 @@ class _TestScreenState extends ConsumerState<TestScreen>
       canPop: false, // Android geri tuşunu devre dışı bırak - MANTIK KORUNUYOR
       child: Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF000428), Color(0xFF001f54), Color(0xFF004e92)],
-            ),
+          decoration: BoxDecoration(
+            gradient: _isDarkMode
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF000428), Color(0xFF001f54), Color(0xFF004e92)],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [_lightBgStart, _lightAccentBlue.withValues(alpha: 0.05), _lightBgEnd],
+                  ),
           ),
           child: Stack(
             children: [
@@ -195,6 +220,10 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
   /// Arka plan parçacıkları
   List<Widget> _buildBackgroundParticles() {
+    final particleOpacity = _isDarkMode ? 0.1 : 0.08;
+    final glowOpacity = _isDarkMode ? 0.3 : 0.15;
+    final particleColor = _isDarkMode ? Colors.cyan : _lightAccentBlue;
+
     return List.generate(15, (index) {
       final random = math.Random(index);
       final size = 4.0 + random.nextDouble() * 6;
@@ -213,13 +242,13 @@ class _TestScreenState extends ConsumerState<TestScreen>
                   height: size,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.cyan.withValues(
-                      alpha: 0.1 + (_glowController.value * 0.2),
+                    color: particleColor.withValues(
+                      alpha: particleOpacity + (_glowController.value * 0.2),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.cyan.withValues(
-                          alpha: 0.3 * _glowController.value,
+                        color: particleColor.withValues(
+                          alpha: glowOpacity * _glowController.value,
                         ),
                         blurRadius: 10,
                         spreadRadius: 2,
@@ -247,6 +276,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
     return Container(
       margin: const EdgeInsets.all(16),
       child: _GlassContainer(
+        isDarkMode: _isDarkMode,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
@@ -260,7 +290,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
               const Spacer(),
 
               // ✅ PERFORMANS: Timer ayrı Consumer ile - sadece timeLeft değişince rebuild
-              _TimerWidget(pulseController: _pulseController),
+              _TimerWidget(pulseController: _pulseController, isDarkMode: _isDarkMode),
 
               const Spacer(),
 
@@ -273,35 +303,34 @@ class _TestScreenState extends ConsumerState<TestScreen>
     ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.3, end: 0);
   }
 
-  // ✅ _buildTimer metodu kaldırıldı - _TimerWidget ConsumerWidget kullanılıyor
-  // Dosyanın sonuna bakın: class _TimerWidget extends ConsumerWidget
-
   /// Soru sayacı
   Widget _buildQuestionCounter(int current, int total) {
+    final accentColor = _isDarkMode ? Colors.cyan : _lightAccentCyan;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.cyan.withValues(alpha: 0.3),
-            Colors.blue.withValues(alpha: 0.3),
+            accentColor.withValues(alpha: _isDarkMode ? 0.3 : 0.15),
+            (_isDarkMode ? Colors.blue : _lightAccentBlue).withValues(alpha: _isDarkMode ? 0.3 : 0.15),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.cyan.withValues(alpha: 0.5),
+          color: accentColor.withValues(alpha: _isDarkMode ? 0.5 : 0.3),
           width: 1.5,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const FaIcon(FontAwesomeIcons.listOl, color: Colors.cyan, size: 14),
+          FaIcon(FontAwesomeIcons.listOl, color: accentColor, size: 14),
           const SizedBox(width: 8),
           Text(
             '$current / $total',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: _isDarkMode ? Colors.white : _lightTextPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
               letterSpacing: 1,
@@ -340,7 +369,9 @@ class _TestScreenState extends ConsumerState<TestScreen>
                   _HoloQuestionCard(
                         questionText: question.soruMetni,
                         questionNumber: questionIndex + 1,
+                        topicName: widget.topicName,
                         isCompact: isSmallScreen,
+                        isDarkMode: _isDarkMode,
                       )
                       .animate()
                       .fadeIn(duration: 400.ms)
@@ -372,6 +403,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
                                 isSelected: _selectedOptionIndex == index,
                                 isDisabled: _isAnswering,
                                 isCompact: isSmallScreen,
+                                isDarkMode: _isDarkMode,
                                 onTap: () =>
                                     _handleAnswer(option, index, controller),
                               )
@@ -425,6 +457,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
         isCorrect: result.isCorrect,
         correctAnswer: result.correctAnswer,
         aciklama: result.aciklama,
+        isDarkMode: _isDarkMode,
         onContinue: () {
           Navigator.of(dialogContext).pop();
         },
@@ -444,14 +477,22 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
   /// Loading ekranı
   Widget _buildLoadingScreen() {
+    final accentColor = _isDarkMode ? Colors.cyan : _lightAccentCyan;
+    
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF000428), Color(0xFF004e92)],
-          ),
+        decoration: BoxDecoration(
+          gradient: _isDarkMode
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF000428), Color(0xFF004e92)],
+                )
+              : LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [_lightBgStart, _lightBgEnd],
+                ),
         ),
         child: Center(
           child: Column(
@@ -464,17 +505,17 @@ class _TestScreenState extends ConsumerState<TestScreen>
                     child: CircularProgressIndicator(
                       strokeWidth: 4,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.cyan.withValues(alpha: 0.8),
+                        accentColor.withValues(alpha: 0.8),
                       ),
                     ),
                   )
                   .animate(onPlay: (c) => c.repeat())
-                  .shimmer(duration: 1500.ms, color: Colors.cyan),
+                  .shimmer(duration: 1500.ms, color: accentColor),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                     'Arena Hazırlanıyor...',
                     style: TextStyle(
-                      color: Colors.cyan,
+                      color: accentColor,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
@@ -493,14 +534,22 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
   /// Hata ekranı
   Widget _buildErrorScreen() {
+    final accentColor = _isDarkMode ? Colors.cyan : _lightAccentCyan;
+    
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF000428), Color(0xFF004e92)],
-          ),
+        decoration: BoxDecoration(
+          gradient: _isDarkMode
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF000428), Color(0xFF004e92)],
+                )
+              : LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [_lightBgStart, _lightBgEnd],
+                ),
         ),
         child: Center(
           child: Column(
@@ -512,10 +561,10 @@ class _TestScreenState extends ConsumerState<TestScreen>
                 size: 60,
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Soru Bulunamadı',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _isDarkMode ? Colors.white : _lightTextPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -524,7 +573,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.cyan,
+                  backgroundColor: accentColor,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 16,
@@ -582,11 +631,12 @@ class _TestScreenState extends ConsumerState<TestScreen>
 // CUSTOM WIDGETS
 // ============================================================================
 
-/// Glass Container - Cam efektli konteyner
+/// Glass Container - Cam efektli konteyner (Light/Dark Mode Destekli)
 class _GlassContainer extends StatelessWidget {
   final Widget child;
+  final bool isDarkMode;
 
-  const _GlassContainer({required this.child});
+  const _GlassContainer({required this.child, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
@@ -597,18 +647,30 @@ class _GlassContainer extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withValues(alpha: 0.1),
+            color: isDarkMode
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.white.withValues(alpha: 0.85),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : const Color(0xFF0EA5E9).withValues(alpha: 0.2),
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.cyan.withValues(alpha: 0.1),
-                blurRadius: 20,
-                spreadRadius: 2,
-              ),
-            ],
+            boxShadow: isDarkMode
+                ? [
+                    BoxShadow(
+                      color: Colors.cyan.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: child,
         ),
@@ -617,16 +679,20 @@ class _GlassContainer extends StatelessWidget {
   }
 }
 
-/// Hologram Soru Kartı (📱 UX Faz 4.1: Auto-size text)
+/// Hologram Soru Kartı (Light/Dark Mode Destekli)
 class _HoloQuestionCard extends StatelessWidget {
   final String questionText;
   final int questionNumber;
+  final String? topicName;
   final bool isCompact;
+  final bool isDarkMode;
 
   const _HoloQuestionCard({
     required this.questionText,
     required this.questionNumber,
+    this.topicName,
     this.isCompact = false,
+    required this.isDarkMode,
   });
 
   @override
@@ -648,33 +714,55 @@ class _HoloQuestionCard extends StatelessWidget {
           : 20;
     }
 
+    final accentColor = isDarkMode ? Colors.cyan : const Color(0xFF0EA5E9);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isCompact ? 16 : 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.cyan.withValues(alpha: 0.15),
-            Colors.blue.withValues(alpha: 0.1),
-            Colors.purple.withValues(alpha: 0.05),
-          ],
+        gradient: isDarkMode
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.cyan.withValues(alpha: 0.15),
+                  Colors.blue.withValues(alpha: 0.1),
+                  Colors.purple.withValues(alpha: 0.05),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.95),
+                  accentColor.withValues(alpha: 0.05),
+                ],
+              ),
+        border: Border.all(
+          color: accentColor.withValues(alpha: isDarkMode ? 0.5 : 0.25),
+          width: 2,
         ),
-        border: Border.all(color: Colors.cyan.withValues(alpha: 0.5), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.cyan.withValues(alpha: 0.3),
-            blurRadius: 20,
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.2),
-            blurRadius: 40,
-            spreadRadius: 5,
-          ),
-        ],
+        boxShadow: isDarkMode
+            ? [
+                BoxShadow(
+                  color: Colors.cyan.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  blurRadius: 40,
+                  spreadRadius: 5,
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.15),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,8 +775,10 @@ class _HoloQuestionCard extends StatelessWidget {
               vertical: isCompact ? 4 : 6,
             ),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Colors.cyan, Colors.blue],
+              gradient: LinearGradient(
+                colors: isDarkMode
+                    ? [Colors.cyan, Colors.blue]
+                    : [accentColor, const Color(0xFF3B82F6)],
               ),
               borderRadius: BorderRadius.circular(20),
             ),
@@ -701,13 +791,17 @@ class _HoloQuestionCard extends StatelessWidget {
                   size: isCompact ? 10 : 12,
                 ),
                 SizedBox(width: isCompact ? 4 : 6),
-                Text(
-                  'Soru $questionNumber',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isCompact ? 10 : 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
+                Flexible(
+                  child: Text(
+                    topicName ?? 'Soru $questionNumber',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isCompact ? 10 : 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -723,7 +817,7 @@ class _HoloQuestionCard extends StatelessWidget {
               child: Text(
                 questionText,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1E293B),
                   fontSize: fontSize,
                   fontWeight: FontWeight.w600,
                   height: 1.4,
@@ -738,7 +832,7 @@ class _HoloQuestionCard extends StatelessWidget {
   }
 }
 
-/// Game Option Button - Oyun tarzı seçenek butonu (📱 UX Faz 4.1: Compact Mode)
+/// Game Option Button - Oyun tarzı seçenek butonu (Light/Dark Mode Destekli)
 class _GameOptionButton extends StatefulWidget {
   final String label;
   final String optionText;
@@ -746,6 +840,7 @@ class _GameOptionButton extends StatefulWidget {
   final bool isSelected;
   final bool isDisabled;
   final bool isCompact;
+  final bool isDarkMode;
   final VoidCallback onTap;
 
   const _GameOptionButton({
@@ -755,6 +850,7 @@ class _GameOptionButton extends StatefulWidget {
     required this.isSelected,
     required this.isDisabled,
     this.isCompact = false,
+    required this.isDarkMode,
     required this.onTap,
   });
 
@@ -802,6 +898,15 @@ class _GameOptionButtonState extends State<_GameOptionButton>
     final fontSize = widget.isCompact ? 14.0 : 16.0;
     final padding = widget.isCompact ? 12.0 : 16.0;
 
+    // Light mode için kart arka plan
+    final cardBgColors = widget.isDarkMode
+        ? (widget.isSelected
+            ? [Colors.amber.withValues(alpha: 0.4), Colors.orange.withValues(alpha: 0.3)]
+            : [Colors.white.withValues(alpha: 0.08), Colors.white.withValues(alpha: 0.04)])
+        : (widget.isSelected
+            ? [Colors.amber.withValues(alpha: 0.25), Colors.orange.withValues(alpha: 0.15)]
+            : [Colors.white.withValues(alpha: 0.95), Colors.white.withValues(alpha: 0.85)]);
+
     return GestureDetector(
       onTapDown: widget.isDisabled
           ? null
@@ -838,28 +943,22 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
-                  colors: widget.isSelected
-                      ? [
-                          Colors.amber.withValues(alpha: 0.4),
-                          Colors.orange.withValues(alpha: 0.3),
-                        ]
-                      : [
-                          Colors.white.withValues(alpha: 0.08),
-                          Colors.white.withValues(alpha: 0.04),
-                        ],
+                  colors: cardBgColors,
                 ),
                 border: Border.all(
                   color: widget.isSelected
                       ? Colors.amber
                       : _isPressed
                       ? colors[0]
-                      : Colors.white.withValues(alpha: 0.2),
+                      : (widget.isDarkMode
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : colors[0].withValues(alpha: 0.25)),
                   width: widget.isSelected ? 2.5 : 1.5,
                 ),
                 boxShadow: widget.isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.amber.withValues(alpha: 0.4),
+                          color: Colors.amber.withValues(alpha: widget.isDarkMode ? 0.4 : 0.3),
                           blurRadius: 15,
                           spreadRadius: 2,
                         ),
@@ -872,7 +971,15 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                           spreadRadius: 1,
                         ),
                       ]
-                    : null,
+                    : widget.isDarkMode
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: colors[0].withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
               ),
               child: Row(
                 children: [
@@ -894,7 +1001,7 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                       boxShadow: [
                         BoxShadow(
                           color: (widget.isSelected ? Colors.amber : colors[0])
-                              .withValues(alpha: 0.5),
+                              .withValues(alpha: widget.isDarkMode ? 0.5 : 0.35),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -921,7 +1028,9 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                       style: TextStyle(
                         color: widget.isSelected
                             ? Colors.amber
-                            : Colors.white.withValues(alpha: 0.9),
+                            : (widget.isDarkMode
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : const Color(0xFF1E293B)),
                         fontSize: fontSize,
                         fontWeight: widget.isSelected
                             ? FontWeight.bold
@@ -967,21 +1076,22 @@ class _GameOptionButtonState extends State<_GameOptionButton>
 }
 
 // ============================================================================
-// ANSWER RESULT DIALOG - Animasyonlu Cevap Sonucu Popup'ı
+// ANSWER RESULT DIALOG - Animasyonlu Cevap Sonucu Popup'ı (Light/Dark Mode)
 // ============================================================================
 
 /// 🎯 Cevap Sonrası Açıklamalı Popup Dialog
-/// Doğru/Yanlış bilgisi, açıklama ve sonraki soruya geçiş butonu içerir.
 class _AnswerResultDialog extends StatefulWidget {
   final bool isCorrect;
   final String correctAnswer;
   final String? aciklama;
+  final bool isDarkMode;
   final VoidCallback onContinue;
 
   const _AnswerResultDialog({
     required this.isCorrect,
     required this.correctAnswer,
     this.aciklama,
+    required this.isDarkMode,
     required this.onContinue,
   });
 
@@ -1037,6 +1147,11 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
         ? [const Color(0xFF00C853), const Color(0xFF00E676)]
         : [const Color(0xFFFF1744), const Color(0xFFFF5252)];
 
+    // Dialog arka plan renkleri
+    final dialogBgColors = widget.isDarkMode
+        ? [const Color(0xFF1a1a2e), const Color(0xFF16213e)]
+        : [Colors.white, const Color(0xFFF8FAFC)];
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -1058,7 +1173,7 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [const Color(0xFF1a1a2e), const Color(0xFF16213e)],
+                    colors: dialogBgColors,
                   ),
                   border: Border.all(
                     color: primaryColor.withValues(alpha: 0.6),
@@ -1066,12 +1181,12 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: 0.4),
+                      color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.4 : 0.3),
                       blurRadius: 30,
                       spreadRadius: 5,
                     ),
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: 0.2),
+                      color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.2 : 0.1),
                       blurRadius: 60,
                       spreadRadius: 10,
                     ),
@@ -1138,8 +1253,8 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            gradientColors[0].withValues(alpha: 0.25),
-            gradientColors[1].withValues(alpha: 0.15),
+            gradientColors[0].withValues(alpha: widget.isDarkMode ? 0.25 : 0.15),
+            gradientColors[1].withValues(alpha: widget.isDarkMode ? 0.15 : 0.08),
           ],
         ),
       ),
@@ -1154,7 +1269,7 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: 0.6),
+                      color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.6 : 0.4),
                       blurRadius: 20,
                       spreadRadius: 4,
                     ),
@@ -1194,7 +1309,9 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
             Text(
               'Harika! Devam et! 🎉',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
+                color: widget.isDarkMode
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : const Color(0xFF64748B),
                 fontSize: 14,
               ),
             ).animate().fadeIn(delay: 300.ms),
@@ -1210,7 +1327,7 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.greenAccent.withValues(alpha: 0.1),
+        color: Colors.greenAccent.withValues(alpha: widget.isDarkMode ? 0.1 : 0.08),
         border: Border.all(
           color: Colors.greenAccent.withValues(alpha: 0.4),
           width: 1.5,
@@ -1252,8 +1369,8 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                 const SizedBox(height: 4),
                 Text(
                   widget.correctAnswer,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: widget.isDarkMode ? Colors.white : const Color(0xFF1E293B),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     height: 1.4,
@@ -1297,16 +1414,20 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.05),
+            color: widget.isDarkMode
+                ? Colors.white.withValues(alpha: 0.05)
+                : const Color(0xFFF1F5F9),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: widget.isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : const Color(0xFFE2E8F0),
               width: 1,
             ),
           ),
           child: Text(
             widget.aciklama!,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: widget.isDarkMode ? Colors.white : const Color(0xFF1E293B),
               fontSize: 15,
               height: 1.6,
               letterSpacing: 0.3,
@@ -1335,7 +1456,7 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.5),
+                  color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.5 : 0.35),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -1369,16 +1490,14 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ✅ PERFORMANS: Timer Widget - Ayrı Consumer
-// ═══════════════════════════════════════════════════════════════════════════
-// Bu widget sadece timeLeft değiştiğinde rebuild olur.
-// Tüm TestScreen rebuild edilmez - diğer state değişikliklerinden izole.
+// ✅ PERFORMANS: Timer Widget - Ayrı Consumer (Light/Dark Mode Destekli)
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _TimerWidget extends ConsumerWidget {
-  const _TimerWidget({required this.pulseController});
+  const _TimerWidget({required this.pulseController, required this.isDarkMode});
 
   final AnimationController pulseController;
+  final bool isDarkMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1428,7 +1547,9 @@ class _TimerWidget extends ConsumerWidget {
               ],
             ),
             progressColor: timerColor,
-            backgroundColor: Colors.white.withValues(alpha: 0.1),
+            backgroundColor: isDarkMode
+                ? Colors.white.withValues(alpha: 0.1)
+                : const Color(0xFFE2E8F0),
             circularStrokeCap: CircularStrokeCap.round,
             animation: false,
           ),
