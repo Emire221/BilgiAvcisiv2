@@ -65,7 +65,6 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
   static const Color _lightAccentCyan = Color(0xFF14B8A6);
   static const Color _lightAccentPurple = Color(0xFF8B5CF6);
   static const Color _lightAccentPink = Color(0xFFEC4899);
-  static const Color _lightAccentYellow = Color(0xFFF59E0B);
   static const Color _lightTextPrimary = Color(0xFF1E293B);
   static const Color _lightTextSecondary = Color(0xFF64748B);
 
@@ -455,7 +454,6 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
   Color get _accentCyan => _isDarkMode ? const Color(0xFF00f5d4) : _lightAccentCyan;
   Color get _accentPurple => _isDarkMode ? const Color(0xFF9b5de5) : _lightAccentPurple;
   Color get _accentPink => _isDarkMode ? const Color(0xFFf15bb5) : _lightAccentPink;
-  Color get _accentYellow => _isDarkMode ? const Color(0xFFfee440) : _lightAccentYellow;
   Color get _textPrimary => _isDarkMode ? Colors.white : _lightTextPrimary;
   Color get _textSecondary => _isDarkMode ? Colors.white.withOpacity(0.7) : _lightTextSecondary;
 

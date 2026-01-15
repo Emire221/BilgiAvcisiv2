@@ -935,62 +935,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
     );
   }
 
-  Widget _buildTemperatureIcon(Temperature temp) {
-    IconData icon;
-    Color color;
 
-    switch (temp) {
-      case Temperature.freezing:
-        icon = FontAwesomeIcons.snowflake;
-        color = const Color(0xFF4FC3F7);
-      case Temperature.cold:
-        icon = FontAwesomeIcons.temperatureLow;
-        color = const Color(0xFF29B6F6);
-      case Temperature.cool:
-        icon = FontAwesomeIcons.wind;
-        color = const Color(0xFF26C6DA);
-      case Temperature.warm:
-        icon = FontAwesomeIcons.temperatureHalf;
-        color = const Color(0xFFFFCA28);
-      case Temperature.hot:
-        icon = FontAwesomeIcons.temperatureHigh;
-        color = const Color(0xFFFF7043);
-      case Temperature.boiling:
-        icon = FontAwesomeIcons.fire;
-        color = const Color(0xFFFF5722);
-      case Temperature.correct:
-        icon = FontAwesomeIcons.check;
-        color = const Color(0xFF66BB6A);
-    }
-
-    return Container(
-          key: ValueKey(temp),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                color.withValues(alpha: 0.3),
-                color.withValues(alpha: 0.1),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.4),
-                blurRadius: 25,
-                spreadRadius: 5,
-              ),
-            ],
-          ),
-          child: Icon(icon, color: color, size: 48),
-        )
-        .animate(onPlay: (c) => c.repeat(reverse: true))
-        .scale(
-          begin: const Offset(1, 1),
-          end: const Offset(1.1, 1.1),
-          duration: 800.ms,
-        );
-  }
 
   Widget _buildInputSection(GuessState state) {
     return Column(

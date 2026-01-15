@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/database_helper.dart';
 import '../services/time_tracking_service.dart';
@@ -19,7 +19,6 @@ class TimeAnalyticsScreen extends StatefulWidget {
 class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
     with TickerProviderStateMixin {
   List<Map<String, dynamic>> _weekData = [];
-  bool _isLoading = true;
   bool _isLoading = true;
   late AnimationController _animController;
   StreamSubscription<int>? _timeSubscription;
@@ -421,9 +420,6 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
     ];
     
     final message = messages[DateTime.now().weekday % messages.length];
-
-    // Haftalık vurgu içeren metin
-    final motivationText = 'Bu hafta $timeText çalışarak harika bir iş çıkardın!';
 
     return Container(
       padding: const EdgeInsets.all(16),
