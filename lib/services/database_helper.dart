@@ -21,25 +21,11 @@ class DatabaseHelper implements IDatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
 
-  /// Aktif kullanıcı ID'si - tüm sorgularda kullanılacak
-  String? _activeUserId;
-
   factory DatabaseHelper() {
     return _instance;
   }
 
   DatabaseHelper._internal();
-
-  /// Aktif kullanıcıyı ayarla (giriş yapıldığında çağrılmalı)
-  void setActiveUser(String userId) {
-    _activeUserId = userId;
-  }
-
-  /// Aktif kullanıcı ID'sini getir
-  String get activeUserId => _activeUserId ?? '';
-
-  /// Aktif kullanıcı ayarlanmış mı?
-  bool get hasActiveUser => _activeUserId != null && _activeUserId!.isNotEmpty;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -51,73 +37,62 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 19, // Versiyon 19 - userId eklendi
+      version: 18,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
-
   Future<void> _onCreate(Database db, int version) async {
-    // Dersler Tablosu - userId ile
+    // Dersler Tablosu
     await db.execute('''
       CREATE TABLE Dersler(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        dersID TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        dersID TEXT PRIMARY KEY,
         dersAdi TEXT,
         ikon TEXT,
-        renk TEXT,
-        UNIQUE(dersID, userId)
+        renk TEXT
       )
     ''');
 
-    // Konular Tablosu - userId ile
+    // Konular Tablosu
     await db.execute('''
       CREATE TABLE Konular(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        konuID TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        konuID TEXT PRIMARY KEY,
         dersID TEXT,
         konuAdi TEXT,
         sira INTEGER,
-        UNIQUE(konuID, userId)
+        FOREIGN KEY(dersID) REFERENCES Dersler(dersID)
       )
     ''');
 
-    // Testler Tablosu - userId ile
+    // Testler Tablosu
     await db.execute('''
       CREATE TABLE Testler(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        testID TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        testID TEXT PRIMARY KEY,
         konuID TEXT,
         testAdi TEXT,
         zorluk INTEGER,
         cozumVideoURL TEXT,
-        sorular TEXT,
-        UNIQUE(testID, userId)
+        sorular TEXT, -- JSON String olarak saklanacak
+        FOREIGN KEY(konuID) REFERENCES Konular(konuID)
       )
     ''');
 
-    // Bilgi Kartları Tablosu - userId ile
+    // Bilgi Kartları Tablosu
     await db.execute('''
       CREATE TABLE BilgiKartlari(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        kartSetID TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        kartSetID TEXT PRIMARY KEY,
         konuID TEXT,
         kartAdi TEXT,
-        kartlar TEXT,
-        UNIQUE(kartSetID, userId)
+        kartlar TEXT, -- JSON String olarak saklanacak
+        FOREIGN KEY(konuID) REFERENCES Konular(konuID)
       )
     ''');
 
-    // Bildirimler Tablosu - userId ile
+    // Bildirimler Tablosu
     await db.execute('''
       CREATE TABLE Notifications(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
         title TEXT,
         body TEXT,
         date TEXT,
@@ -125,64 +100,56 @@ class DatabaseHelper implements IDatabaseHelper {
       )
     ''');
 
-    // Deneme Sınavları Tablosu - userId ile
+    // Deneme Sınavları Tablosu
     await db.execute('''
       CREATE TABLE TrialExams(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        examId TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        id TEXT PRIMARY KEY,
         title TEXT,
         startDate TEXT,
         endDate TEXT,
         duration INTEGER,
-        contentJson TEXT,
-        UNIQUE(examId, userId)
+        contentJson TEXT
       )
     ''');
 
-    // Deneme Sonuçları Tablosu (Ham Cevaplar) - userId zaten var
+    // Deneme Sonuçları Tablosu (Ham Cevaplar)
     await db.execute('''
       CREATE TABLE TrialResults(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         examId TEXT,
-        userId TEXT NOT NULL,
+        userId TEXT,
         rawAnswers TEXT,
         score INTEGER,
-        completedAt TEXT
+        completedAt TEXT,
+        FOREIGN KEY(examId) REFERENCES TrialExams(id)
       )
     ''');
 
-    // Kullanıcı Maskotları Tablosu - userId ile
+    // Kullanıcı Maskotları Tablosu
     await db.execute('''
       CREATE TABLE UserPets(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
         petType TEXT NOT NULL,
         petName TEXT NOT NULL,
         currentXp INTEGER DEFAULT 0,
         level INTEGER DEFAULT 1,
         mood INTEGER DEFAULT 100,
-        createdAt TEXT DEFAULT (datetime('now')),
-        UNIQUE(userId)
+        createdAt TEXT DEFAULT (datetime('now'))
       )
     ''');
 
-    // İndirilen Dosyalar Tablosu - userId ile
+    // İndirilen Dosyalar Tablosu
     await db.execute('''
       CREATE TABLE DownloadedFiles(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        path TEXT NOT NULL,
-        userId TEXT NOT NULL,
-        date TEXT,
-        UNIQUE(path, userId)
+        path TEXT PRIMARY KEY,
+        date TEXT
       )
     ''');
 
-    // Test Sonuçları Tablosu - userId ile
+    // Test Sonuçları Tablosu
     await db.execute('''
       CREATE TABLE TestResults(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
         testId TEXT,
         score INTEGER,
         correct INTEGER,
@@ -191,26 +158,22 @@ class DatabaseHelper implements IDatabaseHelper {
       )
     ''');
 
-    // Fill Blanks Levels Tablosu - userId ile
+    // Fill Blanks Levels Tablosu
     await db.execute('''
       CREATE TABLE FillBlanksLevels(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        levelID TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        levelID TEXT PRIMARY KEY,
         title TEXT,
         description TEXT,
         difficulty INTEGER,
         category TEXT,
-        questions TEXT,
-        UNIQUE(levelID, userId)
+        questions TEXT
       )
     ''');
 
-    // Game Results Tablosu (Tüm oyun sonuçları için) - userId ile
+    // Game Results Tablosu (Tüm oyun sonuçları için)
     await db.execute('''
       CREATE TABLE GameResults(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
         gameType TEXT NOT NULL,
         score INTEGER,
         correctCount INTEGER,
@@ -222,12 +185,10 @@ class DatabaseHelper implements IDatabaseHelper {
       )
     ''');
 
-    // Haftalık Sınavlar Tablosu (İndirilen sınav verileri) - userId ile
+    // Haftalık Sınavlar Tablosu (İndirilen sınav verileri)
     await db.execute('''
       CREATE TABLE WeeklyExams(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        weeklyExamId TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        weeklyExamId TEXT PRIMARY KEY,
         title TEXT,
         weekStart TEXT,
         duration INTEGER,
@@ -236,16 +197,14 @@ class DatabaseHelper implements IDatabaseHelper {
         turkeyAverages TEXT,
         city INTEGER,
         district INTEGER,
-        questions TEXT,
-        UNIQUE(weeklyExamId, userId)
+        questions TEXT
       )
     ''');
 
-    // Haftalık Sınav Sonuçları Tablosu - userId ile
+    // Haftalık Sınav Sonuçları Tablosu
     await db.execute('''
       CREATE TABLE WeeklyExamResults(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
         examId TEXT NOT NULL,
         odaId TEXT NOT NULL,
         odaIsmi TEXT,
@@ -272,52 +231,43 @@ class DatabaseHelper implements IDatabaseHelper {
       )
     ''');
 
-    // Salla Bakalım (Guess) Tablosu - userId ile
+    // Salla Bakalım (Guess) Tablosu
     await db.execute('''
       CREATE TABLE GuessLevels(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        levelID TEXT NOT NULL,
-        userId TEXT NOT NULL,
+        levelID TEXT PRIMARY KEY,
         title TEXT,
         description TEXT,
         difficulty INTEGER,
-        questions TEXT,
-        UNIQUE(levelID, userId)
+        questions TEXT
       )
     ''');
 
-    // Görüntülenen Bilgi Kartı Setleri Tablosu (badge takibi için) - userId ile
+    // Görüntülenen Bilgi Kartı Setleri Tablosu (badge takibi için)
     await db.execute('''
       CREATE TABLE ViewedFlashcardSets(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
-        kartSetID TEXT NOT NULL,
+        kartSetID TEXT NOT NULL UNIQUE,
         topicID TEXT NOT NULL,
-        viewedAt TEXT,
-        UNIQUE(kartSetID, userId)
+        viewedAt TEXT
       )
     ''');
 
-    // Düello Görülen İçerik Tablosu - userId ile
+    // Düello Görülen İçerik Tablosu (aynı içeriğin tekrar gösterilmemesi için)
     await db.execute('''
       CREATE TABLE SeenDuelContent(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
         contentType TEXT NOT NULL,
         contentId TEXT NOT NULL,
         seenAt TEXT NOT NULL,
-        UNIQUE(contentType, contentId, userId)
+        UNIQUE(contentType, contentId)
       )
     ''');
 
-    // Günlük Uygulama Kullanım Süresi Tablosu - userId ile
+    // Günlük Uygulama Kullanım Süresi Tablosu
     await db.execute('''
       CREATE TABLE DailyTimeTracking(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
-        date TEXT NOT NULL,
-        durationSeconds INTEGER NOT NULL DEFAULT 0,
-        UNIQUE(date, userId)
+        date TEXT PRIMARY KEY,
+        durationSeconds INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -606,99 +556,54 @@ class DatabaseHelper implements IDatabaseHelper {
         // Kolon zaten mevcutsa hata alınır, görmezden gel
       }
     }
-
-    // Versiyon 19: Tüm tablolara userId kolonu ekleme (Kullanıcı Bazlı İzolasyon)
-    if (oldVersion < 19) {
-      // Tüm tablolara userId kolonu ekle
-      final tablesNeedingUserId = [
-        'Dersler',
-        'Konular',
-        'Testler',
-        'BilgiKartlari',
-        'Notifications',
-        'UserPets',
-        'DownloadedFiles',
-        'TestResults',
-        'FillBlanksLevels',
-        'GameResults',
-        'WeeklyExams',
-        'WeeklyExamResults',
-        'GuessLevels',
-        'ViewedFlashcardSets',
-        'SeenDuelContent',
-        'DailyTimeTracking',
-        'TrialExams',
-      ];
-
-      for (final table in tablesNeedingUserId) {
-        try {
-          await db.execute('ALTER TABLE $table ADD COLUMN userId TEXT');
-        } catch (e) {
-          // Kolon zaten varsa veya tablo yoksa ignore
-        }
-      }
-
-      // TrialResults tablosunda userId zaten var, sadece NOT NULL kontrolü
-      // Mevcut verilerde userId = NULL olanlar eski kullanıcının verileri olacak
-    }
   }
 
-  // Ekleme Metotları - Tüm metodlara userId otomatik ekleniyor
+  // Ekleme Metotları
   @override
   Future<void> insertDers(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'Dersler',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   @override
   Future<void> insertKonu(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'Konular',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   @override
   Future<void> insertTest(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'Testler',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   Future<void> insertBilgiKart(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'BilgiKartlari',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   // Test için alias metod
   Future<int> insertFlashcard(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     return await db.insert(
       'BilgiKartlari',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -712,24 +617,20 @@ class DatabaseHelper implements IDatabaseHelper {
   // Haftalık Sınav ekleme metodu
   @override
   Future<void> insertWeeklyExam(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'WeeklyExams',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // Haftalık Sınav getirme metodu - userId filtresi ile
+  // Haftalık Sınav getirme metodu
   @override
   Future<Map<String, dynamic>?> getLatestWeeklyExam() async {
     Database db = await database;
     final results = await db.query(
       'WeeklyExams',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
       orderBy: 'weekStart DESC',
       limit: 1,
     );
@@ -747,35 +648,24 @@ class DatabaseHelper implements IDatabaseHelper {
     // Yeni davranış: Hiçbir şey silinmiyor
   }
 
-  // Bildirimler için CRUD Metotları - userId filtresi ile
+  // Bildirimler için CRUD Metotları
   Future<int> insertNotification(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     return await db.insert(
       'Notifications',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   Future<List<Map<String, dynamic>>> getNotifications() async {
     Database db = await database;
-    return await db.query(
-      'Notifications',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-      orderBy: 'date DESC',
-    );
+    return await db.query('Notifications', orderBy: 'date DESC');
   }
 
   Future<int> deleteNotification(int id) async {
     Database db = await database;
-    return await db.delete(
-      'Notifications',
-      where: 'id = ? AND userId = ?',
-      whereArgs: [id, activeUserId],
-    );
+    return await db.delete('Notifications', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> markNotificationAsRead(int id) async {
@@ -783,8 +673,8 @@ class DatabaseHelper implements IDatabaseHelper {
     await db.update(
       'Notifications',
       {'isRead': 1},
-      where: 'id = ? AND userId = ?',
-      whereArgs: [id, activeUserId],
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
@@ -792,26 +682,25 @@ class DatabaseHelper implements IDatabaseHelper {
     Database db = await database;
     return Sqflite.firstIntValue(
           await db.rawQuery(
-            'SELECT COUNT(*) FROM Notifications WHERE isRead = 0 AND userId = ?',
-            [activeUserId],
+            'SELECT COUNT(*) FROM Notifications WHERE isRead = 0',
           ),
         ) ??
         0;
   }
 
-  // Temizleme Metodu (Yeni sınıf indirildiğinde eskileri silmek için) - sadece aktif kullanıcının verilerini siler
+  // Temizleme Metodu (Yeni sınıf indirildiğinde eskileri silmek için)
   @override
   Future<void> clearAllData() async {
     Database db = await database;
     await db.transaction((txn) async {
-      await txn.delete('Dersler', where: 'userId = ?', whereArgs: [activeUserId]);
-      await txn.delete('Konular', where: 'userId = ?', whereArgs: [activeUserId]);
-      await txn.delete('Testler', where: 'userId = ?', whereArgs: [activeUserId]);
-      await txn.delete('BilgiKartlari', where: 'userId = ?', whereArgs: [activeUserId]);
+      await txn.delete('Dersler');
+      await txn.delete('Konular');
+      await txn.delete('Testler');
+      await txn.delete('BilgiKartlari');
     });
   }
 
-  // Toplu Ekleme Metodu (Batch Insert) - userId otomatik eklenir
+  // Toplu Ekleme Metodu (Batch Insert)
   @override
   Future<void> batchInsert(
     String table,
@@ -822,22 +711,16 @@ class DatabaseHelper implements IDatabaseHelper {
     Batch batch = db.batch();
 
     for (var row in rows) {
-      final rowWithUser = Map<String, dynamic>.from(row);
-      rowWithUser['userId'] = activeUserId;
-      batch.insert(table, rowWithUser, conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
     await batch.commit(noResult: true);
   }
 
-  // İndirilen Dosyalar Metotları - userId filtresi ile
+  // İndirilen Dosyalar Metotları
   Future<List<String>> getDownloadedFiles() async {
     Database db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'DownloadedFiles',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-    );
+    final List<Map<String, dynamic>> maps = await db.query('DownloadedFiles');
     return List.generate(maps.length, (i) {
       return maps[i]['path'] as String;
     });
@@ -848,12 +731,11 @@ class DatabaseHelper implements IDatabaseHelper {
     Database db = await database;
     await db.insert('DownloadedFiles', {
       'path': path,
-      'userId': activeUserId,
       'date': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Test Sonuçları Metotları - userId otomatik eklenir
+  // Test Sonuçları Metotları
   Future<void> saveTestResult(
     String testId,
     int score,
@@ -862,7 +744,6 @@ class DatabaseHelper implements IDatabaseHelper {
   ) async {
     Database db = await database;
     await db.insert('TestResults', {
-      'userId': activeUserId,
       'testId': testId,
       'score': score,
       'correct': correct,
@@ -871,30 +752,23 @@ class DatabaseHelper implements IDatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Fill Blanks Levels Metotları - userId ile
+  // Fill Blanks Levels  Metotları
   @override
   Future<void> insertFillBlanksLevel(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'FillBlanksLevels',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   Future<List<Map<String, dynamic>>> getFillBlanksLevels() async {
     Database db = await database;
-    return await db.query(
-      'FillBlanksLevels',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-      orderBy: 'difficulty ASC',
-    );
+    return await db.query('FillBlanksLevels', orderBy: 'difficulty ASC');
   }
 
-  // Game Results Metotları - userId ile
+  // Game Results Metotları
   Future<void> saveGameResult({
     required String gameType,
     required int score,
@@ -908,7 +782,6 @@ class DatabaseHelper implements IDatabaseHelper {
 
     // Önce yeni sonucu kaydet
     await db.insert('GameResults', {
-      'userId': activeUserId,
       'gameType': gameType,
       'score': score,
       'correctCount': correctCount,
@@ -919,15 +792,14 @@ class DatabaseHelper implements IDatabaseHelper {
       'key': key,
     });
 
-    // Sonra eski kayıtları temizle (son 50'yi koru) - kullanıcı bazlı
+    // Sonra eski kayıtları temizle (son 50'yi koru)
     await _cleanOldGameResults(db);
   }
 
   Future<void> _cleanOldGameResults(Database db) async {
-    // Aktif kullanıcı için toplam kayıt sayısını al
+    // Toplam kayıt sayısını al
     final countResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM GameResults WHERE userId = ?',
-      [activeUserId],
+      'SELECT COUNT(*) as count FROM GameResults',
     );
     final count = Sqflite.firstIntValue(countResult) ?? 0;
 
@@ -939,17 +811,16 @@ class DatabaseHelper implements IDatabaseHelper {
         DELETE FROM GameResults 
         WHERE id IN (
           SELECT id FROM GameResults 
-          WHERE userId = ?
           ORDER BY completedAt ASC 
           LIMIT ?
         )
       ''',
-        [activeUserId, deleteCount],
+        [deleteCount],
       );
     }
   }
 
-  /// Salla Bakalım sonuçlarını kaydet (son 10 oyun tutulur) - userId ile
+  /// Salla Bakalım sonuçlarını kaydet (son 10 oyun tutulur)
   Future<void> saveGuessResult({
     required int score,
     required int correctCount,
@@ -962,7 +833,6 @@ class DatabaseHelper implements IDatabaseHelper {
 
     // Yeni sonucu kaydet
     await db.insert('GameResults', {
-      'userId': activeUserId,
       'gameType': 'guess',
       'score': score,
       'correctCount': correctCount,
@@ -973,15 +843,14 @@ class DatabaseHelper implements IDatabaseHelper {
           '{"levelTitle": "$levelTitle", "difficulty": $difficulty, "totalAttempts": $totalAttempts}',
     });
 
-    // Salla Bakalım için son 10 kaydı tut, eskilerini sil - kullanıcı bazlı
+    // Salla Bakalım için son 10 kaydı tut, eskilerini sil
     await _cleanOldGuessResults(db);
   }
 
   Future<void> _cleanOldGuessResults(Database db) async {
-    // Aktif kullanıcı için Salla Bakalım kayıt sayısını al
+    // Salla Bakalım kayıt sayısını al
     final countResult = await db.rawQuery(
-      "SELECT COUNT(*) as count FROM GameResults WHERE gameType = 'guess' AND userId = ?",
-      [activeUserId],
+      "SELECT COUNT(*) as count FROM GameResults WHERE gameType = 'guess'",
     );
     final count = Sqflite.firstIntValue(countResult) ?? 0;
 
@@ -993,17 +862,16 @@ class DatabaseHelper implements IDatabaseHelper {
         DELETE FROM GameResults 
         WHERE id IN (
           SELECT id FROM GameResults 
-          WHERE gameType = 'guess' AND userId = ?
+          WHERE gameType = 'guess'
           ORDER BY completedAt ASC 
           LIMIT ?
         )
       ''',
-        [activeUserId, deleteCount],
+        [deleteCount],
       );
     }
   }
 
-  // Game Results için userId filtreli sorgu
   Future<List<Map<String, dynamic>>> getGameResults(String gameType) async {
     Database db = await database;
 
@@ -1012,11 +880,11 @@ class DatabaseHelper implements IDatabaseHelper {
       // GameResults tablosunda 'testId' sütunu var mı? Hayır, 'key' sütunu var.
       // GameResults tablosu: id, gameType, score, correct, wrong, completedAt, key (testId olabilir)
 
-      // Önce tüm sonuçları al - userId filtresi ile
+      // Önce tüm sonuçları al
       final results = await db.query(
         'GameResults',
-        where: 'gameType = ? AND userId = ?',
-        whereArgs: [gameType, activeUserId],
+        where: 'gameType = ?',
+        whereArgs: [gameType],
         orderBy: 'completedAt DESC',
       );
 
@@ -1027,16 +895,16 @@ class DatabaseHelper implements IDatabaseHelper {
         final testId = result['key'] as String?;
 
         if (testId != null && testId.isNotEmpty) {
-          // Bu testin konusunu ve dersini bul - userId filtresi ile
+          // Bu testin konusunu ve dersini bul
           final testData = await db.rawQuery(
             '''
             SELECT T.testAdi, K.konuAdi, D.dersAdi 
             FROM Testler T
-            JOIN Konular K ON T.konuID = K.konuID AND K.userId = T.userId
-            JOIN Dersler D ON K.dersID = D.dersID AND D.userId = K.userId
-            WHERE T.testID = ? AND T.userId = ?
+            JOIN Konular K ON T.konuID = K.konuID
+            JOIN Dersler D ON K.dersID = D.dersID
+            WHERE T.testID = ?
           ''',
-            [testId, activeUserId],
+            [testId],
           );
 
           if (testData.isNotEmpty) {
@@ -1049,11 +917,11 @@ class DatabaseHelper implements IDatabaseHelper {
       }
       return enrichedResults;
     } else if (gameType == 'flashcard') {
-      // Flashcard için detaylı sorgu (Ders ve Konu adlarını da getir) - userId filtresi ile
+      // Flashcard için detaylı sorgu (Ders ve Konu adlarını da getir)
       final results = await db.query(
         'GameResults',
-        where: 'gameType = ? AND userId = ?',
-        whereArgs: [gameType, activeUserId],
+        where: 'gameType = ?',
+        whereArgs: [gameType],
         orderBy: 'completedAt DESC',
       );
 
@@ -1064,15 +932,15 @@ class DatabaseHelper implements IDatabaseHelper {
         final topicId = result['key'] as String?;
 
         if (topicId != null && topicId.isNotEmpty) {
-          // Bu konuyu ve dersini bul - userId filtresi ile
+          // Bu konuyu ve dersini bul
           final topicData = await db.rawQuery(
             '''
             SELECT K.konuAdi, D.dersAdi 
             FROM Konular K
-            JOIN Dersler D ON K.dersID = D.dersID AND D.userId = K.userId
-            WHERE K.konuID = ? AND K.userId = ?
+            JOIN Dersler D ON K.dersID = D.dersID
+            WHERE K.konuID = ?
           ''',
-            [topicId, activeUserId],
+            [topicId],
           );
 
           if (topicData.isNotEmpty) {
@@ -1086,8 +954,8 @@ class DatabaseHelper implements IDatabaseHelper {
     } else {
       return await db.query(
         'GameResults',
-        where: 'gameType = ? AND userId = ?',
-        whereArgs: [gameType, activeUserId],
+        where: 'gameType = ?',
+        whereArgs: [gameType],
         orderBy: 'completedAt DESC',
       );
     }
@@ -1095,12 +963,7 @@ class DatabaseHelper implements IDatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getAllGameResults() async {
     Database db = await database;
-    return await db.query(
-      'GameResults',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-      orderBy: 'completedAt DESC',
-    );
+    return await db.query('GameResults', orderBy: 'completedAt DESC');
   }
 
   /// Haftalık sınav sonuçlarını getir
@@ -1113,14 +976,19 @@ class DatabaseHelper implements IDatabaseHelper {
     Database db = await database;
     List<Map<String, dynamic>> results;
 
-    // userId parametresi verilirse onu, verilmezse aktif kullanıcıyı kullan
-    final targetUserId = userId ?? activeUserId;
-    results = await db.query(
-      'WeeklyExamResults',
-      where: 'userId = ?',
-      whereArgs: [targetUserId],
-      orderBy: 'completedAt DESC',
-    );
+    if (userId != null) {
+      results = await db.query(
+        'WeeklyExamResults',
+        where: 'odaKatilimciId = ?',
+        whereArgs: [userId],
+        orderBy: 'completedAt DESC',
+      );
+    } else {
+      results = await db.query(
+        'WeeklyExamResults',
+        orderBy: 'completedAt DESC',
+      );
+    }
 
     // Sadece sonucu açıklanmış sınavları filtrele
     if (onlyAnnounced) {
@@ -1147,16 +1015,12 @@ class DatabaseHelper implements IDatabaseHelper {
   // ============================================================
 
   /// Ders bazlı başarı oranlarını hesapla
-  /// Her ders için çözülen testlerdeki doğru/toplam oranını döner - userId filtresi ile
+  /// Her ders için çözülen testlerdeki doğru/toplam oranını döner
   Future<List<Map<String, dynamic>>> getLessonSuccessRates() async {
     Database db = await database;
 
-    // Aktif kullanıcının derslerini al
-    final dersler = await db.query(
-      'Dersler',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-    );
+    // Dersleri al
+    final dersler = await db.query('Dersler');
 
     List<Map<String, dynamic>> result = [];
 
@@ -1164,22 +1028,22 @@ class DatabaseHelper implements IDatabaseHelper {
       final dersId = ders['dersID'] as String;
       final dersAdi = ders['dersAdi'] as String? ?? '';
 
-      // Bu derse ait konuları al - userId filtresi ile
+      // Bu derse ait konuları al
       final konular = await db.query(
         'Konular',
-        where: 'dersID = ? AND userId = ?',
-        whereArgs: [dersId, activeUserId],
+        where: 'dersID = ?',
+        whereArgs: [dersId],
       );
 
       if (konular.isEmpty) continue;
 
       final konuIds = konular.map((k) => k['konuID'] as String).toList();
 
-      // Bu konulara ait testleri al - userId filtresi ile
+      // Bu konulara ait testleri al
       final placeholders = List.filled(konuIds.length, '?').join(',');
       final testler = await db.rawQuery(
-        'SELECT testID FROM Testler WHERE konuID IN ($placeholders) AND userId = ?',
-        [...konuIds, activeUserId],
+        'SELECT testID FROM Testler WHERE konuID IN ($placeholders)',
+        konuIds,
       );
 
       if (testler.isEmpty) {
@@ -1196,10 +1060,10 @@ class DatabaseHelper implements IDatabaseHelper {
       final testIds = testler.map((t) => t['testID'] as String).toList();
       final testPlaceholders = List.filled(testIds.length, '?').join(',');
 
-      // Bu testlerden çözülenlerin sonuçlarını al - userId filtresi ile
+      // Bu testlerden çözülenlerin sonuçlarını al
       final sonuclar = await db.rawQuery(
-        'SELECT correct, wrong FROM TestResults WHERE testId IN ($testPlaceholders) AND userId = ?',
-        [...testIds, activeUserId],
+        'SELECT correct, wrong FROM TestResults WHERE testId IN ($testPlaceholders)',
+        testIds,
       );
 
       if (sonuclar.isEmpty) {
@@ -1240,15 +1104,15 @@ class DatabaseHelper implements IDatabaseHelper {
     return result;
   }
 
-  /// Seçilen derse ait konu başarı oranlarını hesapla - userId filtresi ile
+  /// Seçilen derse ait konu başarı oranlarını hesapla
   Future<List<Map<String, dynamic>>> getTopicSuccessRates(String dersId) async {
     Database db = await database;
 
-    // Derse ait konuları al - userId filtresi ile
+    // Derse ait konuları al
     final konular = await db.query(
       'Konular',
-      where: 'dersID = ? AND userId = ?',
-      whereArgs: [dersId, activeUserId],
+      where: 'dersID = ?',
+      whereArgs: [dersId],
       orderBy: 'sira ASC',
     );
 
@@ -1258,12 +1122,12 @@ class DatabaseHelper implements IDatabaseHelper {
       final konuId = konu['konuID'] as String;
       final konuAdi = konu['konuAdi'] as String? ?? '';
 
-      // Bu konuya ait testleri al - userId filtresi ile
+      // Bu konuya ait testleri al
       final testler = await db.query(
         'Testler',
         columns: ['testID'],
-        where: 'konuID = ? AND userId = ?',
-        whereArgs: [konuId, activeUserId],
+        where: 'konuID = ?',
+        whereArgs: [konuId],
       );
 
       if (testler.isEmpty) {
@@ -1279,10 +1143,10 @@ class DatabaseHelper implements IDatabaseHelper {
       final testIds = testler.map((t) => t['testID'] as String).toList();
       final placeholders = List.filled(testIds.length, '?').join(',');
 
-      // Bu testlerin sonuçlarını al - userId filtresi ile
+      // Bu testlerin sonuçlarını al
       final sonuclar = await db.rawQuery(
-        'SELECT correct, wrong FROM TestResults WHERE testId IN ($placeholders) AND userId = ?',
-        [...testIds, activeUserId],
+        'SELECT correct, wrong FROM TestResults WHERE testId IN ($placeholders)',
+        testIds,
       );
 
       if (sonuclar.isEmpty) {
@@ -1321,88 +1185,79 @@ class DatabaseHelper implements IDatabaseHelper {
     return result;
   }
 
-  /// Rastgele Fill Blanks level çeker - userId filtresi ile
+  /// Rastgele Fill Blanks level çeker
   /// Tüm veriyi belleğe almak yerine SQL RANDOM() kullanır
   Future<Map<String, dynamic>?> getRandomFillBlanksLevel() async {
     Database db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
-      'SELECT * FROM FillBlanksLevels WHERE userId = ? ORDER BY RANDOM() LIMIT 1',
-      [activeUserId],
+      'SELECT * FROM FillBlanksLevels ORDER BY RANDOM() LIMIT 1',
     );
     return results.isNotEmpty ? results.first : null;
   }
 
-  /// Belirlenen zorluk seviyesinden rastgele Fill Blanks level çeker - userId filtresi ile
+  /// Belirlenen zorluk seviyesinden rastgele Fill Blanks level çeker
   /// @param difficulty: 1-3 arası zorluk seviyesi
   Future<Map<String, dynamic>?> getRandomFillBlanksByDifficulty(
     int difficulty,
   ) async {
     Database db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
-      'SELECT * FROM FillBlanksLevels WHERE difficulty = ? AND userId = ? ORDER BY RANDOM() LIMIT 1',
-      [difficulty, activeUserId],
+      'SELECT * FROM FillBlanksLevels WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
+      [difficulty],
     );
     return results.isNotEmpty ? results.first : null;
   }
 
   // ============================================================
-  // Salla Bakalım (Guess) Metodları - userId ile
+  // Salla Bakalım (Guess) Metodları
   // ============================================================
 
-  /// Guess Level ekleme - userId ile
+  /// Guess Level ekleme
   @override
   Future<void> insertGuessLevel(Map<String, dynamic> row) async {
-    final rowWithUser = Map<String, dynamic>.from(row);
-    rowWithUser['userId'] = activeUserId;
     Database db = await database;
     await db.insert(
       'GuessLevels',
-      rowWithUser,
+      row,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  /// Tüm Guess seviyelerini getir - userId filtresi ile
+  /// Tüm Guess seviyelerini getir
   Future<List<Map<String, dynamic>>> getGuessLevels() async {
     Database db = await database;
-    return await db.query(
-      'GuessLevels',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-      orderBy: 'difficulty ASC, title ASC',
-    );
+    return await db.query('GuessLevels', orderBy: 'difficulty ASC, title ASC');
   }
 
-  /// Belirli bir Guess seviyesini getir - userId filtresi ile
+  /// Belirli bir Guess seviyesini getir
   Future<Map<String, dynamic>?> getGuessLevel(String levelId) async {
     Database db = await database;
     final results = await db.query(
       'GuessLevels',
-      where: 'levelID = ? AND userId = ?',
-      whereArgs: [levelId, activeUserId],
+      where: 'levelID = ?',
+      whereArgs: [levelId],
       limit: 1,
     );
     return results.isNotEmpty ? results.first : null;
   }
 
-  /// Rastgele Guess seviyesi getir - userId filtresi ile
+  /// Rastgele Guess seviyesi getir
   Future<Map<String, dynamic>?> getRandomGuessLevel() async {
     Database db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
-      'SELECT * FROM GuessLevels WHERE userId = ? ORDER BY RANDOM() LIMIT 1',
-      [activeUserId],
+      'SELECT * FROM GuessLevels ORDER BY RANDOM() LIMIT 1',
     );
     return results.isNotEmpty ? results.first : null;
   }
 
-  /// Belirli zorluk seviyesinden rastgele Guess level çeker - userId filtresi ile
+  /// Belirli zorluk seviyesinden rastgele Guess level çeker
   Future<Map<String, dynamic>?> getRandomGuessByDifficulty(
     int difficulty,
   ) async {
     Database db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
-      'SELECT * FROM GuessLevels WHERE difficulty = ? AND userId = ? ORDER BY RANDOM() LIMIT 1',
-      [difficulty, activeUserId],
+      'SELECT * FROM GuessLevels WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
+      [difficulty],
     );
     return results.isNotEmpty ? results.first : null;
   }
@@ -1411,16 +1266,10 @@ class DatabaseHelper implements IDatabaseHelper {
   // Maskot Metodları
   // ============================================================
 
-  /// Aktif maskotu getir (bildirimler için mascot ismi) - userId filtresi ile
+  /// Aktif maskotu getir (bildirimler için mascot ismi)
   Future<Map<String, dynamic>?> getActiveMascot() async {
     Database db = await database;
-    final results = await db.query(
-      'UserPets',
-      where: 'userId = ?',
-      whereArgs: [activeUserId],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
+    final results = await db.query('UserPets', orderBy: 'id DESC', limit: 1);
     return results.isNotEmpty ? results.first : null;
   }
 
@@ -1428,25 +1277,25 @@ class DatabaseHelper implements IDatabaseHelper {
   // İlerleme Takip Metodları (Progress Service için)
   // ============================================================
 
-  /// Konu için toplam test sayısı - userId filtresi ile
+  /// Konu için toplam test sayısı
   Future<int> getTestCountByTopic(String topicId) async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM Testler WHERE konuID = ? AND userId = ?',
-      [topicId, activeUserId],
+      'SELECT COUNT(*) as count FROM Testler WHERE konuID = ?',
+      [topicId],
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Konu için çözülmüş test sayısı (TestResults tablosundan) - userId filtresi ile
+  /// Konu için çözülmüş test sayısı (TestResults tablosundan)
   Future<int> getSolvedTestCountByTopic(String topicId) async {
     Database db = await database;
-    // Önce bu konuya ait test ID'lerini al - userId filtresi ile
+    // Önce bu konuya ait test ID'lerini al
     final tests = await db.query(
       'Testler',
       columns: ['testID'],
-      where: 'konuID = ? AND userId = ?',
-      whereArgs: [topicId, activeUserId],
+      where: 'konuID = ?',
+      whereArgs: [topicId],
     );
 
     if (tests.isEmpty) return 0;
@@ -1455,25 +1304,25 @@ class DatabaseHelper implements IDatabaseHelper {
     final testIds = tests.map((t) => t['testID'] as String).toList();
     final placeholders = List.filled(testIds.length, '?').join(',');
 
-    // Bu testlerden kaç tanesi çözülmüş - userId filtresi ile
+    // Bu testlerden kaç tanesi çözülmüş
     final result = await db.rawQuery(
-      'SELECT COUNT(DISTINCT testId) as count FROM TestResults WHERE testId IN ($placeholders) AND userId = ?',
-      [...testIds, activeUserId],
+      'SELECT COUNT(DISTINCT testId) as count FROM TestResults WHERE testId IN ($placeholders)',
+      testIds,
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Konu için toplam flashcard set sayısı - userId filtresi ile
+  /// Konu için toplam flashcard set sayısı
   Future<int> getFlashcardSetCountByTopic(String topicId) async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM BilgiKartlari WHERE konuID = ? AND userId = ?',
-      [topicId, activeUserId],
+      'SELECT COUNT(*) as count FROM BilgiKartlari WHERE konuID = ?',
+      [topicId],
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Oyun tipi için toplam level sayısı - userId filtresi ile
+  /// Oyun tipi için toplam level sayısı
   Future<int> getTotalLevelCount(String gameType) async {
     Database db = await database;
     String table;
@@ -1487,113 +1336,106 @@ class DatabaseHelper implements IDatabaseHelper {
       default:
         return 0;
     }
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM $table WHERE userId = ?',
-      [activeUserId],
-    );
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM $table');
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Oyun tipi için tamamlanan level sayısı (GameResults'tan benzersiz details) - userId filtresi ile
+  /// Oyun tipi için tamamlanan level sayısı (GameResults'tan benzersiz details)
   Future<int> getCompletedLevelCount(String gameType) async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(DISTINCT details) as count FROM GameResults WHERE gameType = ? AND details IS NOT NULL AND userId = ?',
-      [gameType, activeUserId],
+      'SELECT COUNT(DISTINCT details) as count FROM GameResults WHERE gameType = ? AND details IS NOT NULL',
+      [gameType],
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // Flashcard Görüntüleme Takibi - userId ile
+  // Flashcard Görüntüleme Takibi
   // ════════════════════════════════════════════════════════════════════════════
 
-  /// Görüntülenen flashcard setini kaydet - userId ile
+  /// Görüntülenen flashcard setini kaydet
   Future<void> saveViewedFlashcardSet(String kartSetID, String topicID) async {
     Database db = await database;
     await db.insert('ViewedFlashcardSets', {
-      'userId': activeUserId,
       'kartSetID': kartSetID,
       'topicID': topicID,
       'viewedAt': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// Konu için görüntülenen flashcard set sayısı - userId filtresi ile
+  /// Konu için görüntülenen flashcard set sayısı
   Future<int> getViewedFlashcardSetCount(String topicId) async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM ViewedFlashcardSets WHERE topicID = ? AND userId = ?',
-      [topicId, activeUserId],
+      'SELECT COUNT(*) as count FROM ViewedFlashcardSets WHERE topicID = ?',
+      [topicId],
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Derse ait tüm konu ID'lerini döner - userId filtresi ile
+  /// Derse ait tüm konu ID'lerini döner
   Future<List<String>> getTopicIdsByLesson(String lessonId) async {
     Database db = await database;
     final result = await db.query(
       'Konular',
       columns: ['konuID'],
-      where: 'dersID = ? AND userId = ?',
-      whereArgs: [lessonId, activeUserId],
+      where: 'dersID = ?',
+      whereArgs: [lessonId],
     );
     return result.map((row) => row['konuID'] as String).toList();
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // Tekil Öğe Tamamlanma Kontrolü (YENİ badge için) - userId ile
+  // Tekil Öğe Tamamlanma Kontrolü (YENİ badge için)
   // ════════════════════════════════════════════════════════════════════════════
 
-  /// Belirli bir test çözülmüş mü? - userId filtresi ile
+  /// Belirli bir test çözülmüş mü?
   Future<bool> isTestSolved(String testId) async {
     Database db = await database;
     final result = await db.query(
       'TestResults',
-      where: 'testId = ? AND userId = ?',
-      whereArgs: [testId, activeUserId],
+      where: 'testId = ?',
+      whereArgs: [testId],
       limit: 1,
     );
     return result.isNotEmpty;
   }
 
-  /// Belirli bir flashcard seti görüntülenmiş mi? - userId filtresi ile
+  /// Belirli bir flashcard seti görüntülenmiş mi?
   Future<bool> isFlashcardSetViewed(String kartSetID) async {
     Database db = await database;
     final result = await db.query(
       'ViewedFlashcardSets',
-      where: 'kartSetID = ? AND userId = ?',
-      whereArgs: [kartSetID, activeUserId],
+      where: 'kartSetID = ?',
+      whereArgs: [kartSetID],
       limit: 1,
     );
     return result.isNotEmpty;
   }
 
-  /// Belirli bir oyun level'ı tamamlanmış mı? - userId filtresi ile
+  /// Belirli bir oyun level'ı tamamlanmış mı?
   /// [gameType] - 'fill_blanks' veya 'guess'
   /// [levelTitle] - Level başlığı (details alanında aranacak)
   Future<bool> isLevelCompleted(String gameType, String levelTitle) async {
     Database db = await database;
     final result = await db.query(
       'GameResults',
-      where: 'gameType = ? AND details LIKE ? AND userId = ?',
-      whereArgs: [gameType, '%$levelTitle%', activeUserId],
+      where: 'gameType = ? AND details LIKE ?',
+      whereArgs: [gameType, '%$levelTitle%'],
       limit: 1,
     );
     return result.isNotEmpty;
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // Toplam İçerik Sayıları (Motivasyonel Progress Bar için) - userId ile
+  // Toplam İçerik Sayıları (Motivasyonel Progress Bar için)
   // ════════════════════════════════════════════════════════════════════════════
 
-  /// Uygulamadaki toplam test sayısı - userId filtresi ile
+  /// Uygulamadaki toplam test sayısı
   Future<int> getTotalTestCount() async {
     Database db = await database;
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM Testler WHERE userId = ?',
-      [activeUserId],
-    );
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM Testler');
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
@@ -1601,108 +1443,103 @@ class DatabaseHelper implements IDatabaseHelper {
   Future<int> getTotalSolvedTestCount() async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(DISTINCT testId) as count FROM TestResults WHERE userId = ?',
-      [activeUserId],
+      'SELECT COUNT(DISTINCT testId) as count FROM TestResults',
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Uygulamadaki toplam bilgi kartı seti sayısı - userId filtresi ile
+  /// Uygulamadaki toplam bilgi kartı seti sayısı
   Future<int> getTotalFlashcardSetCount() async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM BilgiKartlari WHERE userId = ?',
-      [activeUserId],
+      'SELECT COUNT(*) as count FROM BilgiKartlari',
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  /// Uygulamadaki toplam görüntülenen bilgi kartı seti sayısı - userId filtresi ile
+  /// Uygulamadaki toplam görüntülenen bilgi kartı seti sayısı
   Future<int> getTotalViewedFlashcardSetCount() async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM ViewedFlashcardSets WHERE userId = ?',
-      [activeUserId],
+      'SELECT COUNT(*) as count FROM ViewedFlashcardSets',
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // DÜELLO GÖRÜLEN İÇERİK TAKİBİ - userId ile
+  // DÜELLO GÖRÜLEN İÇERİK TAKİBİ
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// Düelloda gösterilen içeriği işaretle - userId ile
+  /// Düelloda gösterilen içeriği işaretle
   Future<void> markDuelContentAsSeen(
     String contentType,
     String contentId,
   ) async {
     Database db = await database;
     await db.insert('SeenDuelContent', {
-      'userId': activeUserId,
       'contentType': contentType,
       'contentId': contentId,
       'seenAt': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  /// Belirli türdeki görülen içerik ID'lerini getir - userId filtresi ile
+  /// Belirli türdeki görülen içerik ID'lerini getir
   Future<List<String>> getSeenDuelContentIds(String contentType) async {
     Database db = await database;
     final results = await db.query(
       'SeenDuelContent',
       columns: ['contentId'],
-      where: 'contentType = ? AND userId = ?',
-      whereArgs: [contentType, activeUserId],
+      where: 'contentType = ?',
+      whereArgs: [contentType],
     );
     return results.map((r) => r['contentId'] as String).toList();
   }
 
-  /// Belirli türdeki görülen içerikleri sıfırla - userId filtresi ile
+  /// Belirli türdeki görülen içerikleri sıfırla
   Future<void> resetSeenDuelContent(String contentType) async {
     Database db = await database;
     await db.delete(
       'SeenDuelContent',
-      where: 'contentType = ? AND userId = ?',
-      whereArgs: [contentType, activeUserId],
+      where: 'contentType = ?',
+      whereArgs: [contentType],
     );
   }
 
-  /// Tüm düello içeriklerinin görülüp görülmediğini kontrol et - userId filtresi ile
+  /// Tüm düello içeriklerinin görülüp görülmediğini kontrol et
   Future<bool> isAllDuelContentSeen(String contentType, int totalCount) async {
     Database db = await database;
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM SeenDuelContent WHERE contentType = ? AND userId = ?',
-      [contentType, activeUserId],
+      'SELECT COUNT(*) as count FROM SeenDuelContent WHERE contentType = ?',
+      [contentType],
     );
     final seenCount = Sqflite.firstIntValue(result) ?? 0;
     return seenCount >= totalCount;
   }
 
-  // ==================== SÜRE TAKİBİ METOTLARI - userId ile ====================
+  // ==================== SÜRE TAKİBİ METOTLARI ====================
 
-  /// Bugünün süresini kaydet veya güncelle (saniye cinsinden) - userId ile
+  /// Bugünün süresini kaydet veya güncelle (saniye cinsinden)
   Future<void> saveDailyTime(String date, int durationSeconds) async {
     Database db = await database;
     await db.insert('DailyTimeTracking', {
-      'userId': activeUserId,
       'date': date,
       'durationSeconds': durationSeconds,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// Belirli bir günün süresini getir (saniye cinsinden) - userId filtresi ile
+  /// Belirli bir günün süresini getir (saniye cinsinden)
   Future<int> getDailyTime(String date) async {
     Database db = await database;
     final result = await db.query(
       'DailyTimeTracking',
-      where: 'date = ? AND userId = ?',
-      whereArgs: [date, activeUserId],
+      where: 'date = ?',
+      whereArgs: [date],
     );
     if (result.isEmpty) return 0;
     return (result.first['durationSeconds'] as int?) ?? 0;
   }
 
-  /// Bu haftanın verilerini getir (Pazartesi-Pazar) - userId filtresi ile
+  /// Bu haftanın verilerini getir (Pazartesi-Pazar)
   Future<List<Map<String, dynamic>>> getWeeklyTimeData() async {
     final now = DateTime.now();
     // Haftanın Pazartesi gününü bul (weekday: 1 = Pazartesi)

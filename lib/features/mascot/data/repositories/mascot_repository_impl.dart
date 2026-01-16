@@ -13,8 +13,6 @@ class MascotRepositoryImpl implements MascotRepository {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'UserPets',
-      where: 'userId = ?',
-      whereArgs: [_dbHelper.activeUserId],
       limit: 1,
     );
 
@@ -26,7 +24,6 @@ class MascotRepositoryImpl implements MascotRepository {
   Future<void> createMascot(Mascot mascot) async {
     final db = await _dbHelper.database;
     final mascotMap = Map<String, dynamic>.from(mascot.toMap());
-    mascotMap['userId'] = _dbHelper.activeUserId;
     
     await db.insert(
       'UserPets',
@@ -41,8 +38,8 @@ class MascotRepositoryImpl implements MascotRepository {
     await db.update(
       'UserPets',
       mascot.toMap(),
-      where: 'id = ? AND userId = ?',
-      whereArgs: [mascot.id, _dbHelper.activeUserId],
+      where: 'id = ?',
+      whereArgs: [mascot.id],
     );
   }
 

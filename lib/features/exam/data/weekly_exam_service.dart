@@ -727,7 +727,6 @@ class WeeklyExamService {
 
       final db = await _dbHelper.database;
       await db.insert('WeeklyExamResults', {
-        'userId': user.uid,
         'examId': examId,
         'odaId': '${examId}_${examMonday.millisecondsSinceEpoch}',
         'odaIsmi': generateRoomName(examMonday),
