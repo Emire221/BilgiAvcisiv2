@@ -65,9 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
-      // 🔐 AKTİF KULLANICIYI AYARLA - Veritabanı sorguları için
-      final dbHelper = DatabaseHelper();
-      dbHelper.setActiveUser(user.uid);
+
 
       // 📌 DURUM 3: Profil var - kullanıcı değişikliği ve içerik kontrolü
       final prefsService = LocalPreferencesService();

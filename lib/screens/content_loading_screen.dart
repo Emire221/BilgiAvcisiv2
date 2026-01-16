@@ -188,9 +188,9 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
         throw Exception('Kullanıcı oturumu bulunamadı');
       }
 
-      // 🔐 AKTİF KULLANICIYI AYARLA - Veritabanı sorguları için
+
       final dbHelper = DatabaseHelper();
-      dbHelper.setActiveUser(user.uid);
+
 
       // 🧹 Önceki sync yarım kalmışsa bozuk verileri temizle (sadece bu kullanıcı için)
       final wasPreviousSyncComplete = await prefsService.isContentSyncCompleted();
