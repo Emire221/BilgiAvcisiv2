@@ -222,10 +222,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   const Spacer(flex: 2),
 
                   // 2. Astronaut Animation (Secondary element)
-                  // "sadece Astronot animasyonu"
                   SizedBox(
-                        height: screenHeight * 0.2, // Smaller than logo
-                        // ✅ Lottie optimize edildi
+                        height: screenHeight * 0.2, // Orijinal boyut
                         child: Lottie.asset(
                           'assets/animation/astronot_mascot.json',
                           fit: BoxFit.contain,
@@ -242,31 +240,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         curve: Curves.easeOutQuad,
                       ),
 
-                  const Spacer(flex: 2),
-
-                  // 3. Alt yazı - "Bilgi Avcısı"
-                  Text(
-                    'Bilgi Avcısı',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ).animate(delay: 800.ms).fadeIn(duration: 600.ms),
-                  
-                  const SizedBox(height: 8),
-                  
-                  Text(
-                    'Öğrenmenin en eğlenceli yolu',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 14,
-                      letterSpacing: 1,
-                    ),
-                  ).animate(delay: 1000.ms).fadeIn(duration: 600.ms),
-
-                  const Spacer(flex: 1),
+                  const Spacer(flex: 3), // Alt boşluk dengesi
                 ],
               ),
             ),
