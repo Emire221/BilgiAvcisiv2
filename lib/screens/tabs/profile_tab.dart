@@ -1128,7 +1128,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
           );
         }
 
-        // Doğruluk kartı (index 1) için Başarılarım ekranına yönlendirme
         if (index == 1) {
           return GestureDetector(
             onTap: () {
@@ -1136,7 +1135,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const AchievementsScreen(),
+                  builder: (_) => const AchievementsScreen(initialIndex: 1),
                 ),
               );
             },

@@ -52,12 +52,42 @@ class NotificationService {
 
     // Android için bildirim izni iste
     await _requestPermissions();
+    
+    // Android 12+ için tam zamanlı alarm izni iste
+    await _requestExactAlarmPermission();
 
     // Android kanallarını oluştur
     await _createNotificationChannels();
 
     // Okunmamış bildirim sayısını güncelle
     await updateUnreadCount();
+  }
+  
+  /// Android 12+ için Exact Alarm iznini talep eder
+  /// Bu izin olmadan zamanlanmış bildirimler gecikebilir veya çalışmayabilir
+  Future<void> _requestExactAlarmPermission() async {
+    try {
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      
+      if (androidPlugin != null) {
+        // Android 12+ (SDK 31+) için exact alarm izni kontrolü
+        final bool? canScheduleExact = await androidPlugin.canScheduleExactNotifications();
+        
+        if (canScheduleExact == false) {
+          // İzin yoksa sistem ayarlarına yönlendir
+          await androidPlugin.requestExactAlarmsPermission();
+          debugPrint('🔔 Exact Alarm izni talep edildi');
+        } else {
+          debugPrint('✅ Exact Alarm izni zaten mevcut');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Exact Alarm izni kontrolü hatası: $e');
+      // Hata olsa bile devam et - eski Android versiyonlarında bu API yok
+    }
   }
 
   /// Android bildirim kanallarını oluşturur

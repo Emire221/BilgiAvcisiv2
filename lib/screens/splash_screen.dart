@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/database_helper.dart';
 import '../services/local_preferences_service.dart';
 import '../services/notification_service.dart';
 import '../features/mascot/presentation/screens/pet_selection_screen.dart';
@@ -243,18 +242,19 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
 
-            // 4. Alt yazı - Native splash ile tutarlı
+            // 4. Alt yazı - Native splash ile tutarlı markalama
             Positioned(
               bottom: 50,
               left: 0,
               right: 0,
               child: Text(
-                'With ❤️ to ŞemsAna',
+                'with love şemse arik',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
               ).animate(delay: 1200.ms).fadeIn(duration: 600.ms),
             ),

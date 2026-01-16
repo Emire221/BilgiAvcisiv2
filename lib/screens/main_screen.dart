@@ -194,24 +194,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
           return Row(
             children: [
-              // Avatar with gradient border
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF667EEA).withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(radius: 20, backgroundImage: avatarImage),
-              ),
+              // Avatar - halka kaldırıldı
+              CircleAvatar(radius: 22, backgroundImage: avatarImage),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

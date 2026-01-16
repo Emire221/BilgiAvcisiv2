@@ -13,7 +13,10 @@ import 'progress_analytics_screen.dart';
 /// 🏆 Macera Günlüğü - Başarılar Ekranı
 /// Tüm oyun sonuçları ve başarılar burada sergilenir
 class AchievementsScreen extends StatefulWidget {
-  const AchievementsScreen({super.key});
+  /// Başlangıç sekme indexi (0: Deneme, 1: Testler, 2: Kartlar, ...)
+  final int initialIndex;
+  
+  const AchievementsScreen({super.key, this.initialIndex = 0});
 
   @override
   State<AchievementsScreen> createState() => _AchievementsScreenState();
@@ -80,7 +83,12 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(
+      length: _tabs.length,
+      vsync: this,
+      initialIndex: widget.initialIndex.clamp(0, _tabs.length - 1),
+    );
+    _currentTabIndex.value = _tabController.index;
     _tabController.addListener(() {
       if (_tabController.indexIsChanging == false) {
         _currentTabIndex.value = _tabController.index;
