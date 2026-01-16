@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/database_helper.dart';
 import '../services/local_preferences_service.dart';
 import '../services/notification_service.dart';
 import '../features/mascot/presentation/screens/pet_selection_screen.dart';
@@ -33,8 +34,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _startSplashSequence() async {
-    // Splash animasyonu için bekle
-    await Future.delayed(const Duration(seconds: 4));
+    // Splash animasyonu için bekle (Native splash min 1 sn takip eder)
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
     // Kullanıcı durumunu kontrol et ve yönlendir
@@ -64,8 +65,31 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
-      // 📌 DURUM 3: Profil var - içerik senkronizasyon kontrolü
+      // 🔐 AKTİF KULLANICIYI AYARLA - Veritabanı sorguları için
+      final dbHelper = DatabaseHelper();
+      dbHelper.setActiveUser(user.uid);
+
+      // 📌 DURUM 3: Profil var - kullanıcı değişikliği ve içerik kontrolü
       final prefsService = LocalPreferencesService();
+      final userData = userDoc.data();
+      final currentGrade = userData?['classLevel'] as String? ?? '';
+      
+      // Kullanıcı veya sınıf değişmiş mi kontrol et
+      final hasUserChanged = await prefsService.hasUserChanged(user.uid);
+      final hasGradeChanged = await prefsService.hasGradeChanged(currentGrade);
+      
+      // Kullanıcı bilgilerini kaydet
+      await prefsService.setLastUserId(user.uid);
+      if (currentGrade.isNotEmpty) {
+        await prefsService.setLastUserGrade(currentGrade);
+      }
+
+      // Kullanıcı veya sınıf değiştiyse içerik yeniden indirilmeli
+      if (hasUserChanged || hasGradeChanged) {
+        debugPrint('SplashScreen: Kullanıcı veya sınıf değişti - içerik yeniden indirilecek');
+        await prefsService.setContentSyncCompleted(false);
+      }
+
       final isContentSynced = await prefsService.isContentSyncCompleted();
 
       if (isContentSynced) {
@@ -76,7 +100,6 @@ class _SplashScreenState extends State<SplashScreen> {
       } else {
         // ❌ İçerik indirilmemiş veya yarım kalmış
         // Maskot seçilmiş mi kontrol et - eğer seçilmişse ContentLoadingScreen'e git
-        final userData = userDoc.data();
         final hasMascot =
             userData != null &&
             (userData.containsKey('petType') || userData.containsKey('mascot'));
@@ -219,12 +242,49 @@ class _SplashScreenState extends State<SplashScreen> {
                         curve: Curves.easeOutQuad,
                       ),
 
-                  const Spacer(flex: 3),
+                  const Spacer(flex: 2),
 
-                  // Optional: Very subtle version info or loader if needed
-                  // Keeping it minimal as requested "sade"
+                  // 3. Alt yazı - "Bilgi Avcısı"
+                  Text(
+                    'Bilgi Avcısı',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ).animate(delay: 800.ms).fadeIn(duration: 600.ms),
+                  
+                  const SizedBox(height: 8),
+                  
+                  Text(
+                    'Öğrenmenin en eğlenceli yolu',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 14,
+                      letterSpacing: 1,
+                    ),
+                  ).animate(delay: 1000.ms).fadeIn(duration: 600.ms),
+
+                  const Spacer(flex: 1),
                 ],
               ),
+            ),
+
+            // 4. Alt yazı - Native splash ile tutarlı
+            Positioned(
+              bottom: 50,
+              left: 0,
+              right: 0,
+              child: Text(
+                'With ❤️ to ŞemsAna',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ).animate(delay: 1200.ms).fadeIn(duration: 600.ms),
             ),
           ],
         ),

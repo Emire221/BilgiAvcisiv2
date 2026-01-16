@@ -16,6 +16,7 @@ import '../../services/database_helper.dart';
 import '../../services/time_tracking_service.dart';
 import '../login_screen.dart';
 import '../time_analytics_screen.dart';
+import '../achievements_screen.dart';
 
 /// 🏆 Kahraman Profili - RPG Style Profile Tab
 class ProfileTab extends ConsumerStatefulWidget {
@@ -1124,6 +1125,34 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                     ),
               );
             },
+          );
+        }
+
+        // Doğruluk kartı (index 1) için Başarılarım ekranına yönlendirme
+        if (index == 1) {
+          return GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AchievementsScreen(),
+                ),
+              );
+            },
+            child: _buildStatCard(stat, isDarkMode)
+                .animate()
+                .fadeIn(
+                  duration: 500.ms,
+                  delay: Duration(milliseconds: stat.delay),
+                )
+                .scale(
+                  begin: const Offset(0.8, 0.8),
+                  end: const Offset(1, 1),
+                  duration: 500.ms,
+                  delay: Duration(milliseconds: stat.delay),
+                  curve: Curves.easeOutBack,
+                ),
           );
         }
 

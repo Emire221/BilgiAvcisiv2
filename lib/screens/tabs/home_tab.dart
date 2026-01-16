@@ -373,12 +373,27 @@ class _HomeTabState extends ConsumerState<HomeTab>
     });
   }
 
+  /// Sınıf bilgisini formatlı göster
+  String _formatGrade(String? grade) {
+    if (grade == null || grade.isEmpty) return '';
+    if (grade.contains('. Sınıf')) return grade;
+    final match = RegExp(r'(\d+)_?[Ss]inif').firstMatch(grade);
+    if (match != null) return '${match.group(1)}. Sınıf';
+    // Sadece sayı ise
+    final numMatch = RegExp(r'^(\d+)$').firstMatch(grade);
+    if (numMatch != null) return '${numMatch.group(1)}. Sınıf';
+    return grade;
+  }
+
   Widget _buildHeader(
     bool isDarkMode,
     AsyncValue<Map<String, dynamic>?> userProfileAsync,
     AsyncValue<Mascot?> mascotAsync,
   ) {
     final userName = userProfileAsync.asData?.value?['name'] ?? 'Bilgi Avcısı';
+    final grade = userProfileAsync.asData?.value?['grade'] ?? 
+                  userProfileAsync.asData?.value?['classLevel'] ?? '';
+    final formattedGrade = _formatGrade(grade);
     final mascot = mascotAsync.asData?.value;
     final level = mascot?.level ?? 1;
 
@@ -386,18 +401,41 @@ class _HomeTabState extends ConsumerState<HomeTab>
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
       child: Row(
         children: [
-          Flexible(
-            child: Text(
-              'Merhaba, $userName! 👋',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black87,
-              ),
-              overflow: TextOverflow.ellipsis,
+          // Sol taraf: İsim ve Sınıf bilgisi (ikon yok)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Merhaba, $userName! 👋',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (formattedGrade.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      formattedGrade,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode 
+                            ? Colors.white70 
+                            : Colors.black54,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
+          // Sağ taraf: Seri ve Seviye badge'leri
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [

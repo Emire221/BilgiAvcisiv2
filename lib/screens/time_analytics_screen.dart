@@ -193,14 +193,30 @@ class _TimeAnalyticsScreenState extends State<TimeAnalyticsScreen>
     );
   }
 
-  /// İlk gün mü kontrol et (Pazartesi veya ilk kullanım)
+  /// İlk gün mü kontrol et
+  /// - Pazartesi günü (haftanın ilk günü) ise ilk gün sayılır
+  /// - Dün hiç veri yoksa (0 dakika) veya dün verisi bulunamıyorsa ilk gün sayılır
   bool get _isFirstDay {
     final now = DateTime.now();
-    if (now.weekday == 1) return true; // Pazartesi
+    
+    // Pazartesi ise haftanın ilk günü - düne karşılaştırma yapılamaz
+    if (now.weekday == 1) return true;
     
     // Dün verisi var mı kontrol et
-    final yesterdayIndex = now.weekday - 2;
+    final yesterdayIndex = now.weekday - 2; // Pazartesi=0, ..., Pazar=6
     if (yesterdayIndex < 0 || yesterdayIndex >= _weekData.length) return true;
+    
+    // Dün hiç kullanım yoksa da ilk gün gibi davran
+    final yesterdayMinutes = _weekData[yesterdayIndex]['durationMinutes'] as int? ?? 0;
+    if (yesterdayMinutes == 0) {
+      // Bugün de 0 ise gerçekten ilk gün
+      final todayIndex = now.weekday - 1;
+      if (todayIndex >= 0 && todayIndex < _weekData.length) {
+        final todayMinutes = _weekData[todayIndex]['durationMinutes'] as int? ?? 0;
+        if (todayMinutes == 0) return true;
+      }
+    }
+    
     return false;
   }
 

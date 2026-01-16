@@ -79,8 +79,47 @@ class _InteractiveMascotWidgetState
 
     _bounceController.forward();
 
-    // Kayıt başlat
+    // Önce mikrofon izni kontrolü ve isteme
     final service = ref.read(talkingMascotServiceProvider);
+    final hasPermission = await service.requestMicrophonePermission();
+    
+    if (!hasPermission) {
+      // Kullanıcıya izin gerekmesi bilgisini göster
+      if (mounted) {
+        _bounceController.reverse();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.mic_off, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Sesli konuşma için mikrofon izni gerekli. Ayarlardan izin verebilirsin.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Ayarlar',
+              textColor: Colors.white,
+              onPressed: () async {
+                // iOS ve Android için uygulama ayarlarına yönlendir
+                await service.openAppSettingsForPermission();
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Kayıt başlat
     final started = await service.startRecording();
 
     if (started) {
@@ -90,6 +129,26 @@ class _InteractiveMascotWidgetState
 
       // Kayıt animasyonu başlat
       _talkingController.repeat(reverse: true);
+    } else {
+      // Kayıt başlatılamadı
+      _bounceController.reverse();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Ses kaydı başlatılamadı. Tekrar dene.'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 

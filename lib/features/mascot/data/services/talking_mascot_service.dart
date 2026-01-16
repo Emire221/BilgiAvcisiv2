@@ -37,11 +37,15 @@ class TalkingMascotService {
 
     if (status.isPermanentlyDenied) {
       // Kullanıcıyı ayarlara yönlendir
-      await openAppSettings();
       return false;
     }
 
     return false;
+  }
+
+  /// Uygulama ayarlarını aç (izin için)
+  Future<bool> openAppSettingsForPermission() async {
+    return await openAppSettings();
   }
 
   /// Kayıt başlat

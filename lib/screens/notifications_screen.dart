@@ -68,25 +68,40 @@ class _NotificationsListState extends State<NotificationsList> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    // Light mode için renkler
+    final bgGradient = isDarkMode 
+        ? [_deepPurple, _darkBg]
+        : [const Color(0xFFF5F7FA), Colors.white];
+    final borderColor = isDarkMode 
+        ? _accentCyan.withValues(alpha: 0.3)
+        : Colors.grey.withValues(alpha: 0.2);
+    final titleColor = isDarkMode ? Colors.white : Colors.black87;
+    final subtitleColor = isDarkMode 
+        ? Colors.white.withValues(alpha: 0.7)
+        : Colors.grey.shade600;
 
     return Container(
       width: isTablet ? 500 : double.infinity,
       height: size.height * 0.52,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [_deepPurple, _darkBg],
+          colors: bgGradient,
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(
-          top: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
-          left: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
-          right: BorderSide(color: _accentCyan.withValues(alpha: 0.3), width: 1),
+          top: BorderSide(color: borderColor, width: 1),
+          left: BorderSide(color: borderColor, width: 1),
+          right: BorderSide(color: borderColor, width: 1),
         ),
         boxShadow: [
           BoxShadow(
-            color: _primaryPurple.withValues(alpha: 0.2),
+            color: isDarkMode 
+                ? _primaryPurple.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -105,7 +120,9 @@ class _NotificationsListState extends State<NotificationsList> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: isDarkMode 
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey.withValues(alpha: 0.15),
                     ),
                   ),
                 ),
@@ -122,7 +139,7 @@ class _NotificationsListState extends State<NotificationsList> {
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: titleColor,
                         letterSpacing: 1,
                       ),
                     ),
@@ -138,7 +155,7 @@ class _NotificationsListState extends State<NotificationsList> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
                         child: CircularProgressIndicator(
-                          color: _accentCyan,
+                          color: isDarkMode ? _accentCyan : _primaryPurple,
                           strokeWidth: 2,
                         ),
                       );
@@ -176,20 +193,24 @@ class _NotificationsListState extends State<NotificationsList> {
                             Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
+                                color: isDarkMode 
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.grey.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 FontAwesomeIcons.bellSlash,
                                 size: 40,
-                                color: Colors.white.withValues(alpha: 0.3),
+                                color: isDarkMode 
+                                    ? Colors.white.withValues(alpha: 0.3)
+                                    : Colors.grey.withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Henüz bildirim yok',
                               style: GoogleFonts.nunito(
-                                color: Colors.white.withValues(alpha: 0.5),
+                                color: subtitleColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -218,6 +239,7 @@ class _NotificationsListState extends State<NotificationsList> {
                               date: date,
                               isRead: isRead,
                               index: index,
+                              isDarkMode: isDarkMode,
                             )
                             .animate()
                             .fadeIn(delay: Duration(milliseconds: index < 10 ? 50 * index : 0))
@@ -241,7 +263,32 @@ class _NotificationsListState extends State<NotificationsList> {
     required String date,
     required bool isRead,
     required int index,
+    required bool isDarkMode,
   }) {
+    // Light mode için renkler
+    final accentColor = isDarkMode ? _accentCyan : _primaryPurple;
+    final cardBgColor = isDarkMode
+        ? (isRead ? Colors.white.withValues(alpha: 0.03) : _accentCyan.withValues(alpha: 0.1))
+        : (isRead ? Colors.grey.withValues(alpha: 0.05) : _primaryPurple.withValues(alpha: 0.08));
+    final cardBorderColor = isDarkMode
+        ? (isRead ? Colors.white.withValues(alpha: 0.05) : _accentCyan.withValues(alpha: 0.3))
+        : (isRead ? Colors.grey.withValues(alpha: 0.15) : _primaryPurple.withValues(alpha: 0.2));
+    final titleTextColor = isDarkMode
+        ? (isRead ? Colors.white.withValues(alpha: 0.6) : Colors.white)
+        : (isRead ? Colors.grey.shade600 : Colors.black87);
+    final bodyTextColor = isDarkMode
+        ? Colors.white.withValues(alpha: 0.5)
+        : Colors.grey.shade500;
+    final dateTextColor = isDarkMode
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.grey.shade400;
+    final iconBgColor = isDarkMode
+        ? (isRead ? Colors.white.withValues(alpha: 0.05) : _accentCyan.withValues(alpha: 0.2))
+        : (isRead ? Colors.grey.withValues(alpha: 0.1) : _primaryPurple.withValues(alpha: 0.15));
+    final iconColor = isDarkMode
+        ? (isRead ? Colors.white.withValues(alpha: 0.3) : _accentCyan)
+        : (isRead ? Colors.grey.shade400 : _primaryPurple);
+
     return Dismissible(
       key: Key(id.toString()),
       direction: DismissDirection.endToStart,
@@ -271,7 +318,7 @@ class _NotificationsListState extends State<NotificationsList> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('$title silindi', style: GoogleFonts.nunito()),
-              backgroundColor: _deepPurple,
+              backgroundColor: isDarkMode ? _deepPurple : _primaryPurple,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -293,15 +340,9 @@ class _NotificationsListState extends State<NotificationsList> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isRead
-                ? Colors.white.withValues(alpha: 0.03)
-                : _accentCyan.withValues(alpha: 0.1),
+            color: cardBgColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isRead
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : _accentCyan.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: cardBorderColor),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,15 +351,13 @@ class _NotificationsListState extends State<NotificationsList> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isRead
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : _accentCyan.withValues(alpha: 0.2),
+                  color: iconBgColor,
                   shape: BoxShape.circle,
                   boxShadow: isRead
                       ? null
                       : [
                           BoxShadow(
-                            color: _accentCyan.withValues(alpha: 0.3),
+                            color: accentColor.withValues(alpha: 0.3),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -326,9 +365,7 @@ class _NotificationsListState extends State<NotificationsList> {
                 ),
                 child: Icon(
                   FontAwesomeIcons.solidBell,
-                  color: isRead
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : _accentCyan,
+                  color: iconColor,
                   size: 14,
                 ),
               ),
@@ -344,9 +381,7 @@ class _NotificationsListState extends State<NotificationsList> {
                             ? FontWeight.normal
                             : FontWeight.bold,
                         fontSize: 14,
-                        color: isRead
-                            ? Colors.white.withValues(alpha: 0.6)
-                            : Colors.white,
+                        color: titleTextColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -354,7 +389,7 @@ class _NotificationsListState extends State<NotificationsList> {
                       body,
                       style: GoogleFonts.nunito(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: bodyTextColor,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -365,14 +400,14 @@ class _NotificationsListState extends State<NotificationsList> {
                         Icon(
                           FontAwesomeIcons.clock,
                           size: 10,
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: dateTextColor,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(date),
                           style: GoogleFonts.nunito(
                             fontSize: 10,
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: dateTextColor,
                           ),
                         ),
                       ],
@@ -386,11 +421,11 @@ class _NotificationsListState extends State<NotificationsList> {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _accentCyan,
+                    color: accentColor,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: _accentCyan.withValues(alpha: 0.5),
+                        color: accentColor.withValues(alpha: 0.5),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),
@@ -404,3 +439,4 @@ class _NotificationsListState extends State<NotificationsList> {
     );
   }
 }
+

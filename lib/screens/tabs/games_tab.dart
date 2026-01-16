@@ -112,13 +112,32 @@ class _GamesTabState extends ConsumerState<GamesTab>
     final screenHeight = MediaQuery.of(ctx).size.height;
     final screenWidth = MediaQuery.of(ctx).size.width;
     final isTablet = screenWidth > 600;
-
+    // BuildContext'i builder içinden almak yerine mevcut ctx kullanabiliriz ama 
+    // tema değişikliğini dinamik yakalamak icin builder icinde kontrol etmek daha iyi
+    
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       constraints: BoxConstraints(maxWidth: screenWidth, minWidth: screenWidth),
       builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        
+        // Tema renkleri
+        final bgGradient = isDarkMode 
+            ? [_deepPurple, _darkBg]
+            : [const Color(0xFFF5F7FA), Colors.white];
+        final borderColor = isDarkMode 
+            ? _accentCyan.withValues(alpha: 0.3)
+            : Colors.grey.withValues(alpha: 0.2);
+        final shadowColor = isDarkMode 
+            ? const Color(0xFF00E676).withValues(alpha: 0.2)
+            : Colors.black.withValues(alpha: 0.1);
+        final titleColor = isDarkMode ? Colors.white : Colors.black87;
+        final subtitleColor = isDarkMode 
+            ? Colors.white.withValues(alpha: 0.7)
+            : Colors.grey.shade600;
+
         return LayoutBuilder(
           builder: (context, constraints) {
             final modalHeight = screenHeight * 0.45;
@@ -129,31 +148,31 @@ class _GamesTabState extends ConsumerState<GamesTab>
               width: isTablet ? 500 : double.infinity,
               height: modalHeight,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [_deepPurple, _darkBg],
+                  colors: bgGradient,
                 ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
                 border: Border(
                   top: BorderSide(
-                    color: _accentCyan.withValues(alpha: 0.3),
+                    color: borderColor,
                     width: 1,
                   ),
                   left: BorderSide(
-                    color: _accentCyan.withValues(alpha: 0.3),
+                    color: borderColor,
                     width: 1,
                   ),
                   right: BorderSide(
-                    color: _accentCyan.withValues(alpha: 0.3),
+                    color: borderColor,
                     width: 1,
                   ),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.2),
+                    color: shadowColor,
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -176,7 +195,9 @@ class _GamesTabState extends ConsumerState<GamesTab>
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: isDarkMode 
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : Colors.grey.withValues(alpha: 0.15),
                             ),
                           ),
                         ),
@@ -195,7 +216,7 @@ class _GamesTabState extends ConsumerState<GamesTab>
                                   style: GoogleFonts.poppins(
                                     fontSize: isCompact ? 20 : 24,
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.white,
+                                    color: titleColor,
                                     letterSpacing: 1,
                                   ),
                                 ),
@@ -207,7 +228,7 @@ class _GamesTabState extends ConsumerState<GamesTab>
                               style: GoogleFonts.poppins(
                                 fontSize: isCompact ? 13 : 15,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.7),
+                                color: subtitleColor,
                               ),
                             ),
                           ],

@@ -181,23 +181,27 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
     // 🚩 Preferences servisi
     final prefsService = LocalPreferencesService();
 
-    // 🧹 Önceki sync yarım kalmışsa bozuk verileri temizle
-    final wasPreviousSyncComplete = await prefsService.isContentSyncCompleted();
-    if (!wasPreviousSyncComplete) {
-      // Önceki indirme yarıda kalmış - bozuk/eksik verileri temizle
-      debugPrint('⚠️ Önceki sync yarım kalmış - veriler temizleniyor...');
-      await DatabaseHelper().clearAllData();
-    }
-
-    // 🚩 Bayrağı FALSE yap - yeni işlem başlıyor
-    await prefsService.setContentSyncCompleted(false);
-
     try {
       // Kullanıcının sınıf bilgisini al
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('Kullanıcı oturumu bulunamadı');
       }
+
+      // 🔐 AKTİF KULLANICIYI AYARLA - Veritabanı sorguları için
+      final dbHelper = DatabaseHelper();
+      dbHelper.setActiveUser(user.uid);
+
+      // 🧹 Önceki sync yarım kalmışsa bozuk verileri temizle (sadece bu kullanıcı için)
+      final wasPreviousSyncComplete = await prefsService.isContentSyncCompleted();
+      if (!wasPreviousSyncComplete) {
+        // Önceki indirme yarıda kalmış - bozuk/eksik verileri temizle
+        debugPrint('⚠️ Önceki sync yarım kalmış - veriler temizleniyor...');
+        await dbHelper.clearAllData();
+      }
+
+      // 🚩 Bayrağı FALSE yap - yeni işlem başlıyor
+      await prefsService.setContentSyncCompleted(false);
 
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
