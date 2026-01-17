@@ -12,7 +12,6 @@ import '../core/providers/sync_provider.dart';
 import '../features/sync/domain/models/manifest_model.dart';
 import '../services/notification_service.dart';
 import '../services/local_preferences_service.dart';
-import '../services/database_helper.dart';
 import '../widgets/in_app_notification.dart';
 import 'main_screen.dart';
 
@@ -189,17 +188,13 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
       }
 
 
-      final dbHelper = DatabaseHelper();
-
-
-      // 🧹 Önceki sync yarım kalmışsa bozuk verileri temizle (sadece bu kullanıcı için)
-      final wasPreviousSyncComplete = await prefsService.isContentSyncCompleted();
-      if (!wasPreviousSyncComplete) {
-        // Önceki indirme yarıda kalmış - bozuk/eksik verileri temizle
-        // ⚠️ SADECE içerik verilerini temizle - kullanıcı verilerini (mascot, screen time, vb.) KORUMALI
-        debugPrint('⚠️ Önceki sync yarım kalmış - içerik verileri temizleniyor...');
-        await dbHelper.clearContentDataOnly();
-      }
+      // ⚠️ ESKİ HATA: Sync tamamlanmamışsa otomatik temizlik yapılıyordu
+      // Bu, arka plandan dönen kullanıcının verilerini siliyordu
+      // ✅ DÜZELTME: Otomatik temizlik KALDIRILDI
+      // Veriler sadece "Hesabı Sil" butonuyla silinmeli
+      // Sync yarım kalırsa, yeni veriler ÜSTÜNE yazılacak (ConflictAlgorithm.replace)
+      
+      debugPrint('ContentLoadingScreen: Sync başlatılıyor (mevcut veriler korunuyor)');
 
       // 🚩 Bayrağı FALSE yap - yeni işlem başlıyor
       await prefsService.setContentSyncCompleted(false);

@@ -75,19 +75,34 @@ class _SplashScreenState extends State<SplashScreen> {
                            userData?['classLevel'] as String? ?? 
                            '';
       
-      // Kullanıcı veya sınıf değişmiş mi kontrol et
-      final hasUserChanged = await prefsService.hasUserChanged(user.uid);
-      final hasGradeChanged = await prefsService.hasGradeChanged(currentGrade);
+      // Önceki kullanıcı bilgilerini al
+      final lastUserId = await prefsService.getLastUserId();
+      final lastGrade = await prefsService.getLastUserGrade();
       
-      // Kullanıcı bilgilerini kaydet
+      // ✅ DÜZELTME: Sadece GERÇEKTEN farklı bir kullanıcı veya sınıf varsa içeriği sıfırla
+      // lastUserId null ise (ilk kurulum) → sadece isContentSyncCompleted kontrolüne bırak
+      // lastUserId aynı ise → içerik sıfırlanmaz
+      // lastUserId farklı ise (farklı kullanıcı) → içerik sıfırlanır
+      bool shouldResetContent = false;
+      
+      if (lastUserId != null && lastUserId != user.uid) {
+        // Farklı kullanıcı giriş yapmış
+        debugPrint('SplashScreen: FARKLI kullanıcı tespit edildi - içerik yeniden indirilecek');
+        shouldResetContent = true;
+      } else if (lastGrade != null && lastGrade != currentGrade && currentGrade.isNotEmpty) {
+        // Aynı kullanıcı ama sınıf değişmiş
+        debugPrint('SplashScreen: Sınıf değişti ($lastGrade -> $currentGrade) - içerik yeniden indirilecek');
+        shouldResetContent = true;
+      }
+      
+      // Kullanıcı bilgilerini kaydet (her girişte güncellensin)
       await prefsService.setLastUserId(user.uid);
       if (currentGrade.isNotEmpty) {
         await prefsService.setLastUserGrade(currentGrade);
       }
 
-      // Kullanıcı veya sınıf değiştiyse içerik yeniden indirilmeli
-      if (hasUserChanged || hasGradeChanged) {
-        debugPrint('SplashScreen: Kullanıcı veya sınıf değişti - içerik yeniden indirilecek');
+      // Sadece gerektiğinde içerik sıfırla
+      if (shouldResetContent) {
         await prefsService.setContentSyncCompleted(false);
       }
 
