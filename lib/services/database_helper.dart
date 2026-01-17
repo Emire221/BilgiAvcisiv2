@@ -688,15 +688,36 @@ class DatabaseHelper implements IDatabaseHelper {
         0;
   }
 
-  // Temizleme Metodu (Yeni sınıf indirildiğinde eskileri silmek için)
+  // Temizleme Metodu - TÜM VERİLERİ SİLER (Hesap silme için)
   @override
   Future<void> clearAllData() async {
     Database db = await database;
     await db.transaction((txn) async {
+      // İçerik verileri
       await txn.delete('Dersler');
       await txn.delete('Konular');
       await txn.delete('Testler');
       await txn.delete('BilgiKartlari');
+      await txn.delete('FillBlanksLevels');
+      await txn.delete('GuessLevels');
+      
+      // Kullanıcı verileri
+      await txn.delete('UserPets'); // Mascot
+      await txn.delete('DailyTimeTracking'); // Ekran süresi
+      await txn.delete('GameResults'); // Oyun sonuçları
+      await txn.delete('TestResults'); // Test sonuçları
+      await txn.delete('Notifications'); // Bildirimler
+      await txn.delete('DownloadedFiles'); // İndirilen dosya kayıtları
+      await txn.delete('ViewedFlashcardSets'); // Görüntülenen kart setleri
+      await txn.delete('SeenDuelContent'); // Düello içerikleri
+      
+      // Haftalık sınav verileri
+      await txn.delete('WeeklyExams');
+      await txn.delete('WeeklyExamResults');
+      
+      // Eski tablolar (varsa)
+      try { await txn.delete('TrialExams'); } catch (_) {}
+      try { await txn.delete('TrialResults'); } catch (_) {}
     });
   }
 

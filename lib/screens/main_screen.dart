@@ -7,6 +7,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'dart:ui';
 import '../providers/theme_provider.dart'; // ✅ Riverpod themeProvider
 import '../core/providers/user_provider.dart';
+import '../services/database_helper.dart';
+import '../features/mascot/presentation/providers/mascot_provider.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/lessons_tab.dart';
 import 'tabs/games_tab.dart';
@@ -85,7 +87,55 @@ class _MainScreenState extends ConsumerState<MainScreen>
     // Bildirim servisini başlat (izin kontrolü + zamanlanmış bildirimler)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       NotificationService().ensureInitialized();
+      _loadStreak();
     });
+  }
+
+  // Streak (seri) değeri
+  int _streak = 0;
+
+  /// Streak hesapla ve yükle
+  Future<void> _loadStreak() async {
+    try {
+      final dbHelper = DatabaseHelper();
+      const int minSecondsPerDay = 60; // 1 dakika
+      int streak = 0;
+      DateTime checkDate = DateTime.now();
+
+      // Bugün kontrol et
+      String todayStr = _formatDateForDB(checkDate);
+      int todaySeconds = await dbHelper.getDailyTime(todayStr);
+
+      // Bugün henüz 1 dakika kullanım yoksa, dünden başla
+      if (todaySeconds < minSecondsPerDay) {
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      }
+
+      // Geriye doğru ardışık günleri say
+      while (true) {
+        String dateStr = _formatDateForDB(checkDate);
+        int seconds = await dbHelper.getDailyTime(dateStr);
+
+        if (seconds >= minSecondsPerDay) {
+          streak++;
+          checkDate = checkDate.subtract(const Duration(days: 1));
+        } else {
+          break;
+        }
+
+        if (streak >= 365) break;
+      }
+
+      if (mounted) {
+        setState(() => _streak = streak);
+      }
+    } catch (e) {
+      debugPrint('Streak hesaplama hatası: $e');
+    }
+  }
+
+  String _formatDateForDB(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   /// Belirtilen tab'a geçiş yapar
@@ -186,17 +236,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
         data: (profile) {
           final name = profile?['name'] ?? 'Öğrenci';
           final grade = profile?['grade'] ?? '3. Sınıf';
-          final avatar = profile?['avatar'] ?? 'assets/images/avatar.png';
-
-          final avatarImage = avatar.startsWith('assets/')
-              ? AssetImage(avatar)
-              : const AssetImage('assets/images/avatar.png');
 
           return Row(
             children: [
-              // Avatar - halka kaldırıldı
-              CircleAvatar(radius: 22, backgroundImage: avatarImage),
-              const SizedBox(width: 12),
+              // Profil fotoğrafı kaldırıldı - kullanıcı isteği
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,15 +249,16 @@ class _MainScreenState extends ConsumerState<MainScreen>
                       name,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 20,
                         color: isDarkMode ? Colors.white : Colors.black87,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 2),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                        horizontal: 10,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -236,13 +280,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
                                   ).withValues(alpha: 0.2),
                                 ],
                         ),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '$grade 🎓',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                           color: isDarkMode
                               ? const Color(0xFF38EF7D)
                               : const Color(0xFF11998E),
@@ -259,6 +303,12 @@ class _MainScreenState extends ConsumerState<MainScreen>
         error: (_, __) => const SizedBox.shrink(),
       ),
       actions: [
+        // Seri Badge
+        _buildStreakBadge(isDarkMode),
+        const SizedBox(width: 6),
+        // Seviye Badge
+        _buildLevelBadge(isDarkMode),
+        const SizedBox(width: 8),
         // Theme Toggle - Modern pill design
         _buildThemeToggleButton(context, isDarkMode),
         const SizedBox(width: 8),
@@ -267,6 +317,89 @@ class _MainScreenState extends ConsumerState<MainScreen>
         const SizedBox(width: 12),
       ],
     );
+  }
+
+  /// Seri (Streak) Badge Widget
+  Widget _buildStreakBadge(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF6B6B).withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const FaIcon(
+            FontAwesomeIcons.fire,
+            color: Colors.white,
+            size: 12,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$_streak',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.2, end: 0);
+  }
+
+  /// Seviye (Level) Badge Widget
+  Widget _buildLevelBadge(bool isDarkMode) {
+    final mascotAsync = ref.watch(activeMascotProvider);
+    final mascot = mascotAsync.asData?.value;
+    final level = mascot?.level ?? 1;
+    final color = mascot?.petType.color ?? Colors.purple;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.7)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const FaIcon(
+            FontAwesomeIcons.star,
+            color: Colors.white,
+            size: 12,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Lv.$level',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.2, end: 0);
   }
 
   Widget _buildThemeToggleButton(BuildContext context, bool isDarkMode) {

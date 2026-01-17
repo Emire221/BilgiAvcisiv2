@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/local_preferences_service.dart';
 import '../services/notification_service.dart';
+import '../services/database_helper.dart';
 import '../features/mascot/presentation/screens/pet_selection_screen.dart';
 import 'content_loading_screen.dart';
 import 'login_screen.dart';
@@ -96,10 +97,10 @@ class _SplashScreenState extends State<SplashScreen> {
         _navigateToScreen(const MainScreen());
       } else {
         // ❌ İçerik indirilmemiş veya yarım kalmış
-        // Maskot seçilmiş mi kontrol et - eğer seçilmişse ContentLoadingScreen'e git
-        final hasMascot =
-            userData != null &&
-            (userData.containsKey('petType') || userData.containsKey('mascot'));
+        // Maskot seçilmiş mi kontrol et - SQLite'dan kontrol et (Firestore'da değil!)
+        final dbHelper = DatabaseHelper();
+        final mascotData = await dbHelper.getActiveMascot();
+        final hasMascot = mascotData != null;
 
         if (hasMascot) {
           // Maskot var ama sync yarım kalmış → ContentLoadingScreen (sync devam edecek)
@@ -113,9 +114,10 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
     } catch (e) {
-      // Hata durumunda güvenli tarafta kal - PetSelectionScreen
+      // Hata durumunda giriş yapmış kullanıcı için MainScreen'e git
+      // (Kullanıcı zaten giriş yapmış, güvenli varsayım: kurulumu tamamlamış)
       debugPrint('Auth kontrol hatası: $e');
-      _navigateToScreen(const PetSelectionScreen());
+      _navigateToScreen(const MainScreen());
     }
   }
 

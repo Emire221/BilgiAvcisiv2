@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../widgets/glass_container.dart';
 import '../core/providers/user_provider.dart';
+import '../services/database_helper.dart';
+import '../services/local_preferences_service.dart';
 import 'login_screen.dart';
 
 class ProfileSettingsScreen extends ConsumerStatefulWidget {
@@ -172,6 +176,27 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
             .collection('users')
             .doc(user.uid)
             .delete();
+
+        // ✅ TÜM YEREL VERİLERİ TEMİZLE - Telefon yeni indirilmiş gibi olsun
+        
+        // 1. SQLite veritabanını temizle (dersler, konular, sorular, mascot vs.)
+        final dbHelper = DatabaseHelper();
+        await dbHelper.clearAllData();
+
+        // 2. SharedPreferences cache'ini temizle (kullanıcı profili, ayarlar)
+        final localPrefs = LocalPreferencesService();
+        await localPrefs.clearAll();
+
+        // 3. İndirilen içerik dosyalarını sil
+        try {
+          final appDir = await getApplicationDocumentsDirectory();
+          final contentDir = Directory('${appDir.path}/content');
+          if (await contentDir.exists()) {
+            await contentDir.delete(recursive: true);
+          }
+        } catch (e) {
+          debugPrint('İçerik dosyaları silinemedi: $e');
+        }
 
         // Delete Auth account
         await user.delete();

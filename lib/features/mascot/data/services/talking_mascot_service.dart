@@ -16,102 +16,74 @@ class TalkingMascotService {
   bool _isRecording = false;
   bool _isPlaying = false;
 
-  /// Kayıt yapılıyor mu?
   bool get isRecording => _isRecording;
-
-  /// Ses çalınıyor mu?
   bool get isPlaying => _isPlaying;
 
   /// Mikrofon izni kontrolü ve isteme
   Future<bool> requestMicrophonePermission() async {
     final status = await Permission.microphone.status;
-
-    if (status.isGranted) {
-      return true;
-    }
-
+    if (status.isGranted) return true;
     if (status.isDenied) {
       final result = await Permission.microphone.request();
       return result.isGranted;
     }
-
-    if (status.isPermanentlyDenied) {
-      // Kullanıcıyı ayarlara yönlendir
-      return false;
-    }
-
     return false;
   }
 
-  /// Uygulama ayarlarını aç (izin için)
   Future<bool> openAppSettingsForPermission() async {
     return await openAppSettings();
   }
 
-  /// Kayıt başlat
-  Future<bool> startRecording() async {
-    try {
-      // İzin kontrolü
-      final hasPermission = await requestMicrophonePermission();
-      if (!hasPermission) {
-        if (kDebugMode) {
-          debugPrint('TalkingMascot: Mikrofon izni verilmedi');
-        }
-        return false;
-      }
-
-      // Kayıt cihazı kontrolü
-      final canRecord = await _recorder.hasPermission();
-      if (!canRecord) {
-        if (kDebugMode) {
-          debugPrint('TalkingMascot: Kayıt izni yok');
-        }
-        return false;
-      }
-
-      // iOS için AudioSession ayarla - Kayıt moduna geç
-      final session = await AudioSession.instance;
+  /// Ses oturumunu yapılandır (Kayıt veya Oynatma için)
+  Future<void> _configureAudioSession({required bool isRecording}) async {
+    final session = await AudioSession.instance;
+    
+    if (isRecording) {
+      // KAYIT MODU: Hem kayıt hem oynatma izinli, varsayılan hoparlör
       await session.configure(AudioSessionConfiguration(
         avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
         avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker |
             AVAudioSessionCategoryOptions.allowBluetooth |
             AVAudioSessionCategoryOptions.allowAirPlay,
         avAudioSessionMode: AVAudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-        androidAudioAttributes: AndroidAudioAttributes(
+        androidAudioAttributes: const AndroidAudioAttributes(
           contentType: AndroidAudioContentType.speech,
-          flags: AndroidAudioFlags.none,
           usage: AndroidAudioUsage.voiceCommunication,
         ),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
         androidWillPauseWhenDucked: true,
       ));
+    } else {
+      // OYNATMA MODU: Sadece medya oynatma (Hoparlörü zorlar)
+      await session.configure(const AudioSessionConfiguration.music());
+    }
+  }
+
+  /// Kayıt başlat
+  Future<bool> startRecording() async {
+    try {
+      // İzinleri kontrol et
+      if (!await requestMicrophonePermission()) return false;
+
+      // 1. Ses oturumunu KAYIT moduna al (iOS için kritik)
+      await _configureAudioSession(isRecording: true);
 
       // Geçici dosya yolu
       final tempDir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       _currentRecordingPath = '${tempDir.path}/mascot_voice_$timestamp.wav';
 
-      // Kayıt ayarları
+      // Kayıt ayarları (iOS pitch shift için WAV en güvenlisidir)
       const config = RecordConfig(
-        encoder: AudioEncoder.wav, // iOS pitch shift uyumluluğu için WAV daha güvenli
+        encoder: AudioEncoder.wav,
         bitRate: 128000,
         sampleRate: 44100,
       );
 
       await _recorder.start(config, path: _currentRecordingPath!);
       _isRecording = true;
-
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Kayıt başladı - $_currentRecordingPath');
-      }
-
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Kayıt başlatma hatası - $e');
-      }
+      debugPrint('TalkingMascot: Kayıt hatası - $e');
       _isRecording = false;
       return false;
     }
@@ -121,115 +93,69 @@ class TalkingMascotService {
   Future<String?> stopRecording() async {
     try {
       if (!_isRecording) return null;
-
       final path = await _recorder.stop();
       _isRecording = false;
-
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Kayıt durduruldu - $path');
-      }
-
       return path;
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Kayıt durdurma hatası - $e');
-      }
       _isRecording = false;
       return null;
     }
   }
 
-  /// Kaydedilen sesi pitch shift ile oynat (sincap sesi)
-  /// [pitchMultiplier] - 1.0 = normal, 1.5 = ince ses (sincap), 0.7 = kalın ses
+  /// Kaydedilen sesi pitch shift ile oynat
   Future<void> playRecordingWithPitchShift({
     double pitchMultiplier = 1.5,
     double speedMultiplier = 1.3,
     VoidCallback? onComplete,
   }) async {
+    if (_currentRecordingPath == null) return;
+
     try {
-      if (_currentRecordingPath == null) {
-        if (kDebugMode) {
-          debugPrint('TalkingMascot: Çalınacak kayıt yok');
-        }
-        return;
-      }
-
-      final file = File(_currentRecordingPath!);
-      if (!await file.exists()) {
-        if (kDebugMode) {
-          debugPrint('TalkingMascot: Kayıt dosyası bulunamadı');
-        }
-        return;
-      }
-
       _isPlaying = true;
 
-      // Dosyayı yükle
+      // 1. Ses oturumunu OYNATMA moduna al (iOS'te sesi hoparlöre vermek için ŞART)
+      await _configureAudioSession(isRecording: false);
+
+      // 2. Dosyayı yükle
       await _player.setFilePath(_currentRecordingPath!);
 
-      // Pitch ve hız ayarla
+      // 3. Efektleri ayarla
       await _player.setSpeed(speedMultiplier);
       await _player.setPitch(pitchMultiplier);
 
-      // Oynatma tamamlandığında callback
-      _player.playerStateStream.listen((state) {
-        if (state.processingState == ProcessingState.completed) {
-          _isPlaying = false;
-          onComplete?.call();
-        }
-      });
-
-      // Oynat
+      // 4. Oynat ve bitmesini BEKLE (Stream listener yerine await kullanıldı)
       await _player.play();
 
-      if (kDebugMode) {
-        debugPrint(
-          'TalkingMascot: Ses çalınıyor (pitch: $pitchMultiplier, speed: $speedMultiplier)',
-        );
-      }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Ses çalma hatası - $e');
-      }
+      debugPrint('TalkingMascot: Oynatma hatası - $e');
+    } finally {
+      // 5. Her durumda (hata olsa bile) durumu sıfırla ve callback'i çağır
       _isPlaying = false;
+      onComplete?.call();
     }
   }
 
-  /// Oynatmayı durdur
   Future<void> stopPlaying() async {
     try {
       await _player.stop();
       _isPlaying = false;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Oynatma durdurma hatası - $e');
-      }
-    }
+    } catch (_) {}
   }
 
-  /// Geçici ses dosyalarını temizle
   Future<void> cleanupTempFiles() async {
     try {
       final tempDir = await getTemporaryDirectory();
       final dir = Directory(tempDir.path);
-
-      await for (final file in dir.list()) {
-        if (file is File && file.path.contains('mascot_voice_')) {
-          await file.delete();
+      if (await dir.exists()) {
+        await for (final file in dir.list()) {
+          if (file is File && file.path.contains('mascot_voice_')) {
+            await file.delete();
+          }
         }
       }
-
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Geçici dosyalar temizlendi');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('TalkingMascot: Temizleme hatası - $e');
-      }
-    }
+    } catch (_) {}
   }
 
-  /// Servisi kapat
   Future<void> dispose() async {
     await stopRecording();
     await stopPlaying();

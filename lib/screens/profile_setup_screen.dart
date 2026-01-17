@@ -12,6 +12,7 @@ import 'package:lottie/lottie.dart';
 import '../features/mascot/presentation/screens/pet_selection_screen.dart';
 import '../models/models.dart';
 import '../services/firebase_storage_service.dart';
+import '../services/local_preferences_service.dart';
 import '../widgets/glass_container.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -348,9 +349,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
         'district': _selectedDistrict,
         'schoolID': _selectedSchoolID,
         'schoolName': selectedSchool.okulAdi,
-        'classLevel': _selectedClass,
+        'grade': _selectedClass, // ✅ Anasayfa için doğru alan adı
+        'classLevel': _selectedClass, // Geriye dönük uyumluluk için
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // ✅ Local cache'i de güncelle - anasayfada doğru sınıf görünsün
+      final localPrefs = LocalPreferencesService();
+      await localPrefs.saveUserProfile(
+        name: _nameController.text.trim(),
+        grade: _selectedClass!,
+        school: selectedSchool.okulAdi,
+        city: _selectedCity,
+        district: _selectedDistrict,
+      );
 
       // Direkt mascot seçimine git, içerik yükleme orada yapılacak
       if (mounted) {

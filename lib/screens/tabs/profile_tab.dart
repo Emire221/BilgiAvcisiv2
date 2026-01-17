@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import '../../features/mascot/presentation/providers/mascot_provider.dart';
 import '../../features/mascot/domain/entities/mascot.dart';
 import '../../core/gamification/mascot_logic.dart';
 import '../../services/database_helper.dart';
+import '../../services/local_preferences_service.dart';
 import '../../services/time_tracking_service.dart';
 import '../login_screen.dart';
 import '../time_analytics_screen.dart';
@@ -421,6 +423,25 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
           password: password,
         );
         await user.reauthenticateWithCredential(credential);
+        
+        // 🧹 Yerel veritabanı ve önbellek temizliği
+        try {
+          final dbHelper = DatabaseHelper();
+          await dbHelper.clearAllData();
+          
+          // SharedPreferences temizliği
+          final prefsService = LocalPreferencesService();
+          await prefsService.clearAll();
+          
+          // İndirilen dosyaları temizle
+          await _cleanupDownloadedFiles();
+          
+          debugPrint('Yerel veriler başarıyla temizlendi');
+        } catch (e) {
+          debugPrint('Yerel veri temizleme hatası: $e');
+        }
+        
+        // Firebase'den kullanıcı verilerini sil
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -431,7 +452,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Hesabınız başarıyla silindi.'),
+              content: Text('Hesabınız ve tüm verileriniz başarıyla silindi.'),
               backgroundColor: Colors.green,
             ),
           );
@@ -445,20 +466,60 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        String errorMessage = e.code == 'wrong-password'
-            ? 'Şifre yanlış!'
-            : 'Bir hata oluştu.';
+        String errorMessage;
+        if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+          errorMessage = '🔐 Şifre yanlış! Lütfen doğru şifrenizi girin ve tekrar deneyin. Unuttuysanız giriş ekranından şifre sıfırlayabilirsiniz.';
+        } else {
+          errorMessage = 'Bir hata oluştu: ${e.message}';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
-        );
+        // Şifre hatası kontrolü (FirebaseAuthException olmayan durumlar için)
+        final errorStr = e.toString().toLowerCase();
+        if (errorStr.contains('wrong-password') || 
+            errorStr.contains('invalid-credential') ||
+            errorStr.contains('password')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🔐 Şifre yanlış! Lütfen doğru şifrenizi girin ve tekrar deneyin. Unuttuysanız giriş ekranından şifre sıfırlayabilirsiniz.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          );
+        }
       }
+    }
+  }
+
+  /// İndirilen dosyaları temizle
+  Future<void> _cleanupDownloadedFiles() async {
+    try {
+      final dbHelper = DatabaseHelper();
+      final downloadedFiles = await dbHelper.getDownloadedFiles();
+      
+      for (final filePath in downloadedFiles) {
+        try {
+          final file = File(filePath);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (_) {}
+      }
+    } catch (e) {
+      debugPrint('Dosya temizleme hatası: $e');
     }
   }
 

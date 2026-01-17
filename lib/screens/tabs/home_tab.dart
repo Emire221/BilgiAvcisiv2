@@ -148,7 +148,12 @@ class _HomeTabState extends ConsumerState<HomeTab>
           flex: 5,
           child: Column(
             children: [
-              _buildHeader(isDarkMode, userProfileAsync, mascotAsync),
+              // Header kaldırıldı - AppBar'a taşındı
+              if (_dailyFact != null)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildSpeechBubbleCard(isDarkMode, mascotAsync),
+                ),
               Expanded(
                 child: _buildMascotStage(
                   isDarkMode,
@@ -190,27 +195,15 @@ class _HomeTabState extends ConsumerState<HomeTab>
         // Elementleri dikeyde yayar (Üst - Orta - Alt)
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 1. HEADER & BALON
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: _buildHeader(isDarkMode, userProfileAsync, mascotAsync)
-                    .animate()
-                    .fadeIn(duration: 500.ms)
-                    .slideY(begin: -0.3, end: 0),
-              ),
-              if (_dailyFact != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildSpeechBubbleCard(isDarkMode, mascotAsync)
-                      .animate()
-                      .fadeIn(duration: 500.ms, delay: 100.ms)
-                      .slideY(begin: -0.2, end: 0),
-                ),
-            ],
-          ),
+          // 1. BALON (Header kaldırıldı - AppBar'a taşındı)
+          if (_dailyFact != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: _buildSpeechBubbleCard(isDarkMode, mascotAsync)
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 100.ms)
+                  .slideY(begin: -0.2, end: 0),
+            ),
 
           // 2. MASKOT (Expanded ile taşmayı önler)
           Expanded(
@@ -371,147 +364,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
                 .fadeIn(duration: 500.ms),
       );
     });
-  }
-
-  /// Sınıf bilgisini formatlı göster
-  String _formatGrade(String? grade) {
-    if (grade == null || grade.isEmpty) return '';
-    if (grade.contains('. Sınıf')) return grade;
-    final match = RegExp(r'(\d+)_?[Ss]inif').firstMatch(grade);
-    if (match != null) return '${match.group(1)}. Sınıf';
-    // Sadece sayı ise
-    final numMatch = RegExp(r'^(\d+)$').firstMatch(grade);
-    if (numMatch != null) return '${numMatch.group(1)}. Sınıf';
-    return grade;
-  }
-
-  Widget _buildHeader(
-    bool isDarkMode,
-    AsyncValue<Map<String, dynamic>?> userProfileAsync,
-    AsyncValue<Mascot?> mascotAsync,
-  ) {
-    final userName = userProfileAsync.asData?.value?['name'] ?? 'Bilgi Avcısı';
-    final grade = userProfileAsync.asData?.value?['grade'] ?? 
-                  userProfileAsync.asData?.value?['classLevel'] ?? '';
-    final formattedGrade = _formatGrade(grade);
-    final mascot = mascotAsync.asData?.value;
-    final level = mascot?.level ?? 1;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
-      child: Row(
-        children: [
-          // Sol taraf: İsim ve Sınıf bilgisi (ikon yok)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Merhaba, $userName! 👋',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                if (formattedGrade.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      formattedGrade,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isDarkMode 
-                            ? Colors.white70 
-                            : Colors.black54,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Sağ taraf: Seri ve Seviye badge'leri
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.fire,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      '5',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      mascot?.petType.color ?? Colors.purple,
-                      (mascot?.petType.color ?? Colors.purple).withValues(
-                        alpha: 0.7,
-                      ),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const FaIcon(
-                      FontAwesomeIcons.star,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Lv.$level',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildSpeechBubbleCard(

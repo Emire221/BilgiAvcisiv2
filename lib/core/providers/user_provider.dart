@@ -38,9 +38,13 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   // Yoksa Firestore'dan çek ve cache'e kaydet
   final firestoreProfile = await userRepo.getUserProfile(currentUser.uid);
   if (firestoreProfile != null) {
+    // ✅ Hem 'grade' hem 'classLevel' kontrol et (geriye dönük uyumluluk)
+    final grade = firestoreProfile['grade'] ?? 
+                  firestoreProfile['classLevel'] ?? 
+                  '3. Sınıf';
     await localPrefs.saveUserProfile(
       name: firestoreProfile['name'] ?? '',
-      grade: firestoreProfile['grade'] ?? '3. Sınıf',
+      grade: grade,
       school: firestoreProfile['schoolName'] ?? '',
       avatar: firestoreProfile['avatar'],
       city: firestoreProfile['city'],
