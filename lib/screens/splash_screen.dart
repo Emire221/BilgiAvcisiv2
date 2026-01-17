@@ -244,19 +244,37 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
 
-            // 4. Alt yazı - Native splash ile tutarlı markalama
+            // 4. Alt yazı - Zarif imza: "With ♥️ for ŞemsAna"
             Positioned(
-              bottom: 50,
+              bottom: 40,
               left: 0,
               right: 0,
-              child: Text(
-                'with love şemse arik',
+              child: RichText(
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+                text: TextSpan(
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    letterSpacing: 0.3,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'With ',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    const TextSpan(
+                      text: '♥️',
+                      style: TextStyle(
+                        color: Color(0xFFE91E63), // Mat Pembe
+                        fontSize: 13,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' for ŞemsAna',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
                 ),
               ).animate(delay: 1200.ms).fadeIn(duration: 600.ms),
             ),

@@ -20,10 +20,10 @@
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" image="LaunchBackground" translatesAutoresizingMaskIntoConstraints="NO" id="tWc-Dq-wcI"/>
                             <!-- Logo - ortada, orijinal boyutunda -->
                             <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4"/>
-                            <!-- Alt metin: with love şemse arik -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="with love şemse arik" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bottomLabel">
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="16"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <!-- Alt metin: With ♥ for ŞemsAna -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="With ♥ for ŞemsAna" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bottomLabel">
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody" type="italicSystem" pointSize="13"/>
+                                <color key="textColor" red="0.459" green="0.459" blue="0.459" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </label>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -40,7 +40,7 @@
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="height" constant="200" id="logo-height"/>
                             <!-- Alt metin constraints -->
                             <constraint firstItem="bottomLabel" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="label-centerX"/>
-                            <constraint firstItem="bottomLabel" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" constant="-50" id="label-bottom"/>
+                            <constraint firstItem="bottomLabel" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" constant="-40" id="label-bottom"/>
                         </constraints>
                     </view>
                 </viewController>
