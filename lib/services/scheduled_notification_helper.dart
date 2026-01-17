@@ -131,6 +131,7 @@ class ScheduledNotificationHelper {
         importance: Importance.high,
         priority: Priority.high,
         playSound: true,
+        sound: RawResourceAndroidNotificationSound('notification_audio'),
         enableVibration: true,
         icon: '@drawable/splash_logo',
         largeIcon: const DrawableResourceAndroidBitmap('@drawable/splash_logo'),
@@ -144,6 +145,7 @@ class ScheduledNotificationHelper {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: 'notification_audio.wav',
       );
 
       final notificationDetails = NotificationDetails(

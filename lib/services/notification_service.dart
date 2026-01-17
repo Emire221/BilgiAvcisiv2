@@ -105,6 +105,7 @@ class NotificationService {
           description: NotificationData.mascotChannelDesc,
           importance: Importance.high,
           playSound: true,
+          sound: RawResourceAndroidNotificationSound('notification_audio'),
           enableVibration: true,
         ),
       );
@@ -116,6 +117,7 @@ class NotificationService {
           description: NotificationData.gameChannelDesc,
           importance: Importance.max,
           playSound: true,
+          sound: RawResourceAndroidNotificationSound('notification_audio'),
           enableVibration: true,
         ),
       );
@@ -345,27 +347,29 @@ class NotificationService {
       // 3A. Uygulama AÇIKSA: In-App Notification (Overlay) göster
       _showInAppNotification(title, body, payload);
     } else {
-      const AndroidNotificationDetails androidDetails =
-          AndroidNotificationDetails(
-            'bilgi_avcisi_channel',
-            'Bilgi Avcısı Bildirimleri',
-            channelDescription: 'Eğitim içerikleri ve güncellemeler',
-            importance: Importance.max,
-            priority: Priority.high,
-            showWhen: true,
-            playSound: true,
-            enableVibration: true,
-            visibility: NotificationVisibility.public,
-            icon: '@drawable/splash_logo',
-            largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
-            color: Color(0xFF667EEA),
-          );
+        const AndroidNotificationDetails androidDetails =
+            AndroidNotificationDetails(
+              'bilgi_avcisi_channel',
+              'Bilgi Avcısı Bildirimleri',
+              channelDescription: 'Eğitim içerikleri ve güncellemeler',
+              importance: Importance.max,
+              priority: Priority.high,
+              showWhen: true,
+              playSound: true,
+              sound: RawResourceAndroidNotificationSound('notification_audio'),
+              enableVibration: true,
+              visibility: NotificationVisibility.public,
+              icon: '@drawable/splash_logo',
+              largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
+              color: Color(0xFF667EEA),
+            );
 
-      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
+        const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'notification_audio.wav',
+        );
 
       const NotificationDetails notificationDetails = NotificationDetails(
         android: androidDetails,
@@ -616,6 +620,7 @@ class NotificationService {
               importance: Importance.max,
               priority: Priority.high,
               playSound: true,
+              sound: RawResourceAndroidNotificationSound('notification_audio'),
               enableVibration: true,
               visibility: NotificationVisibility.public,
               icon: '@mipmap/ic_launcher',
@@ -631,6 +636,7 @@ class NotificationService {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
+          sound: 'notification_audio.wav',
         );
 
         const NotificationDetails notificationDetails = NotificationDetails(
