@@ -70,7 +70,10 @@ class _SplashScreenState extends State<SplashScreen> {
       // 📌 DURUM 3: Profil var - kullanıcı değişikliği ve içerik kontrolü
       final prefsService = LocalPreferencesService();
       final userData = userDoc.data();
-      final currentGrade = userData?['classLevel'] as String? ?? '';
+      // ✅ DÜZELTME: Önce 'grade' alanını kontrol et, yoksa 'classLevel'a bak (geriye uyumluluk)
+      final currentGrade = userData?['grade'] as String? ?? 
+                           userData?['classLevel'] as String? ?? 
+                           '';
       
       // Kullanıcı veya sınıf değişmiş mi kontrol et
       final hasUserChanged = await prefsService.hasUserChanged(user.uid);
