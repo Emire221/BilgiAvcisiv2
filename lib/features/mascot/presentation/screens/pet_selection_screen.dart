@@ -355,10 +355,10 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
 
     final prefsService = LocalPreferencesService();
 
-    // Önceki sync yarım kalmışsa temizle
+    // Önceki sync yarım kalmışsa sadece içerik verilerini temizle (maskot korunur)
     final wasComplete = await prefsService.isContentSyncCompleted();
     if (!wasComplete) {
-      await DatabaseHelper().clearAllData();
+      await DatabaseHelper().clearContentDataOnly();
     }
 
     await prefsService.setContentSyncCompleted(false);

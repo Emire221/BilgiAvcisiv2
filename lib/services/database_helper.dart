@@ -721,6 +721,36 @@ class DatabaseHelper implements IDatabaseHelper {
     });
   }
 
+  /// Sadece içerik verilerini temizler - Kullanıcı verileri korunur
+  /// Bu fonksiyon sync yarım kaldığında veya yeniden başlatıldığında kullanılır
+  /// NOT: Hesap silme için clearAllData() kullanılmalı
+  Future<void> clearContentDataOnly() async {
+    Database db = await database;
+    await db.transaction((txn) async {
+      // Sadece içerik verileri temizlenir
+      await txn.delete('Dersler');
+      await txn.delete('Konular');
+      await txn.delete('Testler');
+      await txn.delete('BilgiKartlari');
+      await txn.delete('FillBlanksLevels');
+      await txn.delete('GuessLevels');
+      await txn.delete('DownloadedFiles');
+      
+      // Haftalık sınav içerik verileri
+      await txn.delete('WeeklyExams');
+      
+      // NOT: Aşağıdaki tablolar KORUNUR:
+      // - UserPets (Maskot)
+      // - DailyTimeTracking (Ekran süresi)
+      // - GameResults (Oyun sonuçları)
+      // - TestResults (Test sonuçları)
+      // - Notifications
+      // - WeeklyExamResults
+      // - ViewedFlashcardSets
+      // - SeenDuelContent
+    });
+  }
+
   // Toplu Ekleme Metodu (Batch Insert)
   @override
   Future<void> batchInsert(
