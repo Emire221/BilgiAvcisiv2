@@ -84,11 +84,11 @@ class TalkingMascotService {
       // Geçici dosya yolu (.m4a formatı - iOS Core Audio ile native uyumlu)
       final tempDir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${tempDir.path}/mascot_voice_$timestamp.m4a';
+      _currentRecordingPath = '${tempDir.path}/mascot_voice_$timestamp.wav';
 
       // Kayıt ayarları (AAC encoder - iOS için optimal)
       const config = RecordConfig(
-        encoder: AudioEncoder.aacLc,
+        encoder: AudioEncoder.wav,
         bitRate: 128000,
         sampleRate: 44100,
       );
@@ -112,10 +112,8 @@ class TalkingMascotService {
       final path = await _recorder.stop();
       _isRecording = false;
       
-      // iOS dosya sisteminin yazma işlemini bitirmesi için bekle
-      // Bu gecikme race condition'ı önler (dosya henüz hazır değilken
-      // oynatıcının dosyayı okumaya çalışmasını engeller)
-      await Future.delayed(const Duration(milliseconds: 150));
+      // Race condition'ı önlemek için kısa bir bekleme (Güvenli IO Delay)
+      await Future.delayed(const Duration(milliseconds: 250));
       
       debugPrint('TalkingMascot: Kayıt durduruldu - $path');
       return path;
@@ -167,13 +165,11 @@ class TalkingMascotService {
       await _player.setSpeed(speedMultiplier);
       await _player.setPitch(pitchMultiplier);
 
+      // Ses seviyesini zorla (iOS'te ahize modunda kalmaması için)
+      await _player.setVolume(1.0);
+
       // Oynat ve bitmesini bekle
       await _player.play();
-      
-      // Oynatma tamamlanana kadar bekle
-      await _player.playerStateStream.firstWhere(
-        (state) => state.processingState == ProcessingState.completed,
-      );
       
       debugPrint('TalkingMascot: Oynatma tamamlandı');
 
