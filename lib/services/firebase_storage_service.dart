@@ -72,8 +72,8 @@ class FirebaseStorageService {
         throw Exception('Temel dosyalar bulunamadı');
       }
 
-      // 2. Veritabanını temizle
-      await _dbHelper.clearAllData();
+      // 2. Sadece içerik verilerini temizle (kullanıcı verileri korunur)
+      await _dbHelper.clearContentDataOnly();
 
       // 3. JSON'ları arka planda parse et ve hazırla
       onProgress('✨ Sihir yapılıyor...');

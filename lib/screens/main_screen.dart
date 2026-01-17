@@ -15,6 +15,7 @@ import 'tabs/games_tab.dart';
 import 'tabs/profile_tab.dart';
 import 'notifications_screen.dart';
 import '../services/notification_service.dart';
+import '../services/time_tracking_service.dart';
 
 /// Uygulamanın ana iskeleti - Floating Glass Dock ile 4 tab yönetimi
 class MainScreen extends ConsumerStatefulWidget {
@@ -102,12 +103,24 @@ class _MainScreenState extends ConsumerState<MainScreen>
       int streak = 0;
       DateTime checkDate = DateTime.now();
 
-      // Bugün kontrol et
+      // Bugün kontrol et - RAM'deki anlık değeri de dahil et
       String todayStr = _formatDateForDB(checkDate);
-      int todaySeconds = await dbHelper.getDailyTime(todayStr);
+      int todaySecondsFromDb = await dbHelper.getDailyTime(todayStr);
+      // TimeTrackingService RAM'de tutuyor, DB'ye 5 dakikada bir yazıyor
+      // Bu yüzden anlık değeri de kontrol et
+      int todaySecondsFromMemory = TimeTrackingService().todaySeconds;
+      // En büyük değeri al (RAM veya DB)
+      int todaySeconds = todaySecondsFromDb > todaySecondsFromMemory 
+          ? todaySecondsFromDb 
+          : todaySecondsFromMemory;
 
-      // Bugün henüz 1 dakika kullanım yoksa, dünden başla
-      if (todaySeconds < minSecondsPerDay) {
+      debugPrint('Streak: DB=$todaySecondsFromDb, RAM=$todaySecondsFromMemory, Final=$todaySeconds');
+
+      // Bugün 1 dakika kullanım varsa bugünü say, yoksa dünden başla
+      if (todaySeconds >= minSecondsPerDay) {
+        streak = 1; // Bugün dahil
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
         checkDate = checkDate.subtract(const Duration(days: 1));
       }
 
@@ -136,6 +149,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   String _formatDateForDB(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Sınıf formatını düzelt (örn: "3_Sinif" -> "3. Sınıf")
+  String _formatGrade(String grade) {
+    if (grade.contains('. Sınıf')) return grade;
+    final match = RegExp(r'(\d+)_?[Ss]inif').firstMatch(grade);
+    if (match != null) return '${match.group(1)}. Sınıf';
+    return grade;
   }
 
   /// Belirtilen tab'a geçiş yapar
@@ -235,7 +256,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
       title: userProfileAsync.when(
         data: (profile) {
           final name = profile?['name'] ?? 'Öğrenci';
-          final grade = profile?['grade'] ?? '3. Sınıf';
+          final rawGrade = profile?['grade'] ?? '3. Sınıf';
+          final grade = _formatGrade(rawGrade);
 
           return Row(
             children: [

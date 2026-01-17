@@ -220,12 +220,21 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     int streak = 0;
     DateTime checkDate = DateTime.now();
 
-    // Bugün kontrol et
+    // Bugün kontrol et - RAM'deki anlık değeri de dahil et
     String todayStr = _formatDateForDB(checkDate);
-    int todaySeconds = await dbHelper.getDailyTime(todayStr);
+    int todaySecondsFromDb = await dbHelper.getDailyTime(todayStr);
+    // TimeTrackingService RAM'de tutuyor, DB'ye 5 dakikada bir yazıyor
+    int todaySecondsFromMemory = TimeTrackingService().todaySeconds;
+    // En büyük değeri al (RAM veya DB)
+    int todaySeconds = todaySecondsFromDb > todaySecondsFromMemory 
+        ? todaySecondsFromDb 
+        : todaySecondsFromMemory;
 
-    // Bugün henüz 1 dakika kullanım yoksa, dünden başla
-    if (todaySeconds < minSecondsPerDay) {
+    // Bugün 1 dakika kullanım varsa bugünü say, yoksa dünden başla
+    if (todaySeconds >= minSecondsPerDay) {
+      streak = 1; // Bugün dahil
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    } else {
       checkDate = checkDate.subtract(const Duration(days: 1));
     }
 

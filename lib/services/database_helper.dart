@@ -12,6 +12,7 @@ abstract class IDatabaseHelper {
   Future<Map<String, dynamic>?> getLatestWeeklyExam();
   Future<void> clearOldWeeklyExamData(String newExamId);
   Future<void> clearAllData();
+  Future<void> clearContentDataOnly();
   Future<void> addDownloadedFile(String path);
   Future<void> insertDers(Map<String, dynamic> row);
   Future<void> insertKonu(Map<String, dynamic> row);
@@ -724,6 +725,7 @@ class DatabaseHelper implements IDatabaseHelper {
   /// Sadece içerik verilerini temizler - Kullanıcı verileri korunur
   /// Bu fonksiyon sync yarım kaldığında veya yeniden başlatıldığında kullanılır
   /// NOT: Hesap silme için clearAllData() kullanılmalı
+  @override
   Future<void> clearContentDataOnly() async {
     Database db = await database;
     await db.transaction((txn) async {

@@ -196,8 +196,9 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
       final wasPreviousSyncComplete = await prefsService.isContentSyncCompleted();
       if (!wasPreviousSyncComplete) {
         // Önceki indirme yarıda kalmış - bozuk/eksik verileri temizle
-        debugPrint('⚠️ Önceki sync yarım kalmış - veriler temizleniyor...');
-        await dbHelper.clearAllData();
+        // ⚠️ SADECE içerik verilerini temizle - kullanıcı verilerini (mascot, screen time, vb.) KORUMALI
+        debugPrint('⚠️ Önceki sync yarım kalmış - içerik verileri temizleniyor...');
+        await dbHelper.clearContentDataOnly();
       }
 
       // 🚩 Bayrağı FALSE yap - yeni işlem başlıyor
