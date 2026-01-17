@@ -1,0 +1,78 @@
+name: Flutter Build (Android & iOS)
+
+on:
+  push:
+    branches: [ "main" ] # Ana dala kod yüklediğinde çalışır
+  workflow_dispatch:      # İstediğin zaman elle tetiklemek için
+
+jobs:
+  # ==================================================
+  # 🤖 GÖREV 1: ANDROID APK (Android Cihazlar İçin)
+  # ==================================================
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Kodları Çek
+        uses: actions/checkout@v4
+
+      - name: Java Kurulumu
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Flutter Kurulumu
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Bağımlılıkları Yükle
+        run: flutter pub get
+
+      - name: APK Oluştur (Debug)
+        run: flutter build apk --debug
+
+      - name: Sonucu Kaydet (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+
+  # ==================================================
+  # 🍎 GÖREV 2: iOS IPA (Sideloadly ile Yüklemek İçin)
+  # ==================================================
+  build-ios-unsigned:
+    name: Build Unsigned IPA
+    runs-on: macos-latest # DİKKAT: Kotandan 10 kat hızlı düşer!
+    
+    steps:
+      - name: Kodları Çek
+        uses: actions/checkout@v4
+
+      - name: Flutter Kurulumu
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Bağımlılıkları Yükle
+        run: flutter pub get
+
+      # 1. iOS Uygulamasını İMZASIZ olarak derle
+      - name: Build iOS (No Codesign)
+        run: flutter build ios --release --no-codesign
+
+      # 2. .app klasörünü .ipa formatına çevir (Sideloadly için şart)
+      - name: Paketle (Convert to IPA)
+        run: |
+          mkdir Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -r release_app.ipa Payload
+
+      # 3. Sonucu Kaydet (Artifact)
+      - name: Sonucu Kaydet (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: release_app.ipa
