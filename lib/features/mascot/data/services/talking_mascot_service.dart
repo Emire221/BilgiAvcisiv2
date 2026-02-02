@@ -14,7 +14,7 @@ class TalkingMascotService {
   String? _currentRecordingPath;
   bool _isRecording = false;
   bool _isPlaying = false;
-  
+
   // Session'ın sadece bir kez başlatılması yeterlidir
   bool _isSessionInitialized = false;
 
@@ -28,20 +28,23 @@ class TalkingMascotService {
     if (_isSessionInitialized) return;
     try {
       final session = await AudioSession.instance;
-      await session.configure(AudioSessionConfiguration(
-        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-        avAudioSessionCategoryOptions: 
-          AVAudioSessionCategoryOptions.defaultToSpeaker | // Sesi ahize yerine hoparlöre verir
-          AVAudioSessionCategoryOptions.allowBluetooth | 
-          AVAudioSessionCategoryOptions.allowAirPlay |
-          AVAudioSessionCategoryOptions.mixWithOthers,
-        avAudioSessionMode: AVAudioSessionMode.defaultMode,
-        androidAudioAttributes: const AndroidAudioAttributes(
-          contentType: AndroidAudioContentType.speech,
-          usage: AndroidAudioUsage.voiceCommunication,
+      await session.configure(
+        AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+          avAudioSessionCategoryOptions:
+              AVAudioSessionCategoryOptions
+                  .defaultToSpeaker | // Sesi ahize yerine hoparlöre verir
+              AVAudioSessionCategoryOptions.allowBluetooth |
+              AVAudioSessionCategoryOptions.allowAirPlay |
+              AVAudioSessionCategoryOptions.mixWithOthers,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
+          androidAudioAttributes: const AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.speech,
+            usage: AndroidAudioUsage.voiceCommunication,
+          ),
+          androidWillPauseWhenDucked: true,
         ),
-        androidWillPauseWhenDucked: true,
-      ));
+      );
       await session.setActive(true);
       _isSessionInitialized = true;
     } catch (e) {
@@ -59,11 +62,12 @@ class TalkingMascotService {
 
       final tempDir = await getTemporaryDirectory();
       // DÜZELTME 1: .wav formatı (Gecikmesiz yazma için şart)
-      _currentRecordingPath = '${tempDir.path}/mascot_rec_${DateTime.now().millisecondsSinceEpoch}.wav';
+      _currentRecordingPath =
+          '${tempDir.path}/mascot_rec_${DateTime.now().millisecondsSinceEpoch}.wav';
 
       // DÜZELTME 2: Encoder WAV (PCM) olmalı
       const config = RecordConfig(
-        encoder: AudioEncoder.wav, 
+        encoder: AudioEncoder.wav,
         bitRate: 128000,
         sampleRate: 44100,
       );
@@ -81,15 +85,15 @@ class TalkingMascotService {
   Future<String?> stopRecording() async {
     try {
       if (!_isRecording) return null;
-      
+
       final path = await _recorder.stop();
       _isRecording = false;
-      
+
       // DÜZELTME 3: Dosya sisteminin dosyayı kapatması için minik bir bekleme
       if (Platform.isIOS) {
         await Future.delayed(const Duration(milliseconds: 200));
       }
-      
+
       return path;
     } catch (e) {
       _isRecording = false;
@@ -121,17 +125,16 @@ class TalkingMascotService {
       // Player ayarları
       await _player.stop();
       await _player.setVolume(1.0); // Sesi maksimuma zorla
-      
+
       // Dosyayı yükle
       await _player.setFilePath(_currentRecordingPath!);
-      
+
       // Efektler
       await _player.setPitch(pitchMultiplier);
       await _player.setSpeed(speedMultiplier);
 
       // Oynat ve bitmesini bekle (Stream listener yerine await play en sağlıklısıdır)
       await _player.play();
-
     } catch (e) {
       debugPrint('TalkingMascot: Oynatma hatası - $e');
     } finally {
@@ -150,5 +153,16 @@ class TalkingMascotService {
   Future<void> dispose() async {
     await _recorder.dispose();
     await _player.dispose();
+  }
+
+  /// Mikrofon izni iste ve sonucunu döndür
+  Future<bool> requestMicrophonePermission() async {
+    final status = await Permission.microphone.request();
+    return status.isGranted;
+  }
+
+  /// Uygulama ayarlarını aç (izin vermek için)
+  Future<bool> openAppSettingsForPermission() async {
+    return await openAppSettings();
   }
 }
