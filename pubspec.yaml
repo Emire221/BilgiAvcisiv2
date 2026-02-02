@@ -12,53 +12,56 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  firebase_core: ^3.8.0
-  firebase_auth: ^5.3.3
-  firebase_storage: ^12.3.7
-  cloud_firestore: ^5.5.1
-  # 🔥 Firebase Analytics & Monitoring
-  firebase_crashlytics: ^4.2.1
-  firebase_analytics: ^11.4.1
-  firebase_remote_config: ^5.2.1
-  firebase_performance: ^0.10.0+11
+  # 🔥 Firebase Suite - Tüm paketler uyumlu versiyonlarda
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  firebase_storage: ^12.4.10
+  cloud_firestore: ^5.6.12
+  firebase_crashlytics: ^4.3.10
+  firebase_analytics: ^11.6.0
+  firebase_remote_config: ^5.5.0
+  firebase_performance: ^0.10.1+10
+  # Storage & Data
   path_provider: ^2.1.5
-  google_fonts: ^6.3.3
   sqflite: ^2.3.0
   path: ^1.8.3
-  shared_preferences: ^2.2.2
-  lottie: ^3.3.0
+  shared_preferences: ^2.5.4
+  # UI & Fonts
+  google_fonts: ^6.3.3
+  lottie: ^3.3.2
   flutter_local_notifications: ^18.0.1
   intl: ^0.19.0
   # State Management & Architecture
   flutter_riverpod: ^2.6.1
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
-  # Optimizations
-  flutter_secure_storage: ^9.2.2
+  # Utils
   logger: ^2.5.0
   http: ^1.2.0
   # Games & Sensors
-  shake: ^3.0.0
+  shake: ^3.0.0  # Salla Bakalım oyunu için
   confetti: ^0.8.0
   # Sinematik Animasyonlar
   flutter_animate: ^4.5.2
-  archive: ^3.3.7
-  timezone: ^0.9.2
-  # Talking Mascot - Ses kaydı ve oynatma
+  archive: ^4.0.7
+  timezone: ^0.9.4
+  # Talking Mascot - Ses kaydı ve oynatma (Android/iOS only)
   record: ^6.0.0
   audio_session: ^0.1.21
   just_audio: ^0.9.40
   permission_handler: ^11.3.1
-  provider: ^6.1.5+1
+  # UI Components
   font_awesome_flutter: ^10.12.0
   percent_indicator: ^4.2.5
-  fl_chart: ^0.69.0
+  fl_chart: ^0.69.2
   wakelock_plus: ^1.4.0
   # Background scheduled alarms
   android_alarm_manager_plus: ^5.0.0
   # Paylaşım ve Ekran Görüntüsü
   share_plus: ^7.2.2
   gal: ^2.3.0
+
+# Şu an dependency_overrides gerekmemektedir
 
 dev_dependencies:
   flutter_test:
@@ -85,17 +88,10 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/appicon/main_logo.png"
   min_sdk_android: 21
   remove_alpha_ios: true
-  web:
-    generate: true
-    image_path: "assets/appicon/main_logo.png"
-  windows:
-    generate: true
-    image_path: "assets/appicon/main_logo.png"
 
 flutter:
   uses-material-design: true
   assets:
     - assets/json/
-    - assets/images/
     - assets/animation/
     - assets/appicon/

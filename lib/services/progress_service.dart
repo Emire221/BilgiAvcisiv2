@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'database_helper.dart';
+import '../core/utils/logger.dart';
 
 /// 🎯 Merkezi İlerleme Takip Servisi
 ///
@@ -45,11 +45,9 @@ class ProgressService {
         final total = await _dbHelper.getTotalLevelCount(gameId);
         final completed = await _dbHelper.getCompletedLevelCount(gameId);
         final result = (total - completed).clamp(0, total);
-        if (kDebugMode) {
-          debugPrint(
-            '🎮 ProgressService [$gameId]: total=$total, completed=$completed, remaining=$result',
-          );
-        }
+        logger.d(
+          'ProgressService [$gameId]: total=$total, completed=$completed, remaining=$result',
+        );
         return result;
       default:
         // Diğer oyunlar için badge gösterilmez
@@ -66,11 +64,9 @@ class ProgressService {
     final total = await _dbHelper.getTestCountByTopic(topicId);
     final solved = await _dbHelper.getSolvedTestCountByTopic(topicId);
     final result = (total - solved).clamp(0, total);
-    if (kDebugMode) {
-      debugPrint(
-        '📝 ProgressService [test] topicId=$topicId: total=$total, solved=$solved, remaining=$result',
-      );
-    }
+    logger.d(
+      'ProgressService [test] topicId=$topicId: total=$total, solved=$solved, remaining=$result',
+    );
     return result;
   }
 
@@ -79,11 +75,9 @@ class ProgressService {
     final total = await _dbHelper.getFlashcardSetCountByTopic(topicId);
     final viewed = await _dbHelper.getViewedFlashcardSetCount(topicId);
     final result = (total - viewed).clamp(0, total);
-    if (kDebugMode) {
-      debugPrint(
-        '🃏 ProgressService [flashcard] topicId=$topicId: total=$total, viewed=$viewed, remaining=$result',
-      );
-    }
+    logger.d(
+      'ProgressService [flashcard] topicId=$topicId: total=$total, viewed=$viewed, remaining=$result',
+    );
     return result;
   }
 
@@ -108,11 +102,9 @@ class ProgressService {
       total += await getTopicUncompletedCount(topicId, mode);
     }
 
-    if (kDebugMode) {
-      debugPrint(
-        '📚 ProgressService [lesson] lessonId=$lessonId, mode=$mode: topicCount=${topicIds.length}, remaining=$total',
-      );
-    }
+    logger.d(
+      'ProgressService [lesson] lessonId=$lessonId, mode=$mode: topicCount=${topicIds.length}, remaining=$total',
+    );
     return total;
   }
 
@@ -125,11 +117,9 @@ class ProgressService {
     final tests = await _dbHelper.getTotalTestCount();
     final flashcards = await _dbHelper.getTotalFlashcardSetCount();
     final total = tests + flashcards;
-    if (kDebugMode) {
-      debugPrint(
-        '🎯 ProgressService [total]: tests=$tests, flashcards=$flashcards, total=$total',
-      );
-    }
+    logger.d(
+      'ProgressService [total]: tests=$tests, flashcards=$flashcards, total=$total',
+    );
     return total;
   }
 
@@ -138,12 +128,9 @@ class ProgressService {
     final solvedTests = await _dbHelper.getTotalSolvedTestCount();
     final viewedFlashcards = await _dbHelper.getTotalViewedFlashcardSetCount();
     final completed = solvedTests + viewedFlashcards;
-    if (kDebugMode) {
-      debugPrint(
-        '✅ ProgressService [completed]: solvedTests=$solvedTests, viewedFlashcards=$viewedFlashcards, completed=$completed',
-      );
-    }
+    logger.i(
+      'ProgressService [completed]: solvedTests=$solvedTests, viewedFlashcards=$viewedFlashcards, completed=$completed',
+    );
     return completed;
   }
 }
-

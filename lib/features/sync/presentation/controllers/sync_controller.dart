@@ -10,7 +10,7 @@ import '../../../../services/database_helper.dart';
 class SyncController extends StateNotifier<SyncState> {
   final FirebaseStorageService _storageService;
   final LocalPreferencesService _prefsService;
-  // ignore: unused_field
+  // ignore: unused_field - Gelecekte veritabanı işlemleri için saklanıyor
   final DatabaseHelper _dbHelper;
 
   // 🎯 Eğlenceli yükleme mesajları - her aşama için farklı
@@ -280,20 +280,14 @@ class SyncController extends StateNotifier<SyncState> {
       // Hedef klasör yolunu hazırla
       final docDir = await getApplicationDocumentsDirectory();
       // Sınıf ismini güvenli hale getir (Örn: "3. Sınıf" -> "3_Sinif")
-      final safeClassName = className
-          .replaceAll('.', '')
-          .replaceAll(' ', '_');
+      final safeClassName = className.replaceAll('.', '').replaceAll(' ', '_');
       final targetPath = '${docDir.path}/$safeClassName';
 
       // tar.bz2 arşivini indir ve AÇIKLAMA: Arşiv zaten {safeClassName} klasörünü içerdiği için
       // root (docDir) dizinine çıkartıyoruz. Böylece .../3_Sinif/3_Sinif/... oluşmuyor.
-      await _storageService.downloadAndExtractArchive(
-        file.path,
-        (message) {
-          state = state.copyWith(message: message);
-        },
-        destinationPath: docDir.path,
-      );
+      await _storageService.downloadAndExtractArchive(file.path, (message) {
+        state = state.copyWith(message: message);
+      }, destinationPath: docDir.path);
 
       // Arşiv içeriğini veritabanına kaydet
       try {

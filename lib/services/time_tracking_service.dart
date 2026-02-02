@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'database_helper.dart';
+import '../core/utils/logger.dart';
 
 /// Uygulama içi süre takibi servisi
 /// Singleton yapısında, uygulama boyunca süreyi takip eder.
@@ -45,7 +46,7 @@ class TimeTrackingService with WidgetsBindingObserver {
     // Veritabanından bugünün mevcut süresini yükle
     _todaySeconds = await DatabaseHelper().getDailyTime(_currentDate);
     _lastSavedSeconds = _todaySeconds;
-    debugPrint(
+    logger.i(
       'TimeTrackingService: Başlatıldı. Bugünkü süre: $_todaySeconds saniye',
     );
 
@@ -66,7 +67,7 @@ class TimeTrackingService with WidgetsBindingObserver {
         _currentDate = newDate;
         _todaySeconds = 0;
         _lastSavedSeconds = 0;
-        debugPrint('TimeTrackingService: Yeni gün başladı');
+        logger.i('TimeTrackingService: Yeni gün başladı');
       }
 
       _todaySeconds++;
@@ -89,7 +90,7 @@ class TimeTrackingService with WidgetsBindingObserver {
     if (_todaySeconds != _lastSavedSeconds && _currentDate.isNotEmpty) {
       await DatabaseHelper().saveDailyTime(_currentDate, _todaySeconds);
       _lastSavedSeconds = _todaySeconds;
-      debugPrint(
+      logger.d(
         'TimeTrackingService: DB\'ye kaydedildi ($_todaySeconds saniye)',
       );
     }
@@ -100,7 +101,7 @@ class TimeTrackingService with WidgetsBindingObserver {
     _timer?.cancel();
     _timer = null;
     _isRunning = false;
-    debugPrint('TimeTrackingService: Durduruldu');
+    logger.i('TimeTrackingService: Durduruldu');
   }
 
   /// Uygulama yaşam döngüsü değişikliklerini dinle
@@ -110,7 +111,7 @@ class TimeTrackingService with WidgetsBindingObserver {
       case AppLifecycleState.resumed:
         // Uygulama ön plana döndü
         if (!_isRunning) {
-          debugPrint(
+          logger.d(
             'TimeTrackingService: Uygulama resumed, zamanlayıcı devam ediyor',
           );
           _startTimer();
@@ -125,7 +126,7 @@ class TimeTrackingService with WidgetsBindingObserver {
         _saveToDatabase();
         _saveTimer?.cancel();
         if (_isRunning) {
-          debugPrint(
+          logger.d(
             'TimeTrackingService: Uygulama paused, zamanlayıcı duraklatıldı',
           );
           stop();

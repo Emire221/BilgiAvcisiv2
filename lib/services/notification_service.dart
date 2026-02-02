@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +6,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'database_helper.dart';
 import '../models/notification_data.dart';
 import '../core/navigator_key.dart';
+import '../core/utils/logger.dart';
 import '../screens/main_screen.dart';
 import '../features/duel/presentation/screens/duel_game_selection_screen.dart';
 import '../features/games/memory/presentation/screens/memory_game_screen.dart';
@@ -52,7 +52,7 @@ class NotificationService {
 
     // Android için bildirim izni iste
     await _requestPermissions();
-    
+
     // Android 12+ için tam zamanlı alarm izni iste
     await _requestExactAlarmPermission();
 
@@ -62,7 +62,7 @@ class NotificationService {
     // Okunmamış bildirim sayısını güncelle
     await updateUnreadCount();
   }
-  
+
   /// Android 12+ için Exact Alarm iznini talep eder
   /// Bu izin olmadan zamanlanmış bildirimler gecikebilir veya çalışmayabilir
   Future<void> _requestExactAlarmPermission() async {
@@ -71,21 +71,22 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
-      
+
       if (androidPlugin != null) {
         // Android 12+ (SDK 31+) için exact alarm izni kontrolü
-        final bool? canScheduleExact = await androidPlugin.canScheduleExactNotifications();
-        
+        final bool? canScheduleExact = await androidPlugin
+            .canScheduleExactNotifications();
+
         if (canScheduleExact == false) {
           // İzin yoksa sistem ayarlarına yönlendir
           await androidPlugin.requestExactAlarmsPermission();
-          debugPrint('🔔 Exact Alarm izni talep edildi');
+          logger.i('Exact Alarm izni talep edildi');
         } else {
-          debugPrint('✅ Exact Alarm izni zaten mevcut');
+          logger.d('Exact Alarm izni zaten mevcut');
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Exact Alarm izni kontrolü hatası: $e');
+      logger.w('Exact Alarm izni kontrolü hatası: $e');
       // Hata olsa bile devam et - eski Android versiyonlarında bu API yok
     }
   }
@@ -128,15 +129,14 @@ class NotificationService {
   /// İzinler LoginScreen'de zaten istenmiş olmalı
   Future<void> ensureInitialized() async {
     try {
-      debugPrint('🔔 Bildirim servisi başlatılıyor...');
-      
+      logger.i('Bildirim servisi başlatılıyor...');
+
       // Zamanlanmış bildirimleri kur
       await initializeScheduledNotifications();
-      
-      debugPrint('✅ Bildirim servisi başarıyla başlatıldı');
+
+      logger.i('Bildirim servisi başarıyla başlatıldı');
     } catch (e, stack) {
-      debugPrint('❌ Bildirim servisi başlatma hatası: $e');
-      debugPrint('📍 Stack: $stack');
+      logger.e('Bildirim servisi başlatma hatası: $e', e, stack);
     }
   }
 
@@ -165,7 +165,7 @@ class NotificationService {
     // Navigasyon için context'e ihtiyaç var
     final context = navigatorKey.currentContext;
     if (context == null) {
-      debugPrint('Navigator context bulunamadı, yönlendirme yapılamadı');
+      logger.w('Navigator context bulunamadı, yönlendirme yapılamadı');
       return;
     }
 
@@ -277,28 +277,32 @@ class NotificationService {
     try {
       // Bildirim ayarını kontrol et
       final prefs = await SharedPreferences.getInstance();
-      final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+      final notificationsEnabled =
+          prefs.getBool('notifications_enabled') ?? true;
 
       if (!notificationsEnabled) {
-        debugPrint('Bildirimler devre dışı, haftalık bildirimler kurulmadı');
+        logger.d('Bildirimler devre dışı, haftalık bildirimler kurulmadı');
         return;
       }
 
       // Maskot ismini al veya varsayılan kullan
-      final storedMascotName = mascotName ?? prefs.getString('mascot_name') ?? 'Dostum';
+      final storedMascotName =
+          mascotName ?? prefs.getString('mascot_name') ?? 'Dostum';
 
       // Haftalık bildirimleri ScheduledNotificationHelper ile kur
       // 54 haftalık döngüde planlanır, maskot ismi ile kişiselleştirilir
       await ScheduledNotificationHelper.scheduleWeeklyNotifications(
         mascotName: storedMascotName,
       );
-      
-      debugPrint('✅ Haftalık bildirimler başarıyla kuruldu (Maskot: $storedMascotName)');
+
+      logger.i(
+        'Haftalık bildirimler başarıyla kuruldu (Maskot: $storedMascotName)',
+      );
     } catch (e) {
-      debugPrint('Haftalık bildirim kurulum hatası: $e');
+      logger.e('Haftalık bildirim kurulum hatası: $e');
     }
   }
-  
+
   /// Maskot ismini güncelle ve bildirimleri yeniden planla
   Future<void> updateMascotName(String mascotName) async {
     await ScheduledNotificationHelper.updateMascotName(mascotName);
@@ -347,29 +351,29 @@ class NotificationService {
       // 3A. Uygulama AÇIKSA: In-App Notification (Overlay) göster
       _showInAppNotification(title, body, payload);
     } else {
-        const AndroidNotificationDetails androidDetails =
-            AndroidNotificationDetails(
-              'bilgi_avcisi_channel',
-              'Bilgi Avcısı Bildirimleri',
-              channelDescription: 'Eğitim içerikleri ve güncellemeler',
-              importance: Importance.max,
-              priority: Priority.high,
-              showWhen: true,
-              playSound: true,
-              sound: RawResourceAndroidNotificationSound('notification_audio'),
-              enableVibration: true,
-              visibility: NotificationVisibility.public,
-              icon: '@drawable/splash_logo',
-              largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
-              color: Color(0xFF667EEA),
-            );
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            'bilgi_avcisi_channel',
+            'Bilgi Avcısı Bildirimleri',
+            channelDescription: 'Eğitim içerikleri ve güncellemeler',
+            importance: Importance.max,
+            priority: Priority.high,
+            showWhen: true,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('notification_audio'),
+            enableVibration: true,
+            visibility: NotificationVisibility.public,
+            icon: '@drawable/splash_logo',
+            largeIcon: DrawableResourceAndroidBitmap('@drawable/splash_logo'),
+            color: Color(0xFF667EEA),
+          );
 
-        const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          sound: 'notification_audio.wav',
-        );
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        sound: 'notification_audio.wav',
+      );
 
       const NotificationDetails notificationDetails = NotificationDetails(
         android: androidDetails,
@@ -414,11 +418,13 @@ class NotificationService {
           textColor: const Color(0xFF00CEC9),
           onPressed: () {
             if (payload != null) {
-              _onNotificationTapped(NotificationResponse(
-                notificationResponseType:
-                    NotificationResponseType.selectedNotification,
-                payload: payload,
-              ));
+              _onNotificationTapped(
+                NotificationResponse(
+                  notificationResponseType:
+                      NotificationResponseType.selectedNotification,
+                  payload: payload,
+                ),
+              );
             }
           },
         ),
@@ -605,32 +611,32 @@ class NotificationService {
       'date': DateTime.now().toIso8601String(),
       'isRead': 0,
     });
-    
+
     // Sayacı güncelle
     await updateUnreadCount();
 
     // Belirtilen süre sonra bildirim gönder (zonedSchedule yerine Future.delayed + show)
     Future.delayed(Duration(seconds: delaySeconds), () async {
       try {
-        const AndroidNotificationDetails androidDetails =
-            AndroidNotificationDetails(
-              'welcome_channel',
-              'Hoşgeldin Bildirimleri',
-              channelDescription: 'Yeni kullanıcılar için karşılama bildirimleri',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
-              sound: RawResourceAndroidNotificationSound('notification_audio'),
-              enableVibration: true,
-              visibility: NotificationVisibility.public,
-              icon: '@mipmap/ic_launcher',
-              styleInformation: BigTextStyleInformation(
-                '🚀 Öğrenme macerana hoş geldin!\n\n'
-                '📚 Testler, bilgi kartları ve mini oyunlarla öğrenmeyi keşfet.\n'
-                '🎮 Tüm ekranları kontrol etmeyi unutma!\n\n'
-                '⭐ Şimdi başla ve bilgi avcısı ol!',
-              ),
-            );
+        const AndroidNotificationDetails
+        androidDetails = AndroidNotificationDetails(
+          'welcome_channel',
+          'Hoşgeldin Bildirimleri',
+          channelDescription: 'Yeni kullanıcılar için karşılama bildirimleri',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('notification_audio'),
+          enableVibration: true,
+          visibility: NotificationVisibility.public,
+          icon: '@mipmap/ic_launcher',
+          styleInformation: BigTextStyleInformation(
+            '🚀 Öğrenme macerana hoş geldin!\n\n'
+            '📚 Testler, bilgi kartları ve mini oyunlarla öğrenmeyi keşfet.\n'
+            '🎮 Tüm ekranları kontrol etmeyi unutma!\n\n'
+            '⭐ Şimdi başla ve bilgi avcısı ol!',
+          ),
+        );
 
         const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
           presentAlert: true,
@@ -651,10 +657,10 @@ class NotificationService {
           notificationDetails,
           payload: 'welcome_notification',
         );
-        
-        debugPrint('✅ Hoşgeldin bildirimi gönderildi: $userName');
+
+        logger.i('Hoşgeldin bildirimi gönderildi: $userName');
       } catch (e) {
-        debugPrint('❌ Hoşgeldin bildirimi gönderilemedi: $e');
+        logger.e('Hoşgeldin bildirimi gönderilemedi: $e');
       }
     });
   }
