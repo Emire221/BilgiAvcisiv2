@@ -61,15 +61,16 @@ class TalkingMascotService {
       await _initAudioSession(); // Session'ı garantiye al
 
       final tempDir = await getTemporaryDirectory();
-      // DÜZELTME 1: .wav formatı (Gecikmesiz yazma için şart)
+      // iOS için M4A (AAC) formatı kullanılmalı - WAV iOS'te pitch shift ile uyumsuz
       _currentRecordingPath =
-          '${tempDir.path}/mascot_rec_${DateTime.now().millisecondsSinceEpoch}.wav';
+          '${tempDir.path}/mascot_rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
-      // DÜZELTME 2: Encoder WAV (PCM) olmalı
+      // iOS native format: AAC Low Complexity + Mono kanal (en stabil)
       const config = RecordConfig(
-        encoder: AudioEncoder.wav,
+        encoder: AudioEncoder.aacLc,
         bitRate: 128000,
         sampleRate: 44100,
+        numChannels: 1, // Mono - ses efektleri için daha temiz
       );
 
       await _recorder.start(config, path: _currentRecordingPath!);
@@ -89,9 +90,9 @@ class TalkingMascotService {
       final path = await _recorder.stop();
       _isRecording = false;
 
-      // DÜZELTME 3: Dosya sisteminin dosyayı kapatması için minik bir bekleme
+      // iOS'te AAC encoder'ın dosyayı tamamen yazması için bekleme süresi
       if (Platform.isIOS) {
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future.delayed(const Duration(milliseconds: 300));
       }
 
       return path;
