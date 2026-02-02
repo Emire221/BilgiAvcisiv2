@@ -27,31 +27,10 @@ import 'core/navigator_key.dart';
 import 'services/notification_service.dart';
 import 'services/time_tracking_service.dart';
 
-// ⚡ Wakelock import kaldırıldı - artık sadece gerekli ekranlarda kullanılacak
 import 'services/local_preferences_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'services/scheduled_notification_helper.dart';
 import 'providers/theme_provider.dart';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ⚠️ LEGACY ThemeManager - Backward Compatibility İçin Korunuyor
-// ═══════════════════════════════════════════════════════════════════════════
-// YENİ KODLARDA ref.watch(themeProvider) KULLANIN!
-// Bu sınıf kademeli geçiş için tutuluyor, gelecekte kaldırılacak.
-// ═══════════════════════════════════════════════════════════════════════════
-@Deprecated('Use themeProvider from providers/theme_provider.dart instead')
-class ThemeManager extends ValueNotifier<ThemeMode> {
-  ThemeManager(ThemeMode initialMode) : super(initialMode);
-
-  void toggleTheme(bool isDarkMode) {
-    value = isDarkMode ? ThemeMode.dark : ThemeMode.light;
-    // Tercihi kaydet
-    LocalPreferencesService().setDarkMode(isDarkMode);
-  }
-}
-
-// Global tema yöneticisi - main() içinde başlatılacak
-// ignore: deprecated_member_use_from_same_package
-late final ThemeManager themeManager;
 
 /// Global RouteObserver - ekranlar arası geçişleri takip etmek için
 final RouteObserver<PageRoute<dynamic>> routeObserver =
@@ -78,13 +57,13 @@ void main() async {
   runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      
+
       // 📱 Ekran yönlendirmesini dikey olarak kilitle (Portrait Only)
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]);
-      
+
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
@@ -145,10 +124,6 @@ void main() async {
       // Tema tercihini yükle (Varsayılan: Dark Mode)
       final isDarkMode = await LocalPreferencesService().isDarkMode();
       final initialThemeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
-
-      // Legacy ThemeManager (backward compatibility - kademeli olarak kaldırılacak)
-      // ignore: deprecated_member_use_from_same_package
-      themeManager = ThemeManager(initialThemeMode);
 
       // Global hata handler - Release/Debug moda göre farklı davranış
       ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -290,17 +265,49 @@ Future<void> _initRemoteConfig() async {
   }
 }
 
-/// 🎯 Ana Uygulama Widget'ı - Artık ConsumerWidget
-/// Riverpod themeProvider'ı dinliyor
-class MyApp extends ConsumerWidget {
+/// 🎯 Ana Uygulama Widget'ı - Artık ConsumerStatefulWidget
+/// Riverpod themeProvider'ı dinliyor ve uygulama lifecycle'ını yönetiyor
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    // ⚡ Uygulama açıkken ekran HİÇ kapanmasın
+    WakelockPlus.enable();
+    // Lifecycle olaylarını dinle
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    WakelockPlus.disable();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Uygulama ön plana geldiğinde wakelock'u yeniden etkinleştir
+    // Arka plana gittiğinde sistem zaten ekranı yönetir
+    if (state == AppLifecycleState.resumed) {
+      WakelockPlus.enable();
+    } else if (state == AppLifecycleState.paused) {
+      // Arka plana gittiğinde pil tasarrufu için kapat
+      WakelockPlus.disable();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     // ✅ Yeni yöntem: Riverpod themeProvider kullan
-    // ValueListenableBuilder artık gerekli değil!
     final currentMode = ref.watch(themeProvider);
 
     return MaterialApp(

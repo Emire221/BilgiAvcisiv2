@@ -56,6 +56,12 @@
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Sesli asistan özelliği için mikrofon erişimi gereklidir.</string>
 
+		<!-- Fotoğraf Galerisi İzinleri (Ekran görüntüsü/karne kaydetme) -->
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Sınav sonuçlarınızı ve karnelerinizi galeriye kaydetmek için izin gereklidir.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Profil fotoğrafı seçmek için galeri erişimi gereklidir.</string>
+
 		<!-- Arka Plan Modları -->
 		<key>UIBackgroundModes</key>
 		<array>

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import 'dart:ui';
 import '../providers/theme_provider.dart'; // ✅ Riverpod themeProvider
 import '../core/providers/user_provider.dart';
@@ -68,9 +67,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void initState() {
     super.initState();
 
-    // ⚡ Uygulama ön planda olduğu sürece ekran açık kalacak (UX Faz 1.2)
-    WakelockPlus.enable();
-
     // İnitial tab index'i ayarla
     _currentIndex = widget.initialTabIndex;
 
@@ -110,11 +106,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
       // Bu yüzden anlık değeri de kontrol et
       int todaySecondsFromMemory = TimeTrackingService().todaySeconds;
       // En büyük değeri al (RAM veya DB)
-      int todaySeconds = todaySecondsFromDb > todaySecondsFromMemory 
-          ? todaySecondsFromDb 
+      int todaySeconds = todaySecondsFromDb > todaySecondsFromMemory
+          ? todaySecondsFromDb
           : todaySecondsFromMemory;
 
-      debugPrint('Streak: DB=$todaySecondsFromDb, RAM=$todaySecondsFromMemory, Final=$todaySeconds');
+      debugPrint(
+        'Streak: DB=$todaySecondsFromDb, RAM=$todaySecondsFromMemory, Final=$todaySeconds',
+      );
 
       // Bugün 1 dakika kullanım varsa bugünü say, yoksa dünden başla
       if (todaySeconds >= minSecondsPerDay) {
@@ -173,8 +171,6 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void dispose() {
-    // ⚡ Ana ekrandan çıkıldığında wakelock'u kapat
-    WakelockPlus.disable();
     _glowController.dispose();
     _bounceController.dispose();
     super.dispose();
@@ -361,11 +357,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const FaIcon(
-            FontAwesomeIcons.fire,
-            color: Colors.white,
-            size: 12,
-          ),
+          const FaIcon(FontAwesomeIcons.fire, color: Colors.white, size: 12),
           const SizedBox(width: 4),
           Text(
             '$_streak',
@@ -388,40 +380,43 @@ class _MainScreenState extends ConsumerState<MainScreen>
     final color = mascot?.petType.color ?? Colors.purple;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.7)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const FaIcon(
-            FontAwesomeIcons.star,
-            color: Colors.white,
-            size: 12,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'Lv.$level',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color, color.withValues(alpha: 0.7)],
             ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.2, end: 0);
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const FaIcon(
+                FontAwesomeIcons.star,
+                color: Colors.white,
+                size: 12,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Lv.$level',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: 50.ms)
+        .slideX(begin: 0.2, end: 0);
   }
 
   Widget _buildThemeToggleButton(BuildContext context, bool isDarkMode) {

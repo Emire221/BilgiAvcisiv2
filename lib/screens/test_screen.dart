@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import '../features/test/providers/test_provider.dart';
 import '../features/test/models/test_state.dart';
 import '../models/question_model.dart';
@@ -54,13 +53,9 @@ class _TestScreenState extends ConsumerState<TestScreen>
   static const Color _lightAccentBlue = Color(0xFF3B82F6);
   static const Color _lightTextPrimary = Color(0xFF1E293B);
 
-
   @override
   void initState() {
     super.initState();
-
-    // ⚡ Test sırasında ekranın kapanmasını engelle
-    WakelockPlus.enable();
 
     // Pulse animasyonu (timer için)
     _pulseController = AnimationController(
@@ -100,8 +95,6 @@ class _TestScreenState extends ConsumerState<TestScreen>
 
   @override
   void dispose() {
-    // ⚡ Ekran kapanmasına izin ver
-    WakelockPlus.disable();
     _pulseController.dispose();
     _glowController.dispose();
     super.dispose();
@@ -151,12 +144,20 @@ class _TestScreenState extends ConsumerState<TestScreen>
                 ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF000428), Color(0xFF001f54), Color(0xFF004e92)],
+                    colors: [
+                      Color(0xFF000428),
+                      Color(0xFF001f54),
+                      Color(0xFF004e92),
+                    ],
                   )
                 : LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [_lightBgStart, _lightAccentBlue.withValues(alpha: 0.05), _lightBgEnd],
+                    colors: [
+                      _lightBgStart,
+                      _lightAccentBlue.withValues(alpha: 0.05),
+                      _lightBgEnd,
+                    ],
                   ),
           ),
           child: Stack(
@@ -290,7 +291,10 @@ class _TestScreenState extends ConsumerState<TestScreen>
               const Spacer(),
 
               // ✅ PERFORMANS: Timer ayrı Consumer ile - sadece timeLeft değişince rebuild
-              _TimerWidget(pulseController: _pulseController, isDarkMode: _isDarkMode),
+              _TimerWidget(
+                pulseController: _pulseController,
+                isDarkMode: _isDarkMode,
+              ),
 
               const Spacer(),
 
@@ -306,14 +310,16 @@ class _TestScreenState extends ConsumerState<TestScreen>
   /// Soru sayacı
   Widget _buildQuestionCounter(int current, int total) {
     final accentColor = _isDarkMode ? Colors.cyan : _lightAccentCyan;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             accentColor.withValues(alpha: _isDarkMode ? 0.3 : 0.15),
-            (_isDarkMode ? Colors.blue : _lightAccentBlue).withValues(alpha: _isDarkMode ? 0.3 : 0.15),
+            (_isDarkMode ? Colors.blue : _lightAccentBlue).withValues(
+              alpha: _isDarkMode ? 0.3 : 0.15,
+            ),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -478,7 +484,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
   /// Loading ekranı
   Widget _buildLoadingScreen() {
     final accentColor = _isDarkMode ? Colors.cyan : _lightAccentCyan;
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -535,7 +541,7 @@ class _TestScreenState extends ConsumerState<TestScreen>
   /// Hata ekranı
   Widget _buildErrorScreen() {
     final accentColor = _isDarkMode ? Colors.cyan : _lightAccentCyan;
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -901,11 +907,23 @@ class _GameOptionButtonState extends State<_GameOptionButton>
     // Light mode için kart arka plan
     final cardBgColors = widget.isDarkMode
         ? (widget.isSelected
-            ? [Colors.amber.withValues(alpha: 0.4), Colors.orange.withValues(alpha: 0.3)]
-            : [Colors.white.withValues(alpha: 0.08), Colors.white.withValues(alpha: 0.04)])
+              ? [
+                  Colors.amber.withValues(alpha: 0.4),
+                  Colors.orange.withValues(alpha: 0.3),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.04),
+                ])
         : (widget.isSelected
-            ? [Colors.amber.withValues(alpha: 0.25), Colors.orange.withValues(alpha: 0.15)]
-            : [Colors.white.withValues(alpha: 0.95), Colors.white.withValues(alpha: 0.85)]);
+              ? [
+                  Colors.amber.withValues(alpha: 0.25),
+                  Colors.orange.withValues(alpha: 0.15),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.95),
+                  Colors.white.withValues(alpha: 0.85),
+                ]);
 
     return GestureDetector(
       onTapDown: widget.isDisabled
@@ -951,14 +969,16 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                       : _isPressed
                       ? colors[0]
                       : (widget.isDarkMode
-                          ? Colors.white.withValues(alpha: 0.2)
-                          : colors[0].withValues(alpha: 0.25)),
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : colors[0].withValues(alpha: 0.25)),
                   width: widget.isSelected ? 2.5 : 1.5,
                 ),
                 boxShadow: widget.isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.amber.withValues(alpha: widget.isDarkMode ? 0.4 : 0.3),
+                          color: Colors.amber.withValues(
+                            alpha: widget.isDarkMode ? 0.4 : 0.3,
+                          ),
                           blurRadius: 15,
                           spreadRadius: 2,
                         ),
@@ -1001,7 +1021,9 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                       boxShadow: [
                         BoxShadow(
                           color: (widget.isSelected ? Colors.amber : colors[0])
-                              .withValues(alpha: widget.isDarkMode ? 0.5 : 0.35),
+                              .withValues(
+                                alpha: widget.isDarkMode ? 0.5 : 0.35,
+                              ),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -1029,8 +1051,8 @@ class _GameOptionButtonState extends State<_GameOptionButton>
                         color: widget.isSelected
                             ? Colors.amber
                             : (widget.isDarkMode
-                                ? Colors.white.withValues(alpha: 0.9)
-                                : const Color(0xFF1E293B)),
+                                  ? Colors.white.withValues(alpha: 0.9)
+                                  : const Color(0xFF1E293B)),
                         fontSize: fontSize,
                         fontWeight: widget.isSelected
                             ? FontWeight.bold
@@ -1181,12 +1203,16 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.4 : 0.3),
+                      color: primaryColor.withValues(
+                        alpha: widget.isDarkMode ? 0.4 : 0.3,
+                      ),
                       blurRadius: 30,
                       spreadRadius: 5,
                     ),
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.2 : 0.1),
+                      color: primaryColor.withValues(
+                        alpha: widget.isDarkMode ? 0.2 : 0.1,
+                      ),
                       blurRadius: 60,
                       spreadRadius: 10,
                     ),
@@ -1253,8 +1279,12 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            gradientColors[0].withValues(alpha: widget.isDarkMode ? 0.25 : 0.15),
-            gradientColors[1].withValues(alpha: widget.isDarkMode ? 0.15 : 0.08),
+            gradientColors[0].withValues(
+              alpha: widget.isDarkMode ? 0.25 : 0.15,
+            ),
+            gradientColors[1].withValues(
+              alpha: widget.isDarkMode ? 0.15 : 0.08,
+            ),
           ],
         ),
       ),
@@ -1269,7 +1299,9 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.6 : 0.4),
+                      color: primaryColor.withValues(
+                        alpha: widget.isDarkMode ? 0.6 : 0.4,
+                      ),
                       blurRadius: 20,
                       spreadRadius: 4,
                     ),
@@ -1327,7 +1359,9 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.greenAccent.withValues(alpha: widget.isDarkMode ? 0.1 : 0.08),
+        color: Colors.greenAccent.withValues(
+          alpha: widget.isDarkMode ? 0.1 : 0.08,
+        ),
         border: Border.all(
           color: Colors.greenAccent.withValues(alpha: 0.4),
           width: 1.5,
@@ -1370,7 +1404,9 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
                 Text(
                   widget.correctAnswer,
                   style: TextStyle(
-                    color: widget.isDarkMode ? Colors.white : const Color(0xFF1E293B),
+                    color: widget.isDarkMode
+                        ? Colors.white
+                        : const Color(0xFF1E293B),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     height: 1.4,
@@ -1456,7 +1492,9 @@ class _AnswerResultDialogState extends State<_AnswerResultDialog>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withValues(alpha: widget.isDarkMode ? 0.5 : 0.35),
+                  color: primaryColor.withValues(
+                    alpha: widget.isDarkMode ? 0.5 : 0.35,
+                  ),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../domain/models/trial_exam.dart';
 import '../../../../services/database_helper.dart';
 
@@ -26,16 +25,12 @@ class _ExamScreenState extends State<ExamScreen> {
   @override
   void initState() {
     super.initState();
-    // ⚡ Sınav sırasında ekranın kapanmasını engelle
-    WakelockPlus.enable();
     _remainingSeconds = widget.exam.duration * 60; // Dakika -> Saniye
     _startTimer();
   }
 
   @override
   void dispose() {
-    // ⚡ Ekran kapanmasına izin ver
-    WakelockPlus.disable();
     _timer?.cancel();
     _pageController.dispose();
     super.dispose();
@@ -101,7 +96,9 @@ class _ExamScreenState extends State<ExamScreen> {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Cevapların alındı! Sonuçlar Cumartesi 12:00\'de açıklanacak.'),
+        content: Text(
+          'Cevapların alındı! Sonuçlar Cumartesi 12:00\'de açıklanacak.',
+        ),
         duration: Duration(seconds: 3),
       ),
     );

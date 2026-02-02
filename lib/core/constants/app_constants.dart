@@ -14,11 +14,6 @@ class AppConstants {
   static const Duration animationDuration = Duration(milliseconds: 300);
   static const Duration longAnimationDuration = Duration(milliseconds: 500);
 
-  // API Configuration (for future use)
-  static const String apiBaseUrl = 'https://api.example.com';
-  static const Duration apiTimeout = Duration(seconds: 30);
-  static const int maxRetries = 3;
-
   // Cache Configuration
   static const Duration cacheExpiration = Duration(hours: 24);
   static const int maxCacheSize = 100; // MB
