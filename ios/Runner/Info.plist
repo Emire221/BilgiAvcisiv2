@@ -67,6 +67,17 @@
 		<array>
 			<string>fetch</string>
 			<string>remote-notification</string>
+			<string>audio</string>
 		</array>
+
+		<!-- Bluetooth Ses Cihazları İzni (Kulaklık/Hoparlör) -->
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>Bluetooth kulaklık veya hoparlör ile ses çalmak için izin gereklidir.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>Bluetooth ses cihazlarına bağlanmak için izin gereklidir.</string>
+
+		<!-- Hareket Sensörü İzni (Shake/Salla Bakalım oyunu için) -->
+		<key>NSMotionUsageDescription</key>
+		<string>Salla Bakalım oyunu için hareket sensörü erişimi gereklidir.</string>
 	</dict>
 </plist>

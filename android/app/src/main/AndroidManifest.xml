@@ -1,8 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Talking Mascot için mikrofon izni -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- AĞ İZİNLERİ (Firebase, HTTP istekleri için) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     
-    <!-- Bildirim İzinleri (Android 13+ ve Zamanlanmış Bildirimler için ZORUNLU) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- TALKING MASCOT SES İZİNLERİ -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Mikrofon izni (ses kaydı için) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Ses modifikasyonu için (pitch/speed değişikliği) -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <!-- Bluetooth kulaklık/hoparlör desteği -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- BİLDİRİM İZİNLERİ (Android 13+ ve Zamanlanmış Bildirimler için ZORUNLU) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
@@ -13,6 +29,17 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- WAKELOCK İZNİ (Sınav sırasında ekranın kapanmaması için) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SENSÖR İZNİ (Shake/Salla Bakalım oyunu için - Android 12+) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
     
     <application
         android:label="Bilgi Avcısı"
@@ -94,6 +121,15 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- share_plus paketi için (Android 11+ API 30) -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="*/*" />
         </intent>
     </queries>
 </manifest>
